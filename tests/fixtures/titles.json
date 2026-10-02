@@ -390,5 +390,173 @@
     "role": "ai_engineer",
     "group": "g4_genai_agentique",
     "requalified": true
+  },
+  {
+    "source": "taxonomie v2 — formes féminines",
+    "title": "Développeuse Python (H/F)",
+    "role": "dev_generic",
+    "group": "g1_dev"
+  },
+  {
+    "source": "taxonomie v2 — formes féminines",
+    "title": "Programmeuse",
+    "role": "dev_generic",
+    "group": "g1_dev"
+  },
+  {
+    "source": "taxonomie v2 — formes féminines",
+    "title": "Développeuse web PHP",
+    "role": "dev_web",
+    "group": "g1_dev"
+  },
+  {
+    "source": "taxonomie v2 — formes féminines",
+    "title": "Lead développeuse Java",
+    "role": "tech_lead_architecte",
+    "group": "g1_dev"
+  },
+  {
+    "source": "taxonomie v2 — formes féminines",
+    "title": "Ingénieure logiciel",
+    "role": "software_engineer",
+    "group": "g1_dev"
+  },
+  {
+    "source": "taxonomie v2 — formes féminines",
+    "title": "Conceptrice développeuse d'applications",
+    "role": "software_engineer",
+    "group": "g1_dev"
+  },
+  {
+    "source": "taxonomie v2 — formes féminines",
+    "title": "Analyste programmeuse",
+    "role": "software_engineer",
+    "group": "g1_dev"
+  },
+  {
+    "source": "taxonomie v2 — formes féminines",
+    "title": "Ingénieure de test",
+    "role": "qa_test",
+    "group": "g1_dev"
+  },
+  {
+    "source": "taxonomie v2 — formes féminines",
+    "title": "Ingénieure data",
+    "role": "data_engineer",
+    "group": "g2_data"
+  },
+  {
+    "source": "taxonomie v2 — formes féminines",
+    "title": "Ingénieure IA",
+    "role": "ingenieur_ia",
+    "group": "g3_ia_ml"
+  },
+  {
+    "source": "taxonomie v2 — formes féminines",
+    "title": "Ingénieure ML",
+    "role": "ml_engineer",
+    "group": "g3_ia_ml"
+  },
+  {
+    "source": "taxonomie v2 — formes féminines",
+    "title": "Doctorante en intelligence artificielle",
+    "role": "research_ai",
+    "group": "g3_ia_ml"
+  },
+  {
+    "source": "taxonomie v2 — formes féminines",
+    "title": "Développeuse d'agents IA",
+    "role": "agentic_engineer",
+    "group": "g4_genai_agentique"
+  },
+  {
+    "source": "taxonomie v2 — formes féminines",
+    "title": "Ingénieure prompt",
+    "role": "prompt_engineer",
+    "group": "g8_temoins"
+  },
+  {
+    "source": "taxonomie v2 — formes féminines",
+    "title": "Cheffe de projet IA",
+    "role": "chef_projet_ia",
+    "group": "g6_pilotage"
+  },
+  {
+    "source": "taxonomie v2 — formes féminines",
+    "title": "Chef·fe de projet intelligence artificielle",
+    "role": "chef_projet_ia",
+    "group": "g6_pilotage"
+  },
+  {
+    "source": "taxonomie v2 — formes féminines",
+    "title": "Directrice de projet IA",
+    "role": "chef_projet_ia",
+    "group": "g6_pilotage"
+  },
+  {
+    "source": "taxonomie v2 — formes féminines",
+    "title": "Éthicienne de l'IA",
+    "role": "ai_compliance",
+    "group": "g7_gouvernance"
+  },
+  {
+    "source": "taxonomie v2 — formes féminines",
+    "title": "Avocate en droit de l'IA",
+    "role": "juriste_ia",
+    "group": "g7_gouvernance"
+  },
+  {
+    "source": "taxonomie v2 — formes féminines",
+    "title": "Ingénieure d'affaires IT",
+    "role": "commercial_tech",
+    "group": "g9_elargi"
+  },
+  {
+    "source": "taxonomie v2 — formes féminines",
+    "title": "Ingénieure cloud AWS",
+    "role": "devops_sre_cloud",
+    "group": "g9_elargi"
+  },
+  {
+    "source": "taxonomie v2 — formes féminines",
+    "title": "Experte sécurité réseau",
+    "role": "cybersecurite",
+    "group": "g9_elargi"
+  },
+  {
+    "source": "taxonomie v2 — formes féminines",
+    "title": "Auditrice sécurité",
+    "role": "cybersecurite",
+    "group": "g9_elargi"
+  },
+  {
+    "source": "taxonomie v2 — formes féminines",
+    "title": "Pentesteuse",
+    "role": "cybersecurite",
+    "group": "g9_elargi"
+  },
+  {
+    "source": "taxonomie v2 — formes féminines",
+    "title": "Ingénieure systèmes et réseaux",
+    "role": "admin_sys_reseau",
+    "group": "g9_elargi"
+  },
+  {
+    "source": "taxonomie v2 — formes féminines",
+    "title": "Technicien·ne réseaux",
+    "role": "admin_sys_reseau",
+    "group": "g9_elargi"
+  },
+  {
+    "source": "taxonomie v2 — formes féminines",
+    "title": "Business Développeur IT",
+    "role": "commercial_tech",
+    "group": "g9_elargi"
+  },
+  {
+    "source": "taxonomie v2 — formes féminines",
+    "title": "Business Développeuse SaaS",
+    "role": "commercial_tech",
+    "group": "g9_elargi"
   }
 ]
