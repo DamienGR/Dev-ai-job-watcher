@@ -49,6 +49,18 @@ describe('signaux (SPEC.md §6.6)', () => {
     ['2 jours sur site par semaine', 'hybrid'],
     ['Pas de télétravail, poste en atelier', 'on_site'],
     ['Poste basé à Lyon', 'unknown'],
+    // Négations et portée des motifs (taxonomie v2)
+    ["Pas de télétravail. Formation de 3 jours à l'arrivée.", 'on_site'],
+    ["Télétravail : non. Période d'essai de 3 mois, 5 jours de RTT.", 'on_site'],
+    ['Pas de télétravail possible sur ce poste.', 'on_site'],
+    ['Poste sans télétravail, horaires en 3x8.', 'on_site'],
+    ['Télétravail impossible (salle blanche).', 'on_site'],
+    ['Présence 5 jours sur site.', 'on_site'],
+    ['Présentiel : 5j/5 sur site.', 'on_site'],
+    ['Pas de full remote, mais 2 jours de télétravail par semaine.', 'hybrid'],
+    ["Télétravail possible jusqu'à 3 jours par semaine.", 'hybrid'],
+    ['Hybride : 3 jours sur site, 2 jours en télétravail.', 'hybrid'],
+    ["Le poste n'est pas en full remote.", 'unknown'],
   ])('télétravail : « %s » → %s', (description, expected) => {
     expect(analyse('Développeur', description).signals.remote).toBe(expected);
   });
@@ -91,6 +103,7 @@ describe('technologies ambiguës (motifs stricts de taxonomy.yaml)', () => {
   it.each<[string, string[], string[]]>([
     ['Golang, microservices', ['go'], []],
     ['Développeur Go confirmé', ['go'], []],
+    ['Développeuse Go, microservices', ['go'], []],
     ['Stratégie go-to-market', [], ['go']],
     ['Langage C embarqué, C/C++', ['c', 'cpp'], []],
     ['Python et R, RStudio', ['python', 'r'], []],

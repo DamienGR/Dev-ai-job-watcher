@@ -12,6 +12,10 @@
 #   apostrophes typographiques remplacées par ', marqueurs de genre supprimés
 #   ("(H/F)", "F/H/X", "·se", "(e)"...), espaces compactés.
 #   → écrire "developpeur", "ingenieur", "donnees" (sans accents).
+# - Les formes féminines pleines ne sont PAS ramenées au masculin : écrire les
+#   deux formes (ex. 'developpeu(r|se)', 'ingenieure?', 'chef(·?fe)?',
+#   'technicien(·?ne)?'). La normalisation ne retire le point médian que dans
+#   "·e", "·es" et, après "eur", dans "·se", "·euse", "·rice", "·ice".
 # - Pour une apostrophe, utiliser "." (ex. 'ingenieur d.affaires').
 # - Les caractères + # . / - sont conservés par la normalisation.
 # - Rôles : le motif `title.include` qui matche avec la `priority` la plus
@@ -21,7 +25,7 @@
 #   l'historique. Les `id` sont stables et ne sont jamais renommés.
 # =============================================================================
 
-version: 1
+version: 2
 updated: 2026-10-02
 
 # -----------------------------------------------------------------------------
@@ -107,8 +111,8 @@ roles:
       include:
         - '\bcommercial(e)?\b'
         - '\baccount (executive|manager)\b'
-        - '\bbusiness develop(er|ment|eur)\b'
-        - '\bingenieur (d.affaires|commercial)\b'
+        - '\bbusiness develop(p?(eur|euse|ement)|er|ment)\b'
+        - '\bingenieure? (d.affaires|commerciale?)\b'
         - '\btechnico[ -]commercial'
         - '\bsales (representative|executive|manager|development)\b'
         - '\bkey account\b'
@@ -159,7 +163,7 @@ roles:
     title:
       include:
         - '\bprompt (engineer|designer|specialist)\b'
-        - '\bingenieur (de |en )?prompts?\b'
+        - '\bingenieure? (de |en )?prompts?\b'
 
   - id: ai_trainer_annotation
     group: g8_temoins
@@ -182,7 +186,7 @@ roles:
     keywords: ['juriste IA', 'juriste AI Act', 'legal counsel AI']
     title:
       include:
-        - '\b(juriste|avocat|legal counsel|counsel)\b.*\b(ia|ai|intelligence artificielle|ai act)\b'
+        - '\b(juriste|avocate?|legal counsel|counsel)\b.*\b(ia|ai|intelligence artificielle|ai act)\b'
 
   - id: ai_security
     group: g7_gouvernance
@@ -210,7 +214,7 @@ roles:
         - '\bgouvernance\b.*\b(ia|ai|intelligence artificielle)\b'
         - '\bia (de confiance|responsable)\b'
         - '\b(trustworthy|responsible) ai\b'
-        - '\b(ethique|ethics?|ethicien)\b.*\b(ia|ai)\b'
+        - '\b(ethique|ethics?|ethicien(·?ne)?)\b.*\b(ia|ai)\b'
         - '\b(ai|ia) ethic'
 
   # ---------------------------------------------------------------- g6
@@ -246,10 +250,10 @@ roles:
     keywords: ['chef de projet IA', 'AI project manager']
     title:
       include:
-        - '\bchef (de )?projets?\b.*\b(ia|ai|intelligence artificielle|genai|agenti(c|que)s?)\b'
+        - '\bchef(·?fe)? (de )?projets?\b.*\b(ia|ai|intelligence artificielle|genai|agenti(c|que)s?)\b'
         - '\b(ai|ia) project manager\b'
         - '\bproject manager\b.*\b(ai|ia|genai)\b'
-        - '\bdirecteur de projets?\b.*\b(ia|ai)\b'
+        - '\b(directeur|directrice) de projets?\b.*\b(ia|ai)\b'
 
   - id: referent_coach_ia
     group: g6_pilotage
@@ -304,7 +308,7 @@ roles:
       include:
         - '\bagenti(c|que)s?\b'
         - '\b(ai |ia )?agents? (ia |ai )?(engineer|developer|builder)\b'
-        - '\b(developpeur|developer|ingenieur|engineer)\b.*\bagents?\b.*\b(ia|ai)\b'
+        - '\b(developpeu(r|se)|developer|ingenieure?|engineer)\b.*\bagents?\b.*\b(ia|ai)\b'
         - '\bmulti[ -]?agents?\b'
 
   - id: rag_engineer
@@ -425,8 +429,8 @@ roles:
     keywords: ['chercheur IA', 'research scientist machine learning']
     title:
       include:
-        - '\b(chercheur|chercheuse|research scientist|research engineer|ingenieur de recherche|post[ -]?doc|doctorant)\b.*\b(ia|ai|intelligence artificielle|machine learning|deep learning|nlp|vision|apprentissage)\b'
-        - '\b(ia|ai|machine learning|deep learning)\b.*\b(chercheur|research scientist|research engineer)\b'
+        - '\b(chercheur|chercheuse|research scientist|research engineer|ingenieure? de recherche|post[ -]?doc|doctorante?)\b.*\b(ia|ai|intelligence artificielle|machine learning|deep learning|nlp|vision|apprentissage)\b'
+        - '\b(ia|ai|machine learning|deep learning)\b.*\b(chercheur|chercheuse|research scientist|research engineer)\b'
 
   - id: ml_engineer
     group: g3_ia_ml
@@ -437,8 +441,8 @@ roles:
       include:
         - '\bmachine learning\b'
         - '\bdeep learning\b'
-        - '\bml (engineer|ingenieur|developer|scientist)\b'
-        - '\bingenieur ml\b'
+        - '\bml (engineer|ingenieure?|developer|scientist)\b'
+        - '\bingenieure? ml\b'
         - '\bapprentissage (automatique|profond)\b'
 
   - id: ingenieur_ia
@@ -448,9 +452,9 @@ roles:
     keywords: ['ingénieur IA', 'ingénieur intelligence artificielle', 'développeur IA']
     title:
       include:
-        - '\bingenieur (en |d.)?(ia|intelligence artificielle)\b'
-        - '\b(developpeur|developer|dev)\b.*\b(ia|ai|intelligence artificielle)\b'
-        - '\b(ia|intelligence artificielle) (engineer|developer|developpeur)\b'
+        - '\bingenieure? (en |d.)?(ia|intelligence artificielle)\b'
+        - '\b(developpeu(r|se)|developer|dev)\b.*\b(ia|ai|intelligence artificielle)\b'
+        - '\b(ia|intelligence artificielle) (engineer|developer|developpeu(r|se))\b'
         - '\bexpert(e)? (en )?(ia|intelligence artificielle)\b'
         - '\bspecialiste (ia|intelligence artificielle)\b'
     # Intitulé générique : requalifié en ai_engineer (g4) si la description
@@ -493,9 +497,9 @@ roles:
     title:
       include:
         - '\bdata engineer\b'
-        - '\bingenieur (de |des )?(donnees|data|big data)\b'
+        - '\bingenieure? (de |des )?(donnees|data|big data)\b'
         - '\bbig data\b'
-        - '\b(developpeur|developer) (data|big data|etl)\b'
+        - '\b(developpeu(r|se)|developer) (data|big data|etl)\b'
         - '\betl\b'
 
   - id: data_analyst
@@ -539,7 +543,7 @@ roles:
         - '\bsre\b'
         - '\bsite reliability\b'
         - '\bplatform engineer\b'
-        - '\b(ingenieur|architecte|engineer|architect)\b.*\bcloud\b'
+        - '\b(ingenieure?|architecte|engineer|architect)\b.*\bcloud\b'
         - '\bcloud (engineer|architect|ops)\b'
 
   - id: cybersecurite
@@ -550,10 +554,10 @@ roles:
       include:
         - '\bcyber'
         - '\bsecurite (informatique|des si|des systemes|operationnelle)\b'
-        - '\b(consultant|ingenieur|expert|analyste|architecte|responsable|auditeur)\b.*\bsecurite\b'
+        - '\b(consultante?|ingenieure?|experte?|analyste|architecte|responsable|audit(eur|rice))\b.*\bsecurite\b'
         - '\bsecurity (engineer|analyst|architect|consultant|officer)\b'
         - '\bvulnerabilit'
-        - '\b(rssi|ciso|soc|pentest(eur|er)?|grc)\b'
+        - '\b(rssi|ciso|soc|pentest(eur|euse|er)?|grc)\b'
 
   - id: admin_sys_reseau
     group: g9_elargi
@@ -563,8 +567,8 @@ roles:
       include:
         - '\badministrat(eur|rice) (systemes?|reseaux?|bases? de donnees|serveurs?)\b'
         - '\b(sys)?admin\b'
-        - '\bingenieur (systemes?|reseaux?)\b'
-        - '\btechnicien(ne)? (systemes?|reseaux?)\b'
+        - '\bingenieure? (systemes?|reseaux?)\b'
+        - '\btechnicien(·?ne)? (systemes?|reseaux?)\b'
         - '\bdba\b'
 
   - id: support_it
@@ -576,7 +580,7 @@ roles:
         - '\bsupport\b'
         - '\bhelpdesk\b'
         - '\bhelp desk\b'
-        - '\btechnicien(ne)? (informatique|de proximite|d.exploitation)\b'
+        - '\btechnicien(·?ne)? (informatique|de proximite|d.exploitation)\b'
         - '\bexploitation\b'
 
   # ---------------------------------------------------------------- g1
@@ -587,10 +591,10 @@ roles:
     title:
       include:
         - '\btech(nical)? lead\b'
-        - '\blead (dev|developer|developpeur|engineer|tech)\b'
+        - '\blead (dev|developer|developpeu(r|se)|engineer|tech)\b'
         - '\barchitecte (logiciel|applicatif|technique|solutions?|si|d.entreprise)\b'
         - '\b(software|solutions?|enterprise) architect\b'
-        - '\b(staff|principal)\b.*\b(engineer|developer|ingenieur)\b'
+        - '\b(staff|principal)\b.*\b(engineer|developer|ingenieure?)\b'
         - '\bresponsable technique\b'
 
   - id: dev_cms
@@ -647,7 +651,7 @@ roles:
     priority: 41
     title:
       include:
-        - '\b(qa|testeur|testeuse|test engineer|ingenieur (de )?tests?|automaticien de tests?|recette)\b'
+        - '\b(qa|testeur|testeuse|test engineer|ingenieure? (de )?tests?|automaticien(·?ne)? de tests?|recette)\b'
 
   - id: software_engineer
     group: g1_dev
@@ -655,11 +659,11 @@ roles:
     priority: 40
     title:
       include:
-        - '\bingenieur (logiciel|developpement|d.etudes? (et|&) developpement|etudes?)\b'
+        - '\bingenieure? (logiciel|developpement|d.etudes? (et|&) developpement|etudes?)\b'
         - '\bsoftware (engineer|developer)\b'
-        - '\b(developpeur|developer) (logiciel|informatique|applicatif|d.applications?)\b'
-        - '\banalyste[ -]programmeur\b'
-        - '\bconcepteur[ -]developpeur\b'
+        - '\b(developpeu(r|se)|developer) (logiciel|informatique|applicatif|d.applications?)\b'
+        - '\banalyste[ -]programmeu(r|se)\b'
+        - '\bconcept(eur|rice)[ -]developpeu(r|se)\b'
         - '\bbackend engineer\b'
 
   - id: dev_web
@@ -668,10 +672,10 @@ roles:
     priority: 39
     title:
       include:
-        - '\b(developpeur|developer) web\b'
+        - '\b(developpeu(r|se)|developer) web\b'
         - '\bweb developer\b'
         - '\bwebmaster\b'
-        - '\b(developpeur|developer) (php|symfony|laravel|javascript|typescript|node\.?js)\b'
+        - '\b(developpeu(r|se)|developer) (php|symfony|laravel|javascript|typescript|node\.?js)\b'
 
   - id: dev_generic
     group: g1_dev
@@ -679,7 +683,7 @@ roles:
     priority: 10
     title:
       include:
-        - '\b(developpeur|developer|dev|programmeur)\b'
+        - '\b(developpeu(r|se)|developer|dev|programmeu(r|se))\b'
         - '\b(java|python|\.net|c#|c\+\+|golang|php|ruby|scala|kotlin) (developer|engineer)\b'
 
 # -----------------------------------------------------------------------------
@@ -729,22 +733,29 @@ signals:
 
   remote:
     description: Mode de travail (ordre d'évaluation full_remote > hybrid > on_site)
+    # L'ordre d'évaluation est fixé par SPEC.md §6.6 : les motifs full_remote et
+    # hybrid ignorent donc les formes niées (« pas de », « pas en », « sans »,
+    # « aucun ») et ne dépassent pas la phrase (la normalisation met tout le texte
+    # sur une ligne : « . ; ! ? » servent de bornes).
     full_remote:
-      - '\bfull[ -]?remote\b'
+      - '(?<!(pas de|pas en|sans|aucun) )\bfull[ -]?remote\b'
       - '\bfully remote\b'
       - '\bremote[ -]first\b'
-      - '\b100 ?% (teletravail|remote|a distance)\b'
-      - '\bteletravail (complet|total|integral)\b'
-      - '\btotalement (en )?teletravail\b'
+      - '(?<!(pas de|pas en|sans|aucun) )\b100 ?% (teletravail|remote|a distance)\b'
+      - '(?<!(pas de|pas en|sans|aucun) )\bteletravail (complet|total|integral)\b'
+      - '(?<!pas )\btotalement (en )?teletravail\b'
     hybrid:
       - '\bhybride?\b'
-      - '\bteletravail (partiel|possible|occasionnel|frequent|regulier)\b'
+      - '(?<!(pas de|pas en|sans|aucun) )\bteletravail (partiel|possible|occasionnel|frequent|regulier)\b'
       - '\b\d ?(j|jours?) (de |en )?teletravail\b'
-      - '\bteletravail\b.*\b\d ?(j|jours?)\b'
-      - '\b\d ?(j|jours?) (sur site|en presentiel)\b'
+      - '(?<!(pas de|pas en|sans|aucun) )\bteletravail\b[^.;!?]{0,50}?\b\d ?(j|jours?)\b'
+      - '\b[1-4] ?(j|jours?) (sur site|en presentiel)\b'
       - '\bhybrid\b'
     on_site:
-      - '\bpas de teletravail\b'
+      - '\b(pas de|pas en|sans|aucun) teletravail\b'
+      - '\bteletravail ?: ?non\b'
+      - '\bteletravail (non (possible|autorise)|impossible)\b'
+      - '\b5 ?(j|jours?)( ?/ ?5| sur 5)? (sur site|en presentiel)\b(?! par mois)'
       - '\b100 ?% (presentiel|sur site)\b'
       - '\bfull (presentiel|on[ -]?site)\b'
       - '\bon[ -]?site only\b'
@@ -799,7 +810,7 @@ technologies:
   - { id: cpp, family: langages, label: 'C++', patterns: ['(?<![a-z0-9])c\+\+'] }
   - { id: c, family: langages, label: C, patterns: ['\blangage c\b', '\bc ?/ ?c\+\+', '\bc (embarque|ansi)\b'] }
   - { id: php, family: langages, label: PHP, patterns: ['\bphp\b'] }
-  - { id: go, family: langages, label: Go, patterns: ['\bgolang\b', '\b(langage|developpeur|developer|dev|engineer|ingenieur) go\b', '\bgo (developer|developpeur|engineer)\b'] }
+  - { id: go, family: langages, label: Go, patterns: ['\bgolang\b', '\b(langage|developpeu(r|se)|developer|dev|engineer|ingenieure?) go\b', '\bgo (developer|developpeu(r|se)|engineer)\b'] }
   - { id: rust, family: langages, label: Rust, patterns: ['\brust\b'] }
   - { id: ruby, family: langages, label: Ruby, patterns: ['\bruby\b'] }
   - { id: scala, family: langages, label: Scala, patterns: ['\bscala\b'] }

@@ -91,10 +91,10 @@ les noms et les rattachements.
   confirmée par une source officielle sans identifiants France Travail. Reporté au lot 1 (API
   ROME 4.0), `taxonomy.yaml` inchangé.
 
-### Points relevés sur la taxonomie (non modifiée)
+### Points relevés sur la taxonomie
 
-Observés en écrivant les tests ; à traiter par une correction documentée ou à la première revue
-mensuelle :
+Observés en écrivant les tests du lot 0, laissés en l'état dans ce lot, puis **corrigés en
+taxonomie v2** (voir `TAXONOMY_CHANGELOG.md`) :
 
 1. **Formes féminines non reconnues** : la normalisation retire l'écriture inclusive (`·e`,
    `(e)`, `.e`) mais pas les formes féminines pleines. « Développeuse Python », « Ingénieure
@@ -107,3 +107,21 @@ mensuelle :
    `\bteletravail\b.*\b\d ?(j|jours?)\b`, qui peut couvrir toute la description, donnent
    `hybrid` pour « Pas de télétravail. Formation de 3 jours à l'arrivée. » ou « Télétravail :
    non. […] 5 jours de RTT ».
+
+## Taxonomie v2 — formes féminines et télétravail (2026-10-02)
+
+### D9. Formes féminines traitées dans les motifs, pas dans la normalisation
+
+La normalisation de référence (SPEC.md §6.4, exigée) reste inchangée : ramener les formes
+féminines au masculin (« -euse » → « -eur »…) modifierait le texte sur lequel tous les motifs
+sont écrits. Les motifs portent donc les deux formes, convention ajoutée en tête de
+`taxonomy.yaml`. Les mots-clés de collecte (passe B) restent au masculin : la sémantique de
+`motsCles`, à vérifier au lot 1, dira s'il faut aussi les décliner.
+
+### D10. Négations du télétravail traitées dans les motifs
+
+L'ordre `full_remote` > `hybrid` > `on_site` est fixé par SPEC.md §6.6. Les formes niées sont
+donc exclues des motifs `full_remote` et `hybrid` par un lookbehind
+(`(?<!(pas de|pas en|sans|aucun) )`), et le motif « télétravail … N jours » reste dans la
+phrase. Les négations anglaises (« not fully remote ») ne sont pas traitées : elles sont rares
+dans les offres France Travail.
