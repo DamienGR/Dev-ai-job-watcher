@@ -1,0 +1,962 @@
+# =============================================================================
+# Taxonomie — Veille emploi Dev & IA
+# =============================================================================
+# Ce fichier est la source de vérité de la classification des offres.
+# Il est modifié chaque mois par la routine de revue (via pull request),
+# jamais à la main sans incrémenter `version` ni compléter TAXONOMY_CHANGELOG.md.
+#
+# Conventions des motifs (voir SPEC.md §6.4 normalisation et §6.5 classification) :
+# - Chaque motif est le source d'une RegExp JavaScript (sans délimiteurs),
+#   compilée avec le seul drapeau "i".
+# - Les motifs s'appliquent au texte NORMALISÉ : minuscules, accents retirés,
+#   apostrophes typographiques remplacées par ', marqueurs de genre supprimés
+#   ("(H/F)", "F/H/X", "·se", "(e)"...), espaces compactés.
+#   → écrire "developpeur", "ingenieur", "donnees" (sans accents).
+# - Pour une apostrophe, utiliser "." (ex. 'ingenieur d.affaires').
+# - Les caractères + # . / - sont conservés par la normalisation.
+# - Rôles : le motif `title.include` qui matche avec la `priority` la plus
+#   haute gagne (rôle principal). Les autres rôles matchés sont conservés
+#   comme rôles secondaires. Un `exclude` qui matche annule le rôle.
+# - Ne jamais supprimer un rôle : passer `status: deprecated` pour conserver
+#   l'historique. Les `id` sont stables et ne sont jamais renommés.
+# =============================================================================
+
+version: 1
+updated: 2026-10-02
+
+# -----------------------------------------------------------------------------
+# Filet de collecte France Travail (codes ROME 4.0)
+# -----------------------------------------------------------------------------
+# core      : collectés systématiquement
+# secondary : collectés systématiquement, fort taux de hors-périmètre attendu
+# extended  : collectés pour reconnaître le « périmètre élargi » (g9), masqué
+#             par défaut dans le dashboard
+# À VÉRIFIER au lot 0 : liste complète des codes M18xx du ROME 4.0.
+rome_codes:
+  core: [M1805, M1811]
+  secondary: [M1806, M1802, M1803]
+  extended: [M1801, M1810]
+
+# -----------------------------------------------------------------------------
+# Groupes de métiers
+# -----------------------------------------------------------------------------
+# status : socle | etabli | emergent | declin | hors_perimetre
+# dashboard : affiché par défaut dans le dashboard
+# keyword_pass : true → le groupe fait l'objet d'une collecte par mots-clés
+#                sans filtre ROME (métiers émergents mal codés dans le ROME)
+groups:
+  - id: g1_dev
+    label: Développement logiciel & web
+    status: socle
+    dashboard: true
+    keyword_pass: false
+  - id: g2_data
+    label: Data
+    status: socle
+    dashboard: true
+    keyword_pass: false
+  - id: g3_ia_ml
+    label: IA / ML « classique »
+    status: etabli
+    dashboard: true
+    keyword_pass: true
+  - id: g4_genai_agentique
+    label: IA générative & agentique
+    status: emergent
+    dashboard: true
+    keyword_pass: true
+  - id: g5_deploiement
+    label: Interface client / déploiement IA
+    status: emergent
+    dashboard: true
+    keyword_pass: true
+  - id: g6_pilotage
+    label: Pilotage & transformation IA
+    status: emergent
+    dashboard: true
+    keyword_pass: true
+  - id: g7_gouvernance
+    label: Gouvernance, conformité & sécurité IA
+    status: emergent
+    dashboard: true
+    keyword_pass: true
+  - id: g8_temoins
+    label: Témoins de déclin
+    status: declin
+    dashboard: true
+    keyword_pass: true
+  - id: g9_elargi
+    label: Périmètre élargi (infra, cyber, support, commercial)
+    status: hors_perimetre
+    dashboard: false
+    keyword_pass: false
+
+# -----------------------------------------------------------------------------
+# Rôles (métiers)
+# -----------------------------------------------------------------------------
+# keywords : termes envoyés aux API en collecte par mots-clés (groupes avec
+#            keyword_pass: true). Distincts des motifs de classification.
+roles:
+
+  # ---------------------------------------------------------------- g9 (prioritaire)
+  - id: commercial_tech
+    group: g9_elargi
+    label: Commercial / vente tech & IA
+    priority: 98
+    title:
+      include:
+        - '\bcommercial(e)?\b'
+        - '\baccount (executive|manager)\b'
+        - '\bbusiness develop(er|ment|eur)\b'
+        - '\bingenieur (d.affaires|commercial)\b'
+        - '\btechnico[ -]commercial'
+        - '\bsales (representative|executive|manager|development)\b'
+        - '\bkey account\b'
+
+  # ---------------------------------------------------------------- g5
+  - id: forward_deployed_engineer
+    group: g5_deploiement
+    label: Forward Deployed Engineer
+    priority: 100
+    keywords: ['forward deployed', 'forward deployment', 'FDE']
+    title:
+      include:
+        - '\bforward[ -]?deploy(ed|ment)?\b'
+        - '\bfde\b'
+        - '\b(ai|ia|genai) deployment engineer\b'
+        - '\bdeployment engineer\b.*\b(ai|ia|llm|genai)\b'
+        - '\b(ai|ia) field engineer\b'
+        - '\bfield (ai|ia) engineer\b'
+
+  - id: ai_solutions_engineer
+    group: g5_deploiement
+    label: AI Solutions Engineer / Architecte solutions IA
+    priority: 88
+    keywords: ['AI solutions engineer', 'architecte solution IA', 'solutions architect IA']
+    title:
+      include:
+        - '\b(ai|ia|genai|gen ai) solutions? (engineer|architect|consultant)\b'
+        - '\bsolutions? (engineer|architect)\b.*\b(ai|ia|genai|llm|agenti(c|que)s?)\b'
+        - '\barchitecte solutions? (ia|ai|intelligence artificielle)\b'
+        - '\b(ai|ia) (pre[ -]?sales|presales|avant[ -]vente)\b'
+
+  - id: ai_devrel
+    group: g5_deploiement
+    label: Developer Advocate / DevRel IA
+    priority: 88
+    keywords: ['developer advocate IA', 'devrel AI']
+    title:
+      include:
+        - '\b(developer advocate|developer relations|devrel)\b.*\b(ai|ia|llm|genai)\b'
+        - '\b(ai|ia|llm|genai)\b.*\b(developer advocate|developer relations|devrel)\b'
+
+  # ---------------------------------------------------------------- g8
+  - id: prompt_engineer
+    group: g8_temoins
+    label: Prompt Engineer
+    priority: 95
+    keywords: ['prompt engineer']
+    title:
+      include:
+        - '\bprompt (engineer|designer|specialist)\b'
+        - '\bingenieur (de |en )?prompts?\b'
+
+  - id: ai_trainer_annotation
+    group: g8_temoins
+    label: AI Trainer / annotation de données
+    priority: 95
+    keywords: ['AI trainer', 'annotateur IA', 'data annotation']
+    title:
+      include:
+        - '\bai (trainer|tutor)\b'
+        - '\bannotat(eur|rice|ion|or)\b'
+        - '\bdata label(l)?(er|ing)\b'
+        - '\blabeli[sz]ation\b'
+        - '\brlhf\b'
+
+  # ---------------------------------------------------------------- g7
+  - id: juriste_ia
+    group: g7_gouvernance
+    label: Juriste IA
+    priority: 92
+    keywords: ['juriste IA', 'juriste AI Act', 'legal counsel AI']
+    title:
+      include:
+        - '\b(juriste|avocat|legal counsel|counsel)\b.*\b(ia|ai|intelligence artificielle|ai act)\b'
+
+  - id: ai_security
+    group: g7_gouvernance
+    label: Sécurité IA / red teaming
+    priority: 91
+    keywords: ['sécurité IA', 'AI security', 'red team IA']
+    title:
+      include:
+        - '\b(ai|ia|llm|genai) security\b'
+        - '\bsecurite (de l.|des )?(ia|ai|llm|intelligence artificielle)\b'
+        - '\bred team(er|ing)?\b.*\b(ai|ia|llm)\b'
+        - '\b(ai|ia|llm) red team'
+        - '\badversarial\b'
+
+  - id: ai_compliance
+    group: g7_gouvernance
+    label: Conformité / gouvernance / éthique IA
+    priority: 90
+    keywords: ['AI Act', 'gouvernance IA', 'conformité IA', 'IA de confiance', 'éthique IA', 'responsible AI']
+    title:
+      include:
+        - '\bai act\b'
+        - '\b(conformite|compliance)\b.*\b(ia|ai|intelligence artificielle)\b'
+        - '\b(ai|ia) (governance|compliance)\b'
+        - '\bgouvernance\b.*\b(ia|ai|intelligence artificielle)\b'
+        - '\bia (de confiance|responsable)\b'
+        - '\b(trustworthy|responsible) ai\b'
+        - '\b(ethique|ethics?|ethicien)\b.*\b(ia|ai)\b'
+        - '\b(ai|ia) ethic'
+
+  # ---------------------------------------------------------------- g6
+  - id: head_of_ai
+    group: g6_pilotage
+    label: Head of AI / Directeur IA
+    priority: 85
+    keywords: ['head of AI', 'directeur IA', 'chief AI officer', 'responsable IA']
+    title:
+      include:
+        - '\bhead of (ai|ia|data ?(&|and|et) ?(ai|ia)|genai|machine learning)\b'
+        - '\b(directeur|directrice|director)\b (de l.|de la |des |of )?(ia|ai|intelligence artificielle|data ?(&|et|and) ?(ia|ai))\b'
+        - '\bchief (ai|artificial intelligence) officer\b'
+        - '\bcaio\b'
+        - '\bresponsable (de l.|de la |des )?(ia|intelligence artificielle|data ?(&|et) ?ia)\b'
+        - '\bvp (ai|ia|machine learning)\b'
+
+  - id: ai_product_manager
+    group: g6_pilotage
+    label: AI Product Manager / PO IA
+    priority: 82
+    keywords: ['AI product manager', 'product owner IA', 'product manager IA']
+    title:
+      include:
+        - '\b(ai|ia|genai) product (manager|owner|lead)\b'
+        - '\bproduct (manager|owner|lead)\b.*\b(ai|ia|genai|llm|agenti(c|que)s?)\b'
+        - '\b(proxy )?(po|ppo)\b.*\b(ia|ai)\b'
+
+  - id: chef_projet_ia
+    group: g6_pilotage
+    label: Chef de projet IA
+    priority: 80
+    keywords: ['chef de projet IA', 'AI project manager']
+    title:
+      include:
+        - '\bchef (de )?projets?\b.*\b(ia|ai|intelligence artificielle|genai|agenti(c|que)s?)\b'
+        - '\b(ai|ia) project manager\b'
+        - '\bproject manager\b.*\b(ai|ia|genai)\b'
+        - '\bdirecteur de projets?\b.*\b(ia|ai)\b'
+
+  - id: referent_coach_ia
+    group: g6_pilotage
+    label: Référent / coach IA, AI champion
+    priority: 80
+    keywords: ['référent IA', 'coach IA', 'AI champion', 'acculturation IA']
+    title:
+      include:
+        - '\breferent(e)?\b.*\b(ia|ai|intelligence artificielle)\b'
+        - '\bcoach\b.*\b(ia|ai)\b'
+        - '\b(ia|ai) coach\b'
+        - '\bai (champion|enablement|adoption)\b'
+        - '\b(ambassadeur|ambassadrice)\b.*\b(ia|ai)\b'
+        - '\bacculturation\b.*\b(ia|ai)\b'
+
+  - id: formateur_ia
+    group: g6_pilotage
+    label: Formateur IA
+    priority: 80
+    keywords: ['formateur IA', 'formatrice IA']
+    title:
+      include:
+        - '\b(formateur|formatrice)\b.*\b(ia|ai|intelligence artificielle|genai)\b'
+
+  - id: ai_ops_manager
+    group: g6_pilotage
+    label: AI Operations Manager
+    priority: 80
+    keywords: ['AI operations manager']
+    title:
+      include:
+        - '\b(ai|ia) operations? manager\b'
+
+  - id: consultant_ia
+    group: g6_pilotage
+    label: Consultant IA / transformation IA
+    priority: 78
+    keywords: ['consultant IA', 'consultant intelligence artificielle', 'transformation IA']
+    title:
+      include:
+        - '\bconsultant(e)?\b.*\b(ia|ai|intelligence artificielle|genai|agenti(c|que)s?)\b'
+        - '\b(ai|ia|genai) consultant\b'
+        - '\btransformation\b.*\b(ia|ai)\b'
+
+  # ---------------------------------------------------------------- g4
+  - id: agentic_engineer
+    group: g4_genai_agentique
+    label: Agentic AI Engineer / développeur d'agents
+    priority: 75
+    keywords: ['agentic AI engineer', 'AI agent engineer', "développeur agents IA", 'IA agentique']
+    title:
+      include:
+        - '\bagenti(c|que)s?\b'
+        - '\b(ai |ia )?agents? (ia |ai )?(engineer|developer|builder)\b'
+        - '\b(developpeur|developer|ingenieur|engineer)\b.*\bagents?\b.*\b(ia|ai)\b'
+        - '\bmulti[ -]?agents?\b'
+
+  - id: rag_engineer
+    group: g4_genai_agentique
+    label: Ingénieur RAG
+    priority: 74
+    keywords: ['ingénieur RAG', 'RAG engineer']
+    title:
+      include:
+        - '\brag\b'
+        - '\bretrieval[ -]augmented\b'
+
+  - id: llmops_platform
+    group: g4_genai_agentique
+    label: LLMOps / AI Platform Engineer
+    priority: 74
+    keywords: ['LLMOps', 'AI platform engineer']
+    title:
+      include:
+        - '\bllm ?ops\b'
+        - '\b(ai|ia|ml|genai) platform (engineer|lead)\b'
+        - '\bplateforme (ia|genai)\b'
+        - '\b(ai|ia) infra(structure)? engineer\b'
+
+  - id: ai_evaluation
+    group: g4_genai_agentique
+    label: AI Evaluation Engineer (evals)
+    priority: 74
+    keywords: ['AI evaluation engineer', 'LLM evaluation']
+    title:
+      include:
+        - '\b(ai|ia|llm|model) (evaluation|evals?|quality) (engineer|scientist|specialist)\b'
+        - '\bevals? engineer\b'
+        - '\bevaluation (des |de )?(llm|modeles? de langage|agents? (ia|ai))\b'
+
+  - id: context_engineer
+    group: g4_genai_agentique
+    label: Context Engineer
+    priority: 74
+    keywords: ['context engineer']
+    title:
+      include:
+        - '\bcontext engineer(ing)?\b'
+
+  - id: ai_automation
+    group: g4_genai_agentique
+    label: AI Automation Engineer
+    priority: 73
+    keywords: ['AI automation engineer', 'automatisation IA', 'n8n']
+    title:
+      include:
+        - '\b(ai|ia) automation\b'
+        - '\bautomatisation\b.*\b(ia|ai)\b'
+        - '\bautomation (engineer|developer|specialist)\b.*\b(ia|ai|llm)\b'
+        - '\bintelligent automation\b'
+        - '\bn8n\b'
+
+  - id: genai_llm_engineer
+    group: g4_genai_agentique
+    label: GenAI / LLM Engineer
+    priority: 72
+    keywords: ['GenAI engineer', 'LLM engineer', 'IA générative']
+    title:
+      include:
+        - '\bgen ?ai\b'
+        - '\bia generative\b'
+        - '\bgenerative ai\b'
+        - '\bllms?\b'
+        - '\blarge language models?\b'
+
+  - id: ai_engineer
+    group: g4_genai_agentique
+    label: AI Engineer / Applied AI Engineer
+    priority: 70
+    keywords: ['AI engineer', 'applied AI engineer']
+    title:
+      include:
+        - '\bai engineer\b'
+        - '\bapplied ai\b'
+        - '\bai (software )?(developer|engineer)\b'
+        - '\bai[ -]first (engineer|developer)\b'
+
+  # ---------------------------------------------------------------- g3
+  - id: mlops
+    group: g3_ia_ml
+    label: MLOps
+    priority: 65
+    keywords: ['MLOps']
+    title:
+      include:
+        - '\bml ?ops\b'
+
+  - id: nlp_engineer
+    group: g3_ia_ml
+    label: Ingénieur NLP
+    priority: 64
+    keywords: ['NLP', 'traitement automatique du langage']
+    title:
+      include:
+        - '\bnlp\b'
+        - '\btraitement (automatique )?du langage\b'
+        - '\bnatural language processing\b'
+
+  - id: computer_vision
+    group: g3_ia_ml
+    label: Vision par ordinateur
+    priority: 64
+    keywords: ['vision par ordinateur', 'computer vision']
+    title:
+      include:
+        - '\bvision (par ordinateur|artificielle)\b'
+        - '\bcomputer vision\b'
+
+  - id: research_ai
+    group: g3_ia_ml
+    label: Recherche IA (chercheur, research engineer)
+    priority: 63
+    keywords: ['chercheur IA', 'research scientist machine learning']
+    title:
+      include:
+        - '\b(chercheur|chercheuse|research scientist|research engineer|ingenieur de recherche|post[ -]?doc|doctorant)\b.*\b(ia|ai|intelligence artificielle|machine learning|deep learning|nlp|vision|apprentissage)\b'
+        - '\b(ia|ai|machine learning|deep learning)\b.*\b(chercheur|research scientist|research engineer)\b'
+
+  - id: ml_engineer
+    group: g3_ia_ml
+    label: Machine Learning Engineer
+    priority: 62
+    keywords: ['machine learning engineer', 'ingénieur machine learning', 'deep learning']
+    title:
+      include:
+        - '\bmachine learning\b'
+        - '\bdeep learning\b'
+        - '\bml (engineer|ingenieur|developer|scientist)\b'
+        - '\bingenieur ml\b'
+        - '\bapprentissage (automatique|profond)\b'
+
+  - id: ingenieur_ia
+    group: g3_ia_ml
+    label: Ingénieur IA (intitulé générique)
+    priority: 60
+    keywords: ['ingénieur IA', 'ingénieur intelligence artificielle', 'développeur IA']
+    title:
+      include:
+        - '\bingenieur (en |d.)?(ia|intelligence artificielle)\b'
+        - '\b(developpeur|developer|dev)\b.*\b(ia|ai|intelligence artificielle)\b'
+        - '\b(ia|intelligence artificielle) (engineer|developer|developpeur)\b'
+        - '\bexpert(e)? (en )?(ia|intelligence artificielle)\b'
+        - '\bspecialiste (ia|intelligence artificielle)\b'
+    # Intitulé générique : requalifié en ai_engineer (g4) si la description
+    # porte le signal genai (LLM, RAG, agents...). Voir SPEC.md §6.5.
+    requalify:
+      to: ai_engineer
+      if_description_signal: genai
+
+  # ---------------------------------------------------------------- g2
+  - id: analytics_engineer
+    group: g2_data
+    label: Analytics Engineer
+    priority: 55
+    title:
+      include:
+        - '\banalytics engineer\b'
+
+  - id: data_architect
+    group: g2_data
+    label: Architecte data
+    priority: 55
+    title:
+      include:
+        - '\barchitecte (data|donnees|big data|de donnees)\b'
+        - '\bdata architect\b'
+
+  - id: data_scientist
+    group: g2_data
+    label: Data Scientist
+    priority: 54
+    title:
+      include:
+        - '\bdata scien(tist|ce)\b'
+        - '\bscientifique (des|de) donnees\b'
+
+  - id: data_engineer
+    group: g2_data
+    label: Data Engineer
+    priority: 53
+    title:
+      include:
+        - '\bdata engineer\b'
+        - '\bingenieur (de |des )?(donnees|data|big data)\b'
+        - '\bbig data\b'
+        - '\b(developpeur|developer) (data|big data|etl)\b'
+        - '\betl\b'
+
+  - id: data_analyst
+    group: g2_data
+    label: Data Analyst
+    priority: 52
+    title:
+      include:
+        - '\bdata analyst\b'
+        - '\banalyste (de |des )?(donnees|data)\b'
+
+  - id: bi
+    group: g2_data
+    label: BI / décisionnel
+    priority: 51
+    title:
+      include:
+        - '\bbi\b'
+        - '\bbusiness intelligence\b'
+        - '\bdecisionnel(le)?\b'
+        - '\bpower ?bi\b'
+
+  - id: data_governance
+    group: g2_data
+    label: Gouvernance des données
+    priority: 51
+    title:
+      include:
+        - '\bdata (governance|steward|manager|quality)\b'
+        - '\bgouvernance (des |de la )?(donnees|data)\b'
+        - '\bmaster data\b'
+
+  # ---------------------------------------------------------------- g9
+  - id: devops_sre_cloud
+    group: g9_elargi
+    label: DevOps / SRE / Cloud
+    priority: 47
+    title:
+      include:
+        - '\bdev ?(sec)?ops\b'
+        - '\bsre\b'
+        - '\bsite reliability\b'
+        - '\bplatform engineer\b'
+        - '\b(ingenieur|architecte|engineer|architect)\b.*\bcloud\b'
+        - '\bcloud (engineer|architect|ops)\b'
+
+  - id: cybersecurite
+    group: g9_elargi
+    label: Cybersécurité
+    priority: 47
+    title:
+      include:
+        - '\bcyber'
+        - '\bsecurite (informatique|des si|des systemes|operationnelle)\b'
+        - '\b(consultant|ingenieur|expert|analyste|architecte|responsable|auditeur)\b.*\bsecurite\b'
+        - '\bsecurity (engineer|analyst|architect|consultant|officer)\b'
+        - '\bvulnerabilit'
+        - '\b(rssi|ciso|soc|pentest(eur|er)?|grc)\b'
+
+  - id: admin_sys_reseau
+    group: g9_elargi
+    label: Administration systèmes & réseaux
+    priority: 46
+    title:
+      include:
+        - '\badministrat(eur|rice) (systemes?|reseaux?|bases? de donnees|serveurs?)\b'
+        - '\b(sys)?admin\b'
+        - '\bingenieur (systemes?|reseaux?)\b'
+        - '\btechnicien(ne)? (systemes?|reseaux?)\b'
+        - '\bdba\b'
+
+  - id: support_it
+    group: g9_elargi
+    label: Support & exploitation IT
+    priority: 46
+    title:
+      include:
+        - '\bsupport\b'
+        - '\bhelpdesk\b'
+        - '\bhelp desk\b'
+        - '\btechnicien(ne)? (informatique|de proximite|d.exploitation)\b'
+        - '\bexploitation\b'
+
+  # ---------------------------------------------------------------- g1
+  - id: tech_lead_architecte
+    group: g1_dev
+    label: Tech lead / architecte logiciel
+    priority: 46
+    title:
+      include:
+        - '\btech(nical)? lead\b'
+        - '\blead (dev|developer|developpeur|engineer|tech)\b'
+        - '\barchitecte (logiciel|applicatif|technique|solutions?|si|d.entreprise)\b'
+        - '\b(software|solutions?|enterprise) architect\b'
+        - '\b(staff|principal)\b.*\b(engineer|developer|ingenieur)\b'
+        - '\bresponsable technique\b'
+
+  - id: dev_cms
+    group: g1_dev
+    label: Développeur CMS / e-commerce
+    priority: 45
+    title:
+      include:
+        - '\b(drupal|wordpress|prestashop|magento|shopify|typo3|sitecore|joomla|strapi|django[ -]?cms|adobe experience manager|aem)\b'
+
+  - id: dev_mobile
+    group: g1_dev
+    label: Développeur mobile
+    priority: 44
+    title:
+      include:
+        - '\bmobile\b'
+        - '\bios\b'
+        - '\bandroid\b'
+        - '\bflutter\b'
+        - '\breact[ -]native\b'
+
+  - id: dev_fullstack
+    group: g1_dev
+    label: Développeur full-stack
+    priority: 43
+    title:
+      include:
+        - '\bfull[ -]?stack\b'
+
+  - id: dev_frontend
+    group: g1_dev
+    label: Développeur front-end
+    priority: 42
+    title:
+      include:
+        - '\bfront[ -]?end\b'
+        - '\bfront\b'
+        - '\bintegrat(eur|rice) (web|html)\b'
+        - '\b(react|angular|vue\.?js)\b'
+
+  - id: dev_backend
+    group: g1_dev
+    label: Développeur back-end
+    priority: 42
+    title:
+      include:
+        - '\bback[ -]?end\b'
+        - '\bback\b'
+
+  - id: qa_test
+    group: g1_dev
+    label: QA / test logiciel
+    priority: 41
+    title:
+      include:
+        - '\b(qa|testeur|testeuse|test engineer|ingenieur (de )?tests?|automaticien de tests?|recette)\b'
+
+  - id: software_engineer
+    group: g1_dev
+    label: Ingénieur logiciel / développeur applicatif
+    priority: 40
+    title:
+      include:
+        - '\bingenieur (logiciel|developpement|d.etudes? (et|&) developpement|etudes?)\b'
+        - '\bsoftware (engineer|developer)\b'
+        - '\b(developpeur|developer) (logiciel|informatique|applicatif|d.applications?)\b'
+        - '\banalyste[ -]programmeur\b'
+        - '\bconcepteur[ -]developpeur\b'
+        - '\bbackend engineer\b'
+
+  - id: dev_web
+    group: g1_dev
+    label: Développeur web
+    priority: 39
+    title:
+      include:
+        - '\b(developpeur|developer) web\b'
+        - '\bweb developer\b'
+        - '\bwebmaster\b'
+        - '\b(developpeur|developer) (php|symfony|laravel|javascript|typescript|node\.?js)\b'
+
+  - id: dev_generic
+    group: g1_dev
+    label: Développeur (générique)
+    priority: 10
+    title:
+      include:
+        - '\b(developpeur|developer|dev|programmeur)\b'
+        - '\b(java|python|\.net|c#|c\+\+|golang|php|ruby|scala|kotlin) (developer|engineer)\b'
+
+# -----------------------------------------------------------------------------
+# Signaux (appliqués à la DESCRIPTION, sauf mention contraire)
+# -----------------------------------------------------------------------------
+# Attention : ne jamais utiliser '\bai\b' seul sur les descriptions
+# (« j'ai » devient « j ai » ou « j'ai » après normalisation).
+signals:
+  genai:
+    description: Mention d'IA générative, LLM, RAG ou agents
+    patterns:
+      - '\bllms?\b'
+      - '\blarge language models?\b'
+      - '\bgen ?ai\b'
+      - '\bia generative\b'
+      - '\bgenerative ai\b'
+      - '\brag\b'
+      - '\bretrieval[ -]augmented\b'
+      - '\bagenti(c|que)s?\b'
+      - '\bagents? (ia|autonomes?|intelligents?|conversationnels?)\b'
+      - '\bai agents?\b'
+      - '\bchat ?gpt\b'
+      - '\bopenai\b'
+      - '\banthropic\b'
+      - '\bclaude (code|ai|api|sonnet|opus|haiku)\b'
+      - '\bmistral( ai)?\b'
+      - '\blangchain\b'
+      - '\blanggraph\b'
+      - '\bprompts?\b'
+      - '\bcopilot\b'
+
+  ai_any:
+    description: Mention d'IA au sens large (hybridation des offres)
+    extends: genai
+    patterns:
+      - '\bia\b'
+      - '\bintelligence artificielle\b'
+      - '\bartificial intelligence\b'
+      - '\bmachine learning\b'
+      - '\bdeep learning\b'
+      - '\bapprentissage (automatique|profond)\b'
+      - '\b(applied|generative|conversational|responsible) ai\b'
+      - '\bai[ -](engineer|act|first|driven|powered|based|native|models?|solutions?|platform|products?|tools?|assisted|augmented)\b'
+      - '\bnlp\b'
+      - '\bcomputer vision\b'
+      - '\bvision par ordinateur\b'
+
+  remote:
+    description: Mode de travail (ordre d'évaluation full_remote > hybrid > on_site)
+    full_remote:
+      - '\bfull[ -]?remote\b'
+      - '\bfully remote\b'
+      - '\bremote[ -]first\b'
+      - '\b100 ?% (teletravail|remote|a distance)\b'
+      - '\bteletravail (complet|total|integral)\b'
+      - '\btotalement (en )?teletravail\b'
+    hybrid:
+      - '\bhybride?\b'
+      - '\bteletravail (partiel|possible|occasionnel|frequent|regulier)\b'
+      - '\b\d ?(j|jours?) (de |en )?teletravail\b'
+      - '\bteletravail\b.*\b\d ?(j|jours?)\b'
+      - '\b\d ?(j|jours?) (sur site|en presentiel)\b'
+      - '\bhybrid\b'
+    on_site:
+      - '\bpas de teletravail\b'
+      - '\b100 ?% (presentiel|sur site)\b'
+      - '\bfull (presentiel|on[ -]?site)\b'
+      - '\bon[ -]?site only\b'
+
+  tjm:
+    description: Rémunération journalière (mission freelance / portage)
+    patterns:
+      - '\btjm\b'
+      - '\btaux journalier\b'
+      - '\b\d{3,4} ?(€|eur|euros?) ?(ht )?(/|par) ?(j|jour)\b'
+      - '\bper day\b'
+      - '\bdaily rate\b'
+
+  travel:
+    description: Déplacements mentionnés (structurant pour les FDE)
+    patterns:
+      - '\bdeplacements? (frequents?|reguliers?|ponctuels?|a prevoir|chez (le|les|nos) clients?|en clientele|en france|a l.etranger)\b'
+      - '\btravel (required|up to|frequently|\d+ ?%)\b'
+      - '\b\d+ ?% (de )?deplacements?\b'
+
+# -----------------------------------------------------------------------------
+# Technologies (tags, appliqués à intitulé + description)
+# -----------------------------------------------------------------------------
+# Les indicateurs technos ne sont calculés que sur les offres à description
+# complète (France Travail), cf. SPEC.md §6.6.
+# Ambiguïtés connues traitées par des motifs stricts : Go, R, C, Vue (mot
+# français), Tableau (mot français), Spring (nom d'un cabinet), Claude
+# (prénom), Cursor (curseurs SQL), MCP (ancienne certification Microsoft).
+technology_families:
+  - { id: langages, label: Langages }
+  - { id: web, label: Frameworks web }
+  - { id: cms, label: CMS & e-commerce }
+  - { id: llm_agents, label: LLM & agents }
+  - { id: model_providers, label: Fournisseurs de modèles }
+  - { id: vector_search, label: Vectoriel & recherche }
+  - { id: ml, label: Machine learning }
+  - { id: data, label: Data }
+  - { id: cloud_infra, label: Cloud & infra }
+  - { id: automation, label: Automatisation }
+  - { id: ai_dev_tools, label: Dev assisté par IA }
+  - { id: regulation, label: Réglementaire }
+
+technologies:
+  # --- langages
+  - { id: python, family: langages, label: Python, patterns: ['\bpython\b'] }
+  - { id: javascript, family: langages, label: JavaScript, patterns: ['\bjavascript\b', '\bjs\b'] }
+  - { id: typescript, family: langages, label: TypeScript, patterns: ['\btypescript\b'] }
+  - { id: java, family: langages, label: Java, patterns: ['\bjava\b(?![ -]?script)'] }
+  - { id: kotlin, family: langages, label: Kotlin, patterns: ['\bkotlin\b'] }
+  - { id: swift, family: langages, label: Swift, patterns: ['\bswift(ui)?\b'] }
+  - { id: csharp_dotnet, family: langages, label: 'C# / .NET', patterns: ['(?<![a-z0-9])c#', '(?<![a-z0-9])\.net\b', '\bdotnet\b'] }
+  - { id: cpp, family: langages, label: 'C++', patterns: ['(?<![a-z0-9])c\+\+'] }
+  - { id: c, family: langages, label: C, patterns: ['\blangage c\b', '\bc ?/ ?c\+\+', '\bc (embarque|ansi)\b'] }
+  - { id: php, family: langages, label: PHP, patterns: ['\bphp\b'] }
+  - { id: go, family: langages, label: Go, patterns: ['\bgolang\b', '\b(langage|developpeur|developer|dev|engineer|ingenieur) go\b', '\bgo (developer|developpeur|engineer)\b'] }
+  - { id: rust, family: langages, label: Rust, patterns: ['\brust\b'] }
+  - { id: ruby, family: langages, label: Ruby, patterns: ['\bruby\b'] }
+  - { id: scala, family: langages, label: Scala, patterns: ['\bscala\b'] }
+  - { id: r, family: langages, label: R, patterns: ['\brstudio\b', '\blangage r\b', '\br shiny\b', '\b(python|sql) ?(et|/|,) ?r\b'] }
+  - { id: sql, family: langages, label: SQL, patterns: ['\bsql\b'] }
+
+  # --- web
+  - { id: react, family: web, label: React, patterns: ['\breact(\.?js)?\b(?![ -]native)'] }
+  - { id: react_native, family: web, label: React Native, patterns: ['\breact[ -]native\b'] }
+  - { id: angular, family: web, label: Angular, patterns: ['\bangular(js)?\b'] }
+  - { id: vue, family: web, label: Vue.js, patterns: ['\bvue\.?js\b', '\bvue ?[23]\b', '\bnuxt(\.?js)?\b'] }
+  - { id: nextjs, family: web, label: Next.js, patterns: ['\bnext\.?js\b'] }
+  - { id: nodejs, family: web, label: Node.js, patterns: ['\bnode\.?js\b', '\bnestjs\b', '\bexpress\.?js\b'] }
+  - { id: symfony, family: web, label: Symfony, patterns: ['\bsymfony\b'] }
+  - { id: laravel, family: web, label: Laravel, patterns: ['\blaravel\b'] }
+  - { id: django, family: web, label: Django, patterns: ['\bdjango\b(?![ -]?cms)'] }
+  - { id: fastapi_flask, family: web, label: FastAPI / Flask, patterns: ['\bfastapi\b', '\bflask\b'] }
+  - { id: spring, family: web, label: Spring, patterns: ['\bspring[ -]?boot\b', '\bspring (framework|batch|cloud|mvc|security|data)\b', '\bjava ?/ ?spring\b'] }
+  - { id: rails, family: web, label: Ruby on Rails, patterns: ['\b(ruby on )?rails\b'] }
+  - { id: flutter, family: web, label: Flutter, patterns: ['\bflutter\b'] }
+
+  # --- cms
+  - { id: drupal, family: cms, label: Drupal, patterns: ['\bdrupal\b'] }
+  - { id: wordpress, family: cms, label: WordPress, patterns: ['\bwordpress\b', '\bwoocommerce\b'] }
+  - { id: django_cms, family: cms, label: django CMS, patterns: ['\bdjango[ -]?cms\b'] }
+  - { id: typo3, family: cms, label: TYPO3, patterns: ['\btypo3\b'] }
+  - { id: prestashop, family: cms, label: PrestaShop, patterns: ['\bprestashop\b'] }
+  - { id: magento, family: cms, label: Magento / Adobe Commerce, patterns: ['\bmagento\b', '\badobe commerce\b'] }
+  - { id: shopify, family: cms, label: Shopify, patterns: ['\bshopify\b'] }
+  - { id: headless_cms, family: cms, label: CMS headless, patterns: ['\bstrapi\b', '\bcontentful\b', '\bsanity\b', '\bstoryblok\b', '\bheadless cms\b', '\bcms headless\b'] }
+  - { id: aem_sitecore, family: cms, label: AEM / Sitecore, patterns: ['\badobe experience manager\b', '\baem\b', '\bsitecore\b'] }
+
+  # --- llm_agents
+  - { id: llm, family: llm_agents, label: LLM, patterns: ['\bllms?\b', '\blarge language models?\b', '\bmodeles? de langage\b'] }
+  - { id: genai, family: llm_agents, label: IA générative, patterns: ['\bgen ?ai\b', '\bia generative\b', '\bgenerative ai\b'] }
+  - { id: rag, family: llm_agents, label: RAG, patterns: ['\brag\b', '\bretrieval[ -]augmented\b'] }
+  - { id: graphrag, family: llm_agents, label: GraphRAG, patterns: ['\bgraph ?rag\b'] }
+  - { id: agents, family: llm_agents, label: Agents / agentique, patterns: ['\bagenti(c|que)s?\b', '\bagents? (ia|autonomes?|intelligents?)\b', '\bai agents?\b', '\bmulti[ -]?agents?\b'] }
+  - { id: mcp, family: llm_agents, label: MCP, patterns: ['\bmodel context protocol\b', '\bmcp (server|servers|serveur|serveurs)\b', '\bserveurs? mcp\b', '\bprotocole mcp\b'] }
+  - { id: langchain, family: llm_agents, label: LangChain, patterns: ['\blangchain\b'] }
+  - { id: langgraph, family: llm_agents, label: LangGraph, patterns: ['\blanggraph\b'] }
+  - { id: llamaindex, family: llm_agents, label: LlamaIndex, patterns: ['\bllama[ -]?index\b'] }
+  - { id: crewai, family: llm_agents, label: CrewAI, patterns: ['\bcrew ?ai\b'] }
+  - { id: autogen, family: llm_agents, label: AutoGen, patterns: ['\bautogen\b'] }
+  - { id: semantic_kernel, family: llm_agents, label: Semantic Kernel, patterns: ['\bsemantic kernel\b'] }
+  - { id: pydantic_ai, family: llm_agents, label: Pydantic AI, patterns: ['\bpydantic[ -]?ai\b'] }
+  - { id: fine_tuning, family: llm_agents, label: Fine-tuning, patterns: ['\bfine[ -]?tun(e|ed|ing)\b'] }
+  - { id: embeddings, family: llm_agents, label: Embeddings, patterns: ['\bembeddings?\b'] }
+  - { id: evals_observability, family: llm_agents, label: Évaluation & observabilité LLM, patterns: ['\bevals?\b', '\bllm[ -]as[ -]a[ -]judge\b', '\bragas\b', '\blangfuse\b', '\blangsmith\b', '\bevaluation (des |de )?(llm|modeles? de langage|agents?)\b'] }
+  - { id: guardrails, family: llm_agents, label: Guardrails, patterns: ['\bguardrails?\b', '\bgarde[ -]fous?\b'] }
+  - { id: prompt_engineering, family: llm_agents, label: Prompt engineering, patterns: ['\bprompt engineering\b', '\bingenierie (de |des )?prompts?\b', '\bprompting\b'] }
+
+  # --- model_providers
+  - { id: openai, family: model_providers, label: OpenAI / GPT, patterns: ['\bopenai\b', '\bchat ?gpt\b', '\bgpt[ -]?(3|4|4o|4\.1|5)\b'] }
+  - { id: anthropic, family: model_providers, label: Anthropic / Claude, patterns: ['\banthropic\b', '\bclaude (code|ai|api|sonnet|opus|haiku)\b', '\bclaude\.ai\b'] }
+  - { id: mistral, family: model_providers, label: Mistral AI, patterns: ['\bmistral( ai)?\b'] }
+  - { id: gemini, family: model_providers, label: Google Gemini, patterns: ['\bgemini\b'] }
+  - { id: llama, family: model_providers, label: Llama, patterns: ['\bllama\b(?![ -]?index)'] }
+  - { id: huggingface, family: model_providers, label: Hugging Face, patterns: ['\bhugging ?face\b'] }
+  - { id: open_weight_local, family: model_providers, label: Modèles open-weight / locaux, patterns: ['\bopen[ -]?weights?\b', '\bollama\b', '\bvllm\b', '\bllm (on[ -]?premise|souverains?|locaux|open[ -]?source)\b', '\bia souveraine\b'] }
+
+  # --- vector_search
+  - { id: pgvector, family: vector_search, label: pgvector, patterns: ['\bpgvector\b'] }
+  - { id: qdrant, family: vector_search, label: Qdrant, patterns: ['\bqdrant\b'] }
+  - { id: weaviate, family: vector_search, label: Weaviate, patterns: ['\bweaviate\b'] }
+  - { id: pinecone, family: vector_search, label: Pinecone, patterns: ['\bpinecone\b'] }
+  - { id: chroma, family: vector_search, label: Chroma, patterns: ['\bchroma ?db\b'] }
+  - { id: milvus, family: vector_search, label: Milvus, patterns: ['\bmilvus\b'] }
+  - { id: faiss, family: vector_search, label: FAISS, patterns: ['\bfaiss\b'] }
+  - { id: elasticsearch, family: vector_search, label: Elasticsearch / OpenSearch, patterns: ['\belastic ?search\b', '\bopensearch\b'] }
+  - { id: vector_db, family: vector_search, label: Base vectorielle (générique), patterns: ['\bbases? (de donnees )?vectorielles?\b', '\bvector (database|store|db)s?\b'] }
+
+  # --- ml
+  - { id: pytorch, family: ml, label: PyTorch, patterns: ['\bpytorch\b'] }
+  - { id: tensorflow, family: ml, label: TensorFlow / Keras, patterns: ['\btensorflow\b', '\bkeras\b'] }
+  - { id: scikit_learn, family: ml, label: scikit-learn, patterns: ['\bscikit[ -]?learn\b', '\bsklearn\b'] }
+  - { id: gradient_boosting, family: ml, label: XGBoost / LightGBM, patterns: ['\bxgboost\b', '\blightgbm\b', '\bcatboost\b'] }
+  - { id: mlflow, family: ml, label: MLflow, patterns: ['\bmlflow\b'] }
+  - { id: kubeflow, family: ml, label: Kubeflow, patterns: ['\bkubeflow\b'] }
+  - { id: computer_vision, family: ml, label: Vision par ordinateur, patterns: ['\bcomputer vision\b', '\bvision par ordinateur\b', '\bopencv\b'] }
+  - { id: nlp, family: ml, label: NLP, patterns: ['\bnlp\b', '\btraitement (automatique )?du langage\b'] }
+
+  # --- data
+  - { id: spark, family: data, label: Spark, patterns: ['\b(apache )?spark\b', '\bpyspark\b'] }
+  - { id: databricks, family: data, label: Databricks, patterns: ['\bdatabricks\b'] }
+  - { id: snowflake, family: data, label: Snowflake, patterns: ['\bsnowflake\b'] }
+  - { id: dbt, family: data, label: dbt, patterns: ['\bdbt\b'] }
+  - { id: airflow, family: data, label: Airflow, patterns: ['\bairflow\b'] }
+  - { id: kafka, family: data, label: Kafka, patterns: ['\bkafka\b'] }
+  - { id: bigquery, family: data, label: BigQuery, patterns: ['\bbig ?query\b'] }
+  - { id: talend, family: data, label: Talend, patterns: ['\btalend\b'] }
+  - { id: power_bi, family: data, label: Power BI, patterns: ['\bpower ?bi\b'] }
+  - { id: tableau, family: data, label: Tableau, patterns: ['\btableau (software|desktop|server|cloud|prep)\b'] }
+  - { id: pandas, family: data, label: pandas, patterns: ['\bpandas\b'] }
+  - { id: postgresql, family: data, label: PostgreSQL, patterns: ['\bpostgre(s|sql)\b'] }
+  - { id: mongodb, family: data, label: MongoDB, patterns: ['\bmongo ?db\b'] }
+
+  # --- cloud_infra
+  - { id: aws, family: cloud_infra, label: AWS, patterns: ['\baws\b', '\bamazon web services\b'] }
+  - { id: azure, family: cloud_infra, label: Azure, patterns: ['\bazure\b'] }
+  - { id: gcp, family: cloud_infra, label: Google Cloud, patterns: ['\bgcp\b', '\bgoogle cloud\b'] }
+  - { id: ovhcloud, family: cloud_infra, label: OVHcloud, patterns: ['\bovh(cloud)?\b'] }
+  - { id: scaleway, family: cloud_infra, label: Scaleway, patterns: ['\bscaleway\b'] }
+  - { id: azure_ai, family: cloud_infra, label: Azure AI / OpenAI, patterns: ['\bazure (openai|ai foundry|ai studio|cognitive services|ai search)\b', '\bai foundry\b'] }
+  - { id: aws_ai, family: cloud_infra, label: AWS Bedrock / SageMaker, patterns: ['\bbedrock\b', '\bsagemaker\b'] }
+  - { id: vertex_ai, family: cloud_infra, label: Vertex AI, patterns: ['\bvertex ai\b'] }
+  - { id: kubernetes, family: cloud_infra, label: Kubernetes, patterns: ['\bkubernetes\b', '\bk8s\b'] }
+  - { id: docker, family: cloud_infra, label: Docker, patterns: ['\bdocker\b'] }
+  - { id: terraform, family: cloud_infra, label: Terraform, patterns: ['\bterraform\b'] }
+  - { id: gpu_cuda, family: cloud_infra, label: GPU / CUDA, patterns: ['\bcuda\b', '\bgpus?\b'] }
+
+  # --- automation
+  - { id: n8n, family: automation, label: n8n, patterns: ['\bn8n\b'] }
+  - { id: make, family: automation, label: Make, patterns: ['\bmake\.com\b', '\bintegromat\b'] }
+  - { id: zapier, family: automation, label: Zapier, patterns: ['\bzapier\b'] }
+  - { id: power_automate, family: automation, label: Power Automate / Power Platform, patterns: ['\bpower automate\b', '\bpower platform\b'] }
+  - { id: uipath, family: automation, label: UiPath / RPA, patterns: ['\buipath\b', '\brpa\b'] }
+  - { id: copilot_studio, family: automation, label: Copilot Studio, patterns: ['\bcopilot studio\b'] }
+
+  # --- ai_dev_tools
+  - { id: github_copilot, family: ai_dev_tools, label: GitHub Copilot, patterns: ['\bgithub copilot\b', '\bcopilot\b(?! studio)'] }
+  - { id: cursor, family: ai_dev_tools, label: Cursor, patterns: ['\bcursor (ai|ide|editor|editeur)\b'] }
+  - { id: claude_code, family: ai_dev_tools, label: Claude Code, patterns: ['\bclaude code\b'] }
+  - { id: ai_assisted_dev, family: ai_dev_tools, label: Développement assisté par IA, patterns: ['\bdeveloppement assiste par (l.)?ia\b', '\bai[ -](assisted|augmented|driven) (development|engineering|developer|coding)\b', '\bvibe[ -]?coding\b', '\bagentic coding\b', '\bassistants? (de code|ia de developpement)\b'] }
+
+  # --- regulation
+  - { id: ai_act, family: regulation, label: AI Act, patterns: ['\bai act\b', '\breglement (europeen )?(sur l.)?(ia|intelligence artificielle)\b'] }
+  - { id: rgpd, family: regulation, label: RGPD, patterns: ['\brgpd\b', '\bgdpr\b'] }
+  - { id: iso_42001, family: regulation, label: ISO 42001, patterns: ['\biso ?42001\b'] }
+
+# -----------------------------------------------------------------------------
+# Types d'employeurs (ordre d'évaluation = ordre de la liste)
+# -----------------------------------------------------------------------------
+# naf_prefixes : comparés au code NAF de l'offre (France Travail, ex. "62.02A")
+# name_patterns : comparés au nom d'employeur normalisé (toutes sources)
+# Sans NAF ni nom reconnu : "inconnu" (pas "client_final").
+employer_types:
+  - id: recrutement_interim
+    label: Cabinet de recrutement / intérim
+    naf_prefixes: ['78.1', '78.2', '78.3']
+    name_patterns:
+      - '\b(adecco|randstad|manpower|hays|michael page|page personnel|robert half|robert walters|walters people|expectra|proman|synergie|start people|spring france|externatic|urban linker|hunteed|lincoln|fed it|silkhom|digirocks|free[ -]?work)\b'
+  - id: esn_conseil
+    label: ESN / conseil / ingénierie
+    naf_prefixes: ['62.02', '62.03', '70.22', '71.12B']
+    name_patterns:
+      - '\b(capgemini|sopra|alten|akkodis|cgi|accenture|atos|eviden|inetum|talan|keyrus|devoteam|onepoint|wavestone|sii|expleo|ausy|aubay|extia|davidson|modis|altran|cognizant|infosys|tata consultancy|ibm|deloitte|kpmg|ernst ?& ?young|pwc|sfeir|octo technology|xebia|publicis sapient|magellan|umanis|apside|astek|groupe open|neurones|econocom|spie ics|scalian|segula|assystem|amaris|ekino|theodo|zenika|ippon)\b'
+  - id: public_recherche
+    label: Public / recherche / enseignement
+    naf_prefixes: ['84.', '85.4', '72.1', '72.2']
+    name_patterns:
+      - '\b(cnrs|inria|cea|cnes|onera|inrae|inserm|ifremer|ign|insee|universite|ecole nationale|ecole polytechnique|centrale|ministere|prefecture|conseil (regional|departemental)|mairie|ville de|metropole|chu|ap-hp|france travail|urssaf|caf)\b'
+  - id: editeur_logiciel
+    label: Éditeur de logiciel / startup tech
+    naf_prefixes: ['58.2', '62.01']
+    name_patterns: []
+  - id: client_final
+    label: Client final (autres secteurs)
+    naf_prefixes: ['*']
+    name_patterns: []
