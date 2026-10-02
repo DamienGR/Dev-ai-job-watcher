@@ -20,6 +20,8 @@ toute modification.
 
 - `npm ci` puis `npm run check` (lint + typecheck + tests) avant chaque commit.
 - `npm run build` : build du site statique (`web/dist`).
+- `npm run collect:ft -- --mode fixtures` : collecte France Travail locale sans clé ;
+  `npm run probe:ft` : sonde de l'API réelle (identifiants `FT_CLIENT_ID` / `FT_CLIENT_SECRET`).
 
 ## Conventions
 

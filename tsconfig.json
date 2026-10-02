@@ -12,8 +12,9 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": true,
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["src", "tests", "netlify", "*.ts"]
+  "include": ["src", "tests", "netlify", "scripts", "*.ts"]
 }

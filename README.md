@@ -4,8 +4,7 @@ Veille quantitative du marché de l'emploi dev, data et IA en France : collecte 
 offres (France Travail, Adzuna), classification par une taxonomie versionnée, agrégats publiés
 sur un dashboard Netlify. Le cadrage complet est dans [SPEC.md](SPEC.md).
 
-**État** : lot 0 (socle) — outillage, chargement et validation de la taxonomie, normalisation,
-classification, signaux, technologies, extraction du TJM, référentiel départements → régions.
+**État** : lot 0 (socle) et taxonomie v2 livrés ; lot 1 (collecte France Travail) en cours.
 Les lots suivants sont décrits au §14 de la spec.
 
 ## Démarrage
@@ -22,6 +21,25 @@ npm run build      # site statique dans web/dist
 Les variables d'environnement sont documentées dans [`.env.example`](.env.example). Aucune
 donnée ni aucun secret n'est versionné.
 
+## Collecte France Travail
+
+```sh
+npm run collect:ft -- --mode fixtures   # sans clé : offres fictives de fixtures/
+npm run probe:ft                         # vérifie les points [À VÉRIFIER] sur l'API réelle
+npm run collect:ft -- --run-id 2026-W41  # collecte réelle nationale, stockée dans .data/
+```
+
+Le mode réel lit `FT_CLIENT_ID` et `FT_CLIENT_SECRET` dans l'environnement ou dans `.env`.
+Une collecte interrompue reprend où elle s'est arrêtée ; `--reset` repart de zéro.
+
+En production, la collecte tourne dans la fonction `collect-francetravail-background` et se
+relance à la main par `POST /api/admin/run` :
+
+```sh
+curl -X POST "$SITE/api/admin/run" -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H 'content-type: application/json' -d '{"step":"collect-ft","runId":"2026-W41"}'
+```
+
 ## Organisation
 
 ```
@@ -30,12 +48,14 @@ TAXONOMY_CHANGELOG.md   journal des versions de la taxonomie
 netlify.toml            site Netlify unique : dashboard + fonctions
 src/core/               normalize, taxonomy, classify, signals, salary (TJM)
 src/refs/               départements (101) et régions (18), codes INSEE
-src/sources/            collecteurs France Travail et Adzuna (lot 1, lot 3)
-src/pipeline/           collecte, traitement, agrégats, reclassement (lots 1 à 6)
-src/storage/            accès typé à Netlify Blobs (lot 1)
-netlify/functions/      fonctions planifiées, background et API (lots 1 à 6)
+src/sources/            interface Source, client HTTP bridé, collecteur France Travail (Adzuna au lot 3)
+src/pipeline/           identifiant et état des runs, journaux, appels internes (traitement aux lots 2 à 6)
+src/storage/            stores Netlify Blobs, mémoire (tests) et disque (scripts)
+src/functions/          logique des fonctions Netlify, testable
+netlify/functions/      fonctions Netlify : collect-francetravail-background, api-admin
+scripts/                collecte locale et sonde de l'API France Travail
 web/                    dashboard Vite (page d'attente jusqu'au lot 4)
-fixtures/               réponses d'API enregistrées, mode SOURCE_MODE=fixtures (lot 1)
+fixtures/               réponses d'API fictives, mode SOURCE_MODE=fixtures
 tests/                  tests Vitest ; tests/fixtures/titles.json = cas de classification
 docs/decisions.md       décisions d'implémentation
 ```

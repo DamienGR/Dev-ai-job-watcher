@@ -125,3 +125,71 @@ donc exclues des motifs `full_remote` et `hybrid` par un lookbehind
 (`(?<!(pas de|pas en|sans|aucun) )`), et le motif « télétravail … N jours » reste dans la
 phrase. Les négations anglaises (« not fully remote ») ne sont pas traitées : elles sont rares
 dans les offres France Travail.
+
+## Lot 1 — Collecte France Travail (2026-10-02)
+
+### D11. Points [À VÉRIFIER] : valeurs de la spec, tranchées par une sonde
+
+La documentation de l'API sur francetravail.io est une application web qui ne livre son
+contenu qu'à un navigateur : elle n'a pas pu être lue d'ici. Une documentation tierce
+(bibliothèque `api-offres-emploi`) indique pour `range` un premier indice ≤ 1000, un dernier
+≤ 1149 et 150 résultats par page, ce qui concorde avec la borne prudente de la spec. Le code
+retient donc les valeurs de la spec : plafond de 1 150 résultats par requête, dates au format
+`2026-10-05T00:00:00Z`, 8 appels/s. Le script `npm run probe:ft` interroge l'API réelle et
+tranche chaque point (pagination, dates, `motsCles`, `region`, champs, codes ROME M18) ; il
+doit être lancé avant la mise en service, dès que les identifiants sont disponibles.
+
+### D12. Un objet d'état par étape
+
+`state/runs/<runId>/<étape>.json` (ex. `runs/2026-W41/collect-ft.json`) au lieu d'un seul
+`runs/<runId>.json` (SPEC.md §3.4) : les deux collecteurs tournent en parallèle et
+s'écraseraient. L'état est lu en cohérence forte (`consistency: 'strong'`).
+
+### D13. Découpage adaptatif
+
+- Passe A : département → code ROME → dates de création ; passe B : mot-clé → région →
+  département → dates. Une région d'un seul département passe directement aux dates.
+- Dates : division en deux de la fenêtre [2000-01-01, début du run], puis des moitiés, jusqu'à
+  passer sous le plafond. La borne haute est l'instant de référence enregistré dans l'état :
+  une reprise recalcule les mêmes clés.
+- Une partition impossible à découper (fenêtre de moins de 2 s) est lue jusqu'au plafond,
+  marquée `truncated` et signalée dans les erreurs du run.
+- Une partition vide (HTTP 204) est quand même écrite dans `raw` (total 0) : la couverture de
+  la collecte reste lisible.
+
+### D14. Données personnelles retirées avant écriture
+
+Outre l'objet `contact` (exigé, §11), l'objet `agence` (coordonnées de l'agence France
+Travail) est retiré. Par précaution, les e-mails et numéros de téléphone cités dans
+`description` et `entreprise.description` sont masqués (`[e-mail masqué]`,
+`[téléphone masqué]`) ; les montants, codes postaux et SIRET sont laissés intacts (testé).
+
+### D15. Erreurs, nouvelles tentatives et reprise
+
+- Client HTTP : 5 nouvelles tentatives (1, 2, 4, 8, 16 s) sur 429, 5xx et erreurs réseau ;
+  `Retry-After` respecté, plafonné à 60 s. Un 401 renouvelle le jeton une fois.
+- Partition : une erreur 4xx (hors 429) la met en échec tout de suite ; une erreur transitoire
+  est retentée une fois dans la même exécution. Les partitions en échec sont retentées à la
+  relance suivante (`api-admin`, puis `weekly-process` au lot 5).
+- Jeton refusé : la collecte échoue avant toute écriture.
+- Échéance : la fonction background rend la main à 13 min, état enregistré ; la reprise
+  automatique (rappel de la fonction, 5 enchaînements au plus) arrive au lot 5 avec la
+  planification. Un run complet n'est pas refait, sauf `reset`.
+- 4 partitions traitées en parallèle, sous un limiteur commun de 8 appels/s.
+
+### D16. Fixtures synthétiques
+
+`fixtures/francetravail/` contient des offres fictives au format de l'API, pas de réponses
+réelles : la licence de réutilisation des offres (§15.4) n'est pas encore vérifiée et le dépôt
+ne doit contenir aucune donnée collectée.
+
+### D17. Outillage
+
+- `npm run collect:ft` lance la collecte en local, stockage sur disque (`.data/`, ignoré par
+  git), en mode `live` ou `fixtures` ; `npm run probe:ft` lance la sonde. Les deux lisent
+  `.env` s'il existe et s'exécutent avec `tsx`.
+- La logique des fonctions Netlify est dans `src/functions/` (testable) ; les fichiers
+  `netlify/functions/*.mts` ne font que la brancher. `allowImportingTsExtensions` permet aux
+  tests d'importer ces `.mts`.
+- `api-admin` : corps `{ step, runId, reset? }` ; les étapes des lots suivants répondent 501.
+  L'URL du site vient du contexte Netlify (`context.site.url`), à défaut de `URL`.

@@ -14,9 +14,13 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "npm run lint && npm run typecheck && npm test"
+    "check": "npm run lint && npm run typecheck && npm test",
+    "collect:ft": "tsx scripts/collect-ft.ts",
+    "probe:ft": "tsx scripts/ft-probe.ts"
   },
   "dependencies": {
+    "@netlify/blobs": "^11.1.3",
+    "@netlify/functions": "^6.0.2",
     "yaml": "^2.9.1",
     "zod": "^4.6.5"
   },
@@ -25,6 +29,7 @@
     "@types/node": "^22.20.5",
     "eslint": "^10.11.0",
     "globals": "^17.13.0",
+    "tsx": "^4.23.15",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.71.0",
     "vite": "^8.3.2",
