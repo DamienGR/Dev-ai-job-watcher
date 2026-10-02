@@ -1,0 +1,394 @@
+[
+  {
+    "source": "annexe B #1",
+    "title": "Forward Deployed Engineer IA (H/F)",
+    "role": "forward_deployed_engineer",
+    "group": "g5_deploiement"
+  },
+  {
+    "source": "annexe B #2",
+    "title": "Applied AI, Forward Deployed Machine Learning Engineer - EMEA",
+    "role": "forward_deployed_engineer",
+    "group": "g5_deploiement"
+  },
+  {
+    "source": "annexe B #3",
+    "title": "Hands-on AI Solutions Engineer (Forward Deployed)",
+    "role": "forward_deployed_engineer",
+    "group": "g5_deploiement"
+  },
+  {
+    "source": "annexe B #4",
+    "title": "Ingénieur Forward Deployed (H/F)",
+    "role": "forward_deployed_engineer",
+    "group": "g5_deploiement"
+  },
+  {
+    "source": "annexe B #5",
+    "title": "Forward deployment engineer (H/F/NB)",
+    "role": "forward_deployed_engineer",
+    "group": "g5_deploiement"
+  },
+  {
+    "source": "annexe B #6",
+    "title": "Agentic AI Engineer",
+    "role": "agentic_engineer",
+    "group": "g4_genai_agentique"
+  },
+  {
+    "source": "annexe B #7",
+    "title": "Développeur d'Agents IA / Agent Engineer (H/F)",
+    "role": "agentic_engineer",
+    "group": "g4_genai_agentique"
+  },
+  {
+    "source": "annexe B #8",
+    "title": "Architecte Solution IA Agentique",
+    "role": "ai_solutions_engineer",
+    "group": "g5_deploiement"
+  },
+  {
+    "source": "annexe B #9",
+    "title": "Product Owner IA agentique H/F",
+    "role": "ai_product_manager",
+    "group": "g6_pilotage"
+  },
+  {
+    "source": "annexe B #10",
+    "title": "Proxy Product Owner – Agentic Email Automation/ Marseille",
+    "role": "ai_product_manager",
+    "group": "g6_pilotage"
+  },
+  {
+    "source": "annexe B #11",
+    "title": "Expert IA Agentique – Gouvernance & Industrialisation",
+    "role": "agentic_engineer",
+    "group": "g4_genai_agentique"
+  },
+  {
+    "source": "annexe B #12",
+    "title": "Ingénieur DevSecOps & SRE / IA Agentique Senior",
+    "role": "agentic_engineer",
+    "group": "g4_genai_agentique"
+  },
+  {
+    "source": "annexe B #13",
+    "title": "Data Scientist – IA Générative & Agentic AI",
+    "role": "agentic_engineer",
+    "group": "g4_genai_agentique"
+  },
+  {
+    "source": "annexe B #14",
+    "title": "Coach IA / Développeur Python (IT) / Freelance",
+    "role": "referent_coach_ia",
+    "group": "g6_pilotage"
+  },
+  {
+    "source": "annexe B #15",
+    "title": "Référent / Coach IA - Toulouse (H/F)",
+    "role": "referent_coach_ia",
+    "group": "g6_pilotage"
+  },
+  {
+    "source": "annexe B #16",
+    "title": "Consultant(e) Data Protection & Gouvernance IA (RGPD/RIA)",
+    "role": "ai_compliance",
+    "group": "g7_gouvernance"
+  },
+  {
+    "source": "annexe B #17",
+    "title": "Chef de projet data et intelligence artificielle",
+    "role": "chef_projet_ia",
+    "group": "g6_pilotage"
+  },
+  {
+    "source": "annexe B #18",
+    "title": "Responsable IA H/F",
+    "role": "head_of_ai",
+    "group": "g6_pilotage"
+  },
+  {
+    "source": "annexe B #19",
+    "title": "Head of Data & AI",
+    "role": "head_of_ai",
+    "group": "g6_pilotage"
+  },
+  {
+    "source": "annexe B #20",
+    "title": "Directeur commercial solutions IA",
+    "role": "commercial_tech",
+    "group": "g9_elargi"
+  },
+  {
+    "source": "annexe B #21",
+    "title": "Account Executive IA",
+    "role": "commercial_tech",
+    "group": "g9_elargi"
+  },
+  {
+    "source": "annexe B #22",
+    "title": "Prompt Engineer",
+    "role": "prompt_engineer",
+    "group": "g8_temoins"
+  },
+  {
+    "source": "annexe B #23",
+    "title": "AI Trainer - Rédacteur francophone",
+    "role": "ai_trainer_annotation",
+    "group": "g8_temoins"
+  },
+  {
+    "source": "annexe B #24",
+    "title": "Formatrice IA générative",
+    "role": "formateur_ia",
+    "group": "g6_pilotage"
+  },
+  {
+    "source": "annexe B #25",
+    "title": "AI Engineer (f/h)",
+    "role": "ai_engineer",
+    "group": "g4_genai_agentique"
+  },
+  {
+    "source": "annexe B #26",
+    "title": "AI Engineer (H/F/NB)",
+    "role": "ai_engineer",
+    "group": "g4_genai_agentique"
+  },
+  {
+    "source": "annexe B #27",
+    "title": "Ingénieur IA Azure (H/F)",
+    "role": "ingenieur_ia",
+    "group": "g3_ia_ml"
+  },
+  {
+    "source": "annexe B #28",
+    "title": "Développeur Python FastAPI IA (H/F)",
+    "role": "ingenieur_ia",
+    "group": "g3_ia_ml"
+  },
+  {
+    "source": "annexe B #29",
+    "title": "Data Engineer & Lakehouse & Data Platform AWS",
+    "role": "data_engineer",
+    "group": "g2_data"
+  },
+  {
+    "source": "annexe B #30",
+    "title": "Senior Snowflake / DBT Data Engineer",
+    "role": "data_engineer",
+    "group": "g2_data"
+  },
+  {
+    "source": "annexe B #31",
+    "title": "Data Scientist / AI Engineer",
+    "role": "ai_engineer",
+    "group": "g4_genai_agentique"
+  },
+  {
+    "source": "annexe B #32",
+    "title": "Deep Learning Engineer",
+    "role": "ml_engineer",
+    "group": "g3_ia_ml"
+  },
+  {
+    "source": "annexe B #33",
+    "title": "Machine Learning Engineer - NLP",
+    "role": "nlp_engineer",
+    "group": "g3_ia_ml"
+  },
+  {
+    "source": "annexe B #34",
+    "title": "MLOps Engineer",
+    "role": "mlops",
+    "group": "g3_ia_ml"
+  },
+  {
+    "source": "annexe B #35",
+    "title": "Ingénieur LLMOps",
+    "role": "llmops_platform",
+    "group": "g4_genai_agentique"
+  },
+  {
+    "source": "annexe B #36",
+    "title": "Développeur RAG / LLM",
+    "role": "rag_engineer",
+    "group": "g4_genai_agentique"
+  },
+  {
+    "source": "annexe B #37",
+    "title": "Ingénieur IA générative (H/F)",
+    "role": "genai_llm_engineer",
+    "group": "g4_genai_agentique"
+  },
+  {
+    "source": "annexe B #38",
+    "title": "Chercheur en apprentissage automatique",
+    "role": "research_ai",
+    "group": "g3_ia_ml"
+  },
+  {
+    "source": "annexe B #39",
+    "title": "Analyste de données",
+    "role": "data_analyst",
+    "group": "g2_data"
+  },
+  {
+    "source": "annexe B #40",
+    "title": "Business Analyst Master Data Management",
+    "role": "data_governance",
+    "group": "g2_data"
+  },
+  {
+    "source": "annexe B #41",
+    "title": "Consultant BI Power BI",
+    "role": "bi",
+    "group": "g2_data"
+  },
+  {
+    "source": "annexe B #42",
+    "title": "Développeur Full Stack Drupal",
+    "role": "dev_cms",
+    "group": "g1_dev"
+  },
+  {
+    "source": "annexe B #43",
+    "title": "Développeur·se Full Stack Java/Angular",
+    "role": "dev_fullstack",
+    "group": "g1_dev"
+  },
+  {
+    "source": "annexe B #44",
+    "title": "Développeur(se) Java F/H",
+    "role": "dev_generic",
+    "group": "g1_dev"
+  },
+  {
+    "source": "annexe B #45",
+    "title": "Développeur Api Talend (H/F)",
+    "role": "dev_generic",
+    "group": "g1_dev"
+  },
+  {
+    "source": "annexe B #46",
+    "title": "Lead Tech Java / Spring - API Management",
+    "role": "tech_lead_architecte",
+    "group": "g1_dev"
+  },
+  {
+    "source": "annexe B #47",
+    "title": "Senior Dev Fullstack (front mindset) (f/h/n)",
+    "role": "dev_fullstack",
+    "group": "g1_dev"
+  },
+  {
+    "source": "annexe B #48",
+    "title": "Staff Backend Engineer (f/h/n)",
+    "role": "tech_lead_architecte",
+    "group": "g1_dev"
+  },
+  {
+    "source": "annexe B #49",
+    "title": "Développeur React Native",
+    "role": "dev_mobile",
+    "group": "g1_dev"
+  },
+  {
+    "source": "annexe B #50",
+    "title": "Développeur web PHP Symfony",
+    "role": "dev_web",
+    "group": "g1_dev"
+  },
+  {
+    "source": "annexe B #51",
+    "title": "Ingénieur(e) développement logiciel Angular F/H",
+    "role": "dev_frontend",
+    "group": "g1_dev"
+  },
+  {
+    "source": "annexe B #52",
+    "title": "Ingénieur(e) développement logiciel F/H",
+    "role": "software_engineer",
+    "group": "g1_dev"
+  },
+  {
+    "source": "annexe B #53",
+    "title": "Consultant sécurité IA",
+    "role": "ai_security",
+    "group": "g7_gouvernance"
+  },
+  {
+    "source": "annexe B #54",
+    "title": "Testeur / Testeuse informatique",
+    "role": "qa_test",
+    "group": "g1_dev"
+  },
+  {
+    "source": "annexe B #55",
+    "title": "Technicien support informatique",
+    "role": "support_it",
+    "group": "g9_elargi"
+  },
+  {
+    "source": "annexe B #56",
+    "title": "Administrateur systèmes et réseaux",
+    "role": "admin_sys_reseau",
+    "group": "g9_elargi"
+  },
+  {
+    "source": "annexe B #57",
+    "title": "Ingénieur Cloud AWS",
+    "role": "devops_sre_cloud",
+    "group": "g9_elargi"
+  },
+  {
+    "source": "annexe B #58",
+    "title": "Consultant Securité expert Vulnerabilité Qualys",
+    "role": "cybersecurite",
+    "group": "g9_elargi"
+  },
+  {
+    "source": "annexe B #59",
+    "title": "Consultant SAP S/4HANA",
+    "role": "non_classe",
+    "group": "non_classe"
+  },
+  {
+    "source": "annexe B #60",
+    "title": "Expert WebMethods & API Management",
+    "role": "non_classe",
+    "group": "non_classe"
+  },
+  {
+    "source": "annexe B #61",
+    "title": "Juriste AI Act / protection des données",
+    "role": "juriste_ia",
+    "group": "g7_gouvernance"
+  },
+  {
+    "source": "annexe B #62",
+    "title": "AI Red Teamer",
+    "role": "ai_security",
+    "group": "g7_gouvernance"
+  },
+  {
+    "source": "annexe B #63",
+    "title": "Automation Engineer n8n",
+    "role": "ai_automation",
+    "group": "g4_genai_agentique"
+  },
+  {
+    "source": "annexe B #64",
+    "title": "Product Manager, APIs",
+    "role": "non_classe",
+    "group": "non_classe"
+  },
+  {
+    "source": "annexe B — requalification",
+    "title": "Ingénieur IA (H/F)",
+    "description": "Vous concevrez des solutions basées sur des LLM et du RAG.",
+    "role": "ai_engineer",
+    "group": "g4_genai_agentique",
+    "requalified": true
+  }
+]

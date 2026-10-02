@@ -1,0 +1,17 @@
+# Un seul site Netlify : dashboard statique + fonctions (SPEC.md §3).
+# Les fonctions arrivent à partir du lot 1 ; leur planification et leur route sont
+# déclarées dans chaque fichier (`export const config`), cron en UTC.
+# Rappel : aucun run de collecte ne doit déclencher de déploiement (SPEC.md §3.2).
+
+[build]
+  command = "npm run build"
+  publish = "web/dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+  # Lue à l'exécution pour la classification et le reclassement (SPEC.md §6.5, §9.3).
+  included_files = ["taxonomy.yaml"]
