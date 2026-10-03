@@ -3,6 +3,7 @@ import { loadCompiledTaxonomy, type CompiledTaxonomy } from '../../src/core/taxo
 import { computeAggregates, StockCounter, toAggregateOffer } from '../../src/pipeline/aggregates';
 import { aggregateBase, addMonths, monthOfWeek } from '../../src/pipeline/aggregates/context';
 import {
+  conditions,
   density,
   emerging,
   employers,
@@ -118,6 +119,23 @@ describe('salaires et TJM (indicateurs 7, 8)', () => {
     expect(records(tjm).find((r) => r.month === '*' && r.group === '*')).toEqual({
       month: '*', group: '*', n: 1, p25: null, p50: null, p75: null,
     });
+  });
+});
+
+describe('conditions (indicateur 9)', () => {
+  it('répartit chaque offre par mois × groupe × rôle, pour chaque dimension', () => {
+    const offers = [
+      makeOffer({ sourceId: 'A', remote: 'hybrid' }),
+      makeOffer({ sourceId: 'B', remote: 'hybrid' }),
+      makeOffer({ sourceId: 'C', role: 'ai_engineer', group: 'g4_genai_agentique', remote: 'full_remote' }),
+    ];
+    const table = conditions(base(offers));
+    expect(table.columns).toEqual(['month', 'group', 'role', 'dimension', 'value', 'n']);
+    const remote = records(table).filter((r) => r.dimension === 'remote');
+    expect(remote).toEqual([
+      { month: '2026-09', group: 'g1_dev', role: 'dev_backend', dimension: 'remote', value: 'hybrid', n: 2 },
+      { month: '2026-09', group: 'g4_genai_agentique', role: 'ai_engineer', dimension: 'remote', value: 'full_remote', n: 1 },
+    ]);
   });
 });
 

@@ -4,8 +4,8 @@ Veille quantitative du marché de l'emploi dev, data et IA en France : collecte 
 offres (France Travail, Adzuna), classification par une taxonomie versionnée, agrégats publiés
 sur un dashboard Netlify. Le cadrage complet est dans [SPEC.md](SPEC.md).
 
-**État** : lot 0 (socle) et taxonomie v2 livrés ; lot 1 (collecte France Travail) en cours.
-Les lots suivants sont décrits au §14 de la spec.
+**État** : lots 0 à 2 livrés (socle, collecte France Travail, traitement et agrégats) ; lot 4
+(dashboard) en cours, avant le lot 3 (Adzuna, D31). Les lots sont décrits au §14 de la spec.
 
 ## Démarrage
 
@@ -54,6 +54,20 @@ disparitions, premier run) et écrit `offers/<run>.jsonl.gz`, puis recalcule tou
 même run donne le même résultat. Il refuse un run dont la collecte est en cours, ou plus
 ancien que le dernier run traité.
 
+## Dashboard et envoi des agrégats
+
+```sh
+npm run process -- --run-id 2026-W41   # agrégats dans .data/aggregates
+npm run dev:web                         # dashboard sur http://localhost:5173, lit .data/aggregates
+npm run build && npm run preview:web    # version de production, mêmes données locales
+npm run push                            # envoi au site : SITE_URL et INGEST_SECRET requis
+```
+
+Le dashboard est un site statique (Vite, ECharts, Leaflet) qui lit les agrégats par
+`GET /api/data/:name`. `npm run push` envoie chaque fichier de `.data/aggregates` (ou
+`DATA_DIR`) à `PUT /api/ingest/:name`, `meta.json` en dernier : le site passe au nouveau run
+sans déploiement. Pages, filtres et règles d'affichage : SPEC.md §8, décisions D31 à D36.
+
 ## Organisation
 
 ```
@@ -63,12 +77,12 @@ netlify.toml            site Netlify unique : dashboard + fonctions
 src/core/               normalize, taxonomy, classify, signals, salary, location, employer, dedup, stats
 src/refs/               départements (101), régions (18), population active INSEE par région
 src/sources/            interface Source, client HTTP bridé, collecteur France Travail (Adzuna au lot 3)
-src/pipeline/           état des runs, traitement (process, index seen), agrégats (aggregates/)
+src/pipeline/           état des runs, traitement (process, index seen), agrégats (aggregates/), envoi (push)
 src/storage/            stores Netlify Blobs, mémoire (tests) et disque (scripts)
 src/functions/          logique des fonctions Netlify, testable
-netlify/functions/      fonctions Netlify : collect-francetravail-background, api-admin
-scripts/                collecte et traitement locaux, sonde de l'API France Travail
-web/                    dashboard Vite (page d'attente jusqu'au lot 4)
+netlify/functions/      fonctions Netlify : api-ingest, api-data, collect-francetravail-background, api-admin
+scripts/                collecte, traitement et envoi, sonde de l'API France Travail
+web/                    dashboard Vite : pages (web/src/pages), calculs testés (web/src/lib)
 fixtures/               réponses d'API fictives, mode SOURCE_MODE=fixtures
 tests/                  tests Vitest ; tests/fixtures/titles.json = cas de classification
 docs/decisions.md       décisions d'implémentation

@@ -58,7 +58,11 @@ export function techs(base: AggregateBase): { techs: Table; totals: Table } {
 
 const flag = (value: boolean | null): string => (value === null ? 'unknown' : String(value));
 
-/** Indicateur 9 : répartitions par mois × groupe (contrat, télétravail, expérience, cadre…). */
+/**
+ * Indicateur 9 : répartitions par mois × groupe × rôle (contrat, télétravail, expérience,
+ * cadre…). Le rôle sert la part de télétravail du tableau des rôles (SPEC.md §8.1, D35) ; les
+ * comptages étant additifs, le dashboard somme les rôles d'un groupe.
+ */
 export function conditions(base: AggregateBase): Table {
   const counter = new Counter();
   for (const { offer: o, month } of base.dated) {
@@ -70,9 +74,9 @@ export function conditions(base: AggregateBase): Table {
       ['travel', flag(o.signals.travel)],
       ['fullTime', flag(o.fullTime)],
     ];
-    for (const [dimension, value] of values) counter.add([month, o.group, dimension, value]);
+    for (const [dimension, value] of values) counter.add([month, o.group, o.role, dimension, value]);
   }
-  return counter.toTable(['month', 'group', 'dimension', 'value']);
+  return counter.toTable(['month', 'group', 'role', 'dimension', 'value']);
 }
 
 /** Période de l'offre et `*` si elle tombe dans la fenêtre glissante. */
