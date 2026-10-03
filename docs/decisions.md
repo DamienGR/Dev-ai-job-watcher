@@ -254,11 +254,70 @@ statistiques agrégées sur les offres, lui convient au regard de la licence. En
 - rien ne change pour le dépôt : il ne contient toujours aucune donnée collectée (CLAUDE.md),
   et les fixtures restent fictives (D16).
 
-## Lot 2 — Traitement et agrégats (2026-10-03)
+## Hébergement (2026-10-03)
 
-D21 (hébergement : collecte et traitement sur le serveur de Damien par cron, Netlify pour le
-dashboard et les fonctions de lecture) est validée par Damien le 2026-10-03 et rédigée à part,
-avec la révision de la spec.
+### D21. Collecte et traitement sur le VPS de Damien, dashboard sur Netlify
+
+Écart à un point **exigé** de SPEC.md §3.2 (« un site Netlify unique : dashboard + fonctions »),
+validé par Damien le 2026-10-03. SPEC.md passe en version 1.1.
+
+**Constat (§15.1).** Le site Netlify `dev-ai-job-watcher` a été créé le 2026-10-03 dans l'équipe
+« DamienGR's team ». Le compte date de 2019, et les comptes ouverts avant le 4 septembre 2025
+sont sur un plan legacy (Free, Starter ou Pro), même quand le plan s'appelle « Free ». L'API
+Netlify donne pour l'équipe et ses sites le plan interne `nf_team_dev`, celui de l'offre
+gratuite historique (déduction : l'API n'affiche pas le libellé du plan). La vérification du
+lot 0, qui concluait à un plan à crédits sur le seul nom « Free », est donc corrigée. Or les
+plans Free et Starter legacy n'ont pas de fonctions background. Le site `vps-stock-watch` du même
+compte tourne avec une fonction planifiée, disponible sur ces plans, ce qui ne contredit pas le
+constat.
+
+**Options écartées**
+
+- Passer l'équipe au plan Free à crédits : changement définitif, et les 74 autres sites de
+  l'équipe, dont des sites clients, partageraient 300 crédits par mois. Une fois ces crédits
+  épuisés, Netlify met tous les sites de l'équipe en pause jusqu'au mois suivant.
+- Équipe dédiée au plan Free à crédits : 15 crédits par déploiement de production, soit une
+  vingtaine de fusions par mois au plus. La documentation Netlify ne dit pas non plus si un
+  compte peut posséder une deuxième équipe gratuite.
+- Tout en fonctions planifiées (30 s) : la collecte tient en 20 s aujourd'hui (D18), sans marge,
+  et le reclassement de tout l'historique dépassera vite cette limite.
+
+**Choix**
+
+- Le VPS OVH de Damien exécute la collecte, le traitement et le reclassement : scripts Node
+  lancés par des timers systemd, stores sur son disque (`src/storage/filesystem.ts`, déjà
+  utilisé par les scripts), relances et reprise par l'état de run.
+- Le site Netlify garde le dashboard et des fonctions synchrones (`api-ingest`, `api-data`,
+  `api-export`) plus une fonction planifiée (`watchdog`). Le plan legacy ne change pas : aucune
+  fonction background, aucun crédit consommé.
+- Le VPS envoie les seuls agrégats au site par `api-ingest`, protégée par `INGEST_SECRET`. Pas
+  de jeton personnel Netlify sur le VPS : il donnerait accès à tout le compte, et Netlify ne
+  permet pas d'en restreindre la portée. Les agrégats pèsent quelques centaines de Ko au plus,
+  loin des 6 Mo d'un corps de requête.
+- Le VPS n'expose aucun port pour le projet : il appelle France Travail, Adzuna et le site.
+  L'administration (`admin`) passe par SSH.
+- `watchdog` vérifie sur Netlify qu'un run a réussi dans les 8 derniers jours : l'alerte
+  « aucun run réussi » (§10) fonctionne même si le VPS est arrêté.
+
+**Conséquences**
+
+- SPEC.md 1.1 : §3 réécrit (vue d'ensemble, choix techniques, jobs et fonctions, stockage,
+  variables, arborescence), §9.3, §10, §11, §12, §13, §14 (lots 4 à 6), §15 et §16.
+- Variables : `INTERNAL_SECRET` et `ADMIN_TOKEN` disparaissent ; `INGEST_SECRET`, `SITE_URL`
+  et `DATA_DIR` apparaissent. `.env.example` et le README suivront au lot qui les utilise.
+- Code du lot 1 : `collect-francetravail-background` et `api-admin` restent en place jusqu'au
+  lot 5, qui les remplace par les jobs `weekly-run` et `admin`. Sans `INTERNAL_SECRET` ni
+  `ADMIN_TOKEN` côté Netlify, ces deux fonctions refusent toute requête.
+- Lot 4 : `api-ingest` et l'envoi des agrégats arrivent avec le dashboard, qui en a besoin.
+- Lot 6 : le reclassement ne suit plus le déploiement mais le job quotidien `update`. Une
+  taxonomie fusionnée est appliquée au plus tard le lendemain.
+- Nouveau risque : `raw` n'existe que sur le disque du VPS. Une sauvegarde hebdomadaire hors du
+  VPS est exigée (§3.4), son moyen est une décision ouverte (§16.6).
+- La maintenance du VPS (système, Node 22, timers) revient à Damien.
+- D20 : « la collecte peut tourner en production dès que le site Netlify est configuré » se lit
+  désormais « dès que le VPS est installé (lot 5) ».
+
+## Lot 2 — Traitement et agrégats (2026-10-03)
 
 ### D22. Traitement lancé par script
 
@@ -266,14 +325,14 @@ Conformément à D21, le traitement ne tourne pas dans une fonction Netlify back
 une fonction `processRun(runId, { stores, log, taxonomy })` (`src/pipeline/process.ts`),
 lancée par `npm run process -- --run-id <run>` après la collecte, sur les stores du disque. Elle
 ne dépend que de l'interface des stores et ne sait pas où elle tourne. Il n'y a pas de fonction
-`process-background` ; l'envoi des agrégats vers Netlify et le sort de l'étape `process` dans
-`api-admin` (qui répond toujours 501) relèvent de la mise en œuvre de D21.
+`process-background`. Suivent SPEC.md 1.1 : l'envoi des agrégats par `api-ingest` (lot 4) et
+le job `admin` (lot 5), qui remplacera l'étape `process` d'`api-admin` (elle répond toujours
+501).
 
-- **Pas de checkpoint ni d'auto-relance** (§12) : le traitement d'une semaine réelle prend 7 s
-  (D30).
-- **Verrou** : le verrou global (`state/locks/…`) arrive au lot 5 avec la planification. En
-  attendant, un traitement refuse de démarrer si le même run est « en cours » depuis moins de
-  20 minutes (TTL de §12).
+- **Pas de reprise partielle** : le traitement d'une semaine réelle prend environ 8 s (D30) ;
+  un traitement interrompu est rejoué en entier (§12).
+- **Verrou** : le verrou du VPS (`flock`, §12) arrive au lot 5 avec les jobs. En attendant, un
+  traitement refuse de démarrer si le même run est « en cours » depuis moins de 20 minutes.
 - **Rejouable** (§12) : avant le premier traitement d'un run, l'index `seen` est copié sous
   `index/seen-before/<run>.json.gz` ; une relance repart de cette copie et réécrit les mêmes
   clés. Un run plus ancien que le dernier traité est refusé : il effacerait les suivants. Le
@@ -395,7 +454,7 @@ source et méthode. Mayotte n'a pas ce tableau : densité non calculée (`null`)
 
 ### D30. Premier traitement réel (run 2026-W40)
 
-Traitement de la collecte nationale du 2026-10-03 en local : 7 s, dont la relecture et les
+Traitement de la collecte nationale du 2026-10-03 en local : 7 à 8 s, dont la relecture et les
 agrégats. 4 997 offres lues, 3 654 distinctes, 103 lectures écartées hors de France
 (Luxembourg 89), 443 écartées par la règle de rétention, **3 211 retenues**. Salaire
 exploitable : 37 % (1 177 offres, médiane 42 000 €) ; TJM : 179 offres ; coordonnées : 24 % ; sans région : 17. Agrégats de

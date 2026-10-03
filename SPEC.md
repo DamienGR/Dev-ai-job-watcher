@@ -1,6 +1,6 @@
 # Veille emploi Dev & IA — Spec de cadrage
 
-**Version** 1.0 · **Date** 2 octobre 2026 · **Auteur** Damien Gros · **Statut** validée pour démarrage (lot 0)
+**Version** 1.1 · **Date** 3 octobre 2026 · **Auteur** Damien Gros · **Statut** validée pour démarrage (lot 0) ; version 1.1 : collecte et traitement hébergés sur le VPS de Damien (D21)
 
 Fichier compagnon : [`taxonomy.yaml`](taxonomy.yaml) — taxonomie v1 validée (9 groupes, 51 rôles, 118 technologies ; 437 motifs compilés et testés sur les cas de l'annexe B).
 
@@ -52,92 +52,111 @@ Le marché de l'emploi dev / data / IA bouge vite : de nouveaux intitulés appar
 
 ### 3.1 Vue d'ensemble
 
+Deux hôtes depuis la version 1.1 (D21) : le VPS de Damien fait tout le travail lourd, le site
+Netlify sert le dashboard et les agrégats.
+
 ```
-┌──────────────────────────────── Netlify (un seul site) ─────────────────────────────────┐
-│                                                                                          │
-│  Lun. 05:00 UTC  weekly-kickoff (planifiée, 30 s)                                        │
-│                    ├──► collect-francetravail-background (≤ 15 min) ──┐                  │
-│                    └──► collect-adzuna-background       (≤ 15 min) ──┤  Blobs « raw »    │
-│                                                                       │                  │
-│  Lun. 06:30 UTC  weekly-process (planifiée, 30 s)                     │                  │
-│                    └──► process-background (≤ 15 min) ◄──────────────┘                  │
-│                           normalise · dédoublonne · classe · agrège                      │
-│                           ──► Blobs « offers », « index », « aggregates », « state »     │
-│                                                                                          │
-│  Mar. (≤ 7)      monthly-adzuna-stats (planifiée) ──► Blobs « aggregates »               │
-│                                                                                          │
-│  api-data / api-export / api-admin (synchrones) ◄── dashboard statique (Vite) ◄── nav.   │
-│                                                                                          │
-│  deploy-succeeded (événement) ──► reclassify-background (si la taxonomie a changé)       │
-└──────────────────────────────────────────────────────────────────────────────────────────┘
+┌─── VPS OVH de Damien (timers systemd, heures UTC) ─────────────────────────────────┐
+│                                                                                    │
+│ Lun. 05:00  weekly-run, relancé à 06:00 et 07:00 s'il reste incomplet              │
+│               1. collecte France Travail ─┐                                        │
+│               2. collecte Adzuna ─────────┴──► « raw »                             │
+│               3. traitement : normalise · dédoublonne · classe · agrège            │
+│                  ──► « offers », « index », « aggregates », « state »              │
+│               4. envoi des agrégats ═══════════════════════════════════════╗       │
+│                                                                            ║       │
+│ Mar. 1 à 7  monthly-adzuna-stats ──► « aggregates », envoi ════════════════╣       │
+│                                                                            ║       │
+│ Chaque jour update : git pull de main ; si la taxonomie a changé,          ║       │
+│             reclassement complet ──► « offers », « aggregates », envoi ════╣       │
+│                                                                            ║       │
+│ Stores sur le disque du VPS (DATA_DIR) ; aucun port entrant                ║       │
+└────────────────────────────────────────────────────────────────────────────╫───────┘
+                                                       HTTPS, INGEST_SECRET  ║
+┌─── Netlify (un seul site, plan legacy) ────────────────────────────────────╨───────┐
+│ api-ingest (synchrone) ──► Blobs « aggregates »                                    │
+│ api-data, api-export (synchrones) ◄── dashboard statique (Vite) ◄── navigateur     │
+│ watchdog (planifiée, quotidienne) : alerte si aucun run réussi depuis 8 jours      │
+└────────────────────────────────────────────────────────────────────────────────────┘
 
  1er mardi du mois : tâche planifiée Claude ──► lit /api/export/taxonomy-review.md
                                              ──► ouvre une PR sur taxonomy.yaml
-                                             ──► fusion par Damien ──► déploiement ──► reclassement
+                                             ──► fusion par Damien ──► update du VPS ──► reclassement
 ```
 
 ### 3.2 Choix techniques
 
 | Sujet | Choix |
 |---|---|
-| Hébergement | Un site Netlify unique : dashboard + fonctions **(exigé)**. Les fonctions background sont disponibles sur les plans à crédits (Free, Personal, Pro) **[À VÉRIFIER : plan du compte ; sur un plan legacy, vérifier la disponibilité des background functions]**. |
+| Hébergement | **Deux hôtes (exigé)** : le VPS OVH de Damien exécute la collecte, le traitement et le reclassement ; un site Netlify unique sert le dashboard et les API de lecture. Le plan Netlify du compte est un plan legacy sans fonctions background (§15.1, D21) : aucune fonction background n'est utilisée. |
 | Langage | TypeScript, Node 22, ESM **(exigé)**. |
-| Fonctions | `@netlify/functions`, format moderne (`export default async (req, context)` + `export const config`). Background : suffixe `-background` dans le nom de fichier. Planifiées : `config.schedule` (cron en **UTC**). |
-| Stockage | Netlify Blobs (`@netlify/blobs`). Pas de base de données au MVP (§5) **(exigé)**. |
+| Jobs (VPS) | Scripts Node lancés par des timers systemd (`OnCalendar`, heures UTC), sous un utilisateur système dédié. Ils utilisent les mêmes modules `src/` que les tests ; les données vivent dans un répertoire du VPS (`DATA_DIR`). |
+| Fonctions (Netlify) | `@netlify/functions`, format moderne (`export default async (req, context)` + `export const config`). Synchrones (`api-ingest`, `api-data`, `api-export`) et une planifiée (`watchdog`, `config.schedule`, cron en **UTC**). |
+| Stockage | Fichiers sur le disque du VPS pour tous les stores (§3.4) ; copie des seuls agrégats dans Netlify Blobs (`@netlify/blobs`), lue par le site. Pas de base de données au MVP (§5) **(exigé)**. |
 | Validation | `zod` pour la taxonomie, les réponses d'API et le schéma `Offer`. |
 | Tests | Vitest ; ESLint ; `tsc --noEmit` en CI (GitHub Actions). |
 | Dashboard | Site statique **Vite + TypeScript**, graphiques **Apache ECharts**, carte **MapLibre GL JS** (ou Leaflet + markercluster) sur fond OpenStreetMap libre, contours de régions en GeoJSON simplifié. Pas de framework lourd nécessaire. *(recommandé)* |
-| Données et Git | **Aucune donnée dans le dépôt (exigé).** Un run ne doit jamais déclencher de déploiement : chaque déploiement de production consomme des crédits Netlify. |
+| Données et Git | **Aucune donnée dans le dépôt (exigé).** Un run ne doit jamais déclencher de déploiement Netlify : l'envoi des agrégats écrit dans Blobs, sans build. |
 
-**Contraintes Netlify à respecter (exigé)**
+**Contraintes à respecter (exigé)**
 
-- Fonction planifiée : 30 s maximum, ne s'exécute que sur un déploiement publié. Elle ne fait que **déclencher**.
-- Fonction background : 15 min maximum, relancée automatiquement en cas d'échec (après 1 min, puis 2 min). Tout traitement doit donc être **idempotent** (§12).
-- Variables d'environnement : environ 4 Ko au total pour toutes les fonctions.
-- Cron Netlify : les champs « jour du mois » et « jour de la semaine » combinés sont en **OU** (sémantique cron standard). Pour « premier mardi du mois », planifier tous les mardis et vérifier `jour ≤ 7` dans le code.
+- Fonction Netlify synchrone : 60 s maximum ; corps de requête et de réponse de 6 Mo au plus (environ 4,5 Mo pour un contenu binaire, encodé en base64). Chaque fichier d'agrégats envoyé à `api-ingest` reste donc sous 4 Mo (critère de bascule du §5 : 5 Mo).
+- Fonction planifiée : 30 s maximum, ne s'exécute que sur un déploiement publié.
+- Variables d'environnement Netlify : environ 4 Ko au total pour toutes les fonctions.
+- Jobs du VPS : idempotents et reprenables (§12), 60 minutes au plus par exécution (`TimeoutStartSec`), un seul job à la fois.
+- Timers systemd : jour de la semaine et jour du mois se combinent en **ET**, contrairement au cron. « Premier mardi du mois » s'écrit `Tue *-*-01..07`.
 
-### 3.3 Fonctions
+### 3.3 Jobs et fonctions
+
+**Jobs du VPS**
+
+| Job | Déclencheur (UTC) | Rôle |
+|---|---|---|
+| `weekly-run` | lundi 05:00, relancé à 06:00 et 07:00 | Crée le run s'il n'existe pas (id = semaine ISO Europe/Paris, ex. `2026-W41`) ; collecte France Travail et Adzuna → `raw` (§4) ; traitement (§6, §7) ; envoi des agrégats. Une relance reprend à la première étape incomplète et ne fait rien si le run est complet ; 3 tentatives au plus, puis alerte (§10). |
+| `monthly-adzuna-stats` | `Tue *-*-01..07 07:00` | Appels agrégés Adzuna (`history`, `histogram`, `geodata`) → `aggregates/adzuna-stats.json`, puis envoi. |
+| `update` | chaque jour à 04:00 | `git pull --ff-only` de `main`, `npm ci` si `package-lock.json` a changé. Si la version de `taxonomy.yaml` diffère de `state/taxonomy-version` : reclassement complet (§9.3), puis envoi des agrégats. |
+| `admin` | à la main, par SSH | Relance d'une étape (`collect-ft`, `collect-adzuna`, `process`, `reclassify`, `push`) pour un `runId`, `--reset` en option. Remplace `api-admin`. |
+
+**Fonctions Netlify**
 
 | Fonction | Type | Déclencheur | Rôle |
 |---|---|---|---|
-| `weekly-kickoff` | planifiée | `0 5 * * 1` | Crée le run (id = semaine ISO Europe/Paris, ex. `2026-W41`) et appelle les deux collecteurs. |
-| `collect-francetravail-background` | background | appel interne | Collecte France Travail → `raw` (§4.1). |
-| `collect-adzuna-background` | background | appel interne | Collecte Adzuna → `raw` (§4.2). |
-| `weekly-process` | planifiée | `30 6 * * 1` | Vérifie l'état des collectes ; relance un collecteur incomplet (3 tentatives max) ; lance `process-background`. |
-| `process-background` | background | appel interne | Normalisation, dédoublonnage, classification, agrégats (§6, §7). |
-| `monthly-adzuna-stats` | planifiée | `0 7 * * 2` + garde `jour ≤ 7` | Appels agrégés Adzuna (`history`, `histogram`, `geodata`) → `aggregates/adzuna-stats.json`. |
-| `deploy-succeeded` | événement | déploiement réussi | Compare la version de taxonomie déployée à celle des données ; si différente, appelle `reclassify-background`. **[À VÉRIFIER : une fonction d'événement peut appeler une fonction background par HTTP]** |
-| `reclassify-background` | background | appel interne | Relit `raw` de toutes les semaines, reclasse, recalcule les agrégats (§9.3). |
+| `api-ingest` | synchrone | `PUT /api/ingest/:name` | Reçoit un fichier d'agrégats du VPS et l'écrit dans le store Blobs `aggregates`. Protégé par `INGEST_SECRET` (`Authorization: Bearer`, comparaison à temps constant) ; `name` limité aux fichiers du §3.4. Le VPS envoie `meta.json` en dernier, pour que le dashboard passe d'un run au suivant d'un seul coup. |
 | `api-data` | synchrone | `GET /api/data/:name` | Sert un fichier d'agrégats depuis Blobs (gzip, `Cache-Control: max-age=3600`). |
-| `api-export` | synchrone | `GET /api/export/taxonomy-review(.md\|.json)?month=YYYY-MM` | Export de revue mensuelle (§9.1). Lecture publique : il ne contient que des agrégats. |
-| `api-admin` | synchrone | `POST /api/admin/run` | Relance manuelle d'une étape (`collect-ft`, `collect-adzuna`, `process`, `reclassify`) pour un `runId`. Protégé par `ADMIN_TOKEN`. |
+| `api-export` | synchrone | `GET /api/export/taxonomy-review(.md\|.json)?month=YYYY-MM` | Export de revue mensuelle (§9.1), mis en forme à partir de `review/{YYYY-MM}.json` préparé par le VPS. Lecture publique : il ne contient que des agrégats. |
+| `watchdog` | planifiée | `0 9 * * *` | Lit `meta.json` et alerte (§10) si aucun run n'a réussi depuis 8 jours, ce qui couvre un VPS arrêté. |
 
-**Appels internes (exigé)** : les fonctions background sont appelées par `fetch(`${process.env.URL}/.netlify/functions/<nom>`, { method: 'POST', headers: { 'x-internal-secret': INTERNAL_SECRET }, body: JSON.stringify({ runId, ... }) })`. Toute fonction background refuse un appel sans le bon secret (comparaison à temps constant).
+**Pas d'appel entrant vers le VPS (exigé)** : il appelle les API sources et `api-ingest`, rien ne l'appelle. Les fonctions Netlify ne s'appellent pas entre elles.
 
-### 3.4 Stockage (Netlify Blobs)
+### 3.4 Stockage (disque du VPS, Netlify Blobs)
 
 | Store | Clés | Contenu |
 |---|---|---|
 | `raw` | `ft/{runId}/{partition}.json.gz`<br>`adzuna/{runId}/{passe}-{requete}-{page}.json.gz` | Réponses brutes, **sans les champs de contact** (§11). Une clé par partition, déterministe → réécriture sans doublon. |
 | `offers` | `{runId}.jsonl.gz` | Offres normalisées et classées de la semaine (schéma §6.1), description incluse. |
 | `index` | `seen.json.gz` | `uid → { firstSeenRun, lastSeenRun, createdAt }`. Sert à la nouveauté et à la durée de vie (§6.9). À partitionner par année si > 50 Mo. |
-| `aggregates` | `meta.json`, `timeseries.json`, `salaries.json`, `techs.json`, `conditions.json`, `employers.json`, `titles.json`, `geo-regions.json`, `geo-points.json`, `emerging.json`, `quality.json`, `adzuna-stats.json` | Fichiers lus par le dashboard (§7.2). |
-| `state` | `runs/{runId}.json`, `locks/{runId}`, `adzuna-budget/{date}.json`, `taxonomy-version` | État des runs (étapes, partitions faites, tentatives, compteurs, erreurs), verrous, consommation du quota Adzuna. |
+| `aggregates` | `meta.json`, `timeseries.json`, `salaries.json`, `techs.json`, `conditions.json`, `employers.json`, `titles.json`, `geo-regions.json`, `geo-points.json`, `emerging.json`, `quality.json`, `adzuna-stats.json`, `review/{YYYY-MM}.json` | Fichiers lus par le dashboard (§7.2) et par l'export de revue (§9.1). |
+| `state` | `runs/{runId}.json`, `adzuna-budget/{date}.json`, `taxonomy-version` | État des runs (étapes, partitions faites, tentatives, compteurs, erreurs), consommation du quota Adzuna. |
+
+Sur le VPS, chaque store est un répertoire de `DATA_DIR` et chaque clé un fichier, écrit de façon atomique (fichier temporaire puis renommage). Dans Netlify Blobs, seul le store `aggregates` existe : c'est une copie de celui du VPS, réécrite à chaque envoi.
+
+**Sauvegarde (exigé)** : `raw` est irremplaçable, puisque France Travail ne renvoie aucun historique. `DATA_DIR` est copié hors du VPS au moins une fois par semaine, après `weekly-run` **[DÉCISION OUVERTE : moyen de sauvegarde, §16]**.
 
 Le référentiel département → région est **embarqué dans le code** (`src/refs/departements.json`, 101 entrées) : aucun référentiel communal n'est nécessaire (§6.2).
 
 ### 3.5 Variables d'environnement
 
-| Variable | Usage |
-|---|---|
-| `FT_CLIENT_ID`, `FT_CLIENT_SECRET` | OAuth France Travail |
-| `ADZUNA_APP_ID`, `ADZUNA_APP_KEY` | API Adzuna |
-| `INTERNAL_SECRET` | Appels entre fonctions |
-| `ADMIN_TOKEN` | `api-admin` |
-| `ALERT_*` | Canal d'alerte (§10) **[DÉCISION OUVERTE]** |
-| `SOURCE_MODE` | `live` (défaut) ou `fixtures` (§13) |
+| Variable | Où | Usage |
+|---|---|---|
+| `FT_CLIENT_ID`, `FT_CLIENT_SECRET` | VPS | OAuth France Travail |
+| `ADZUNA_APP_ID`, `ADZUNA_APP_KEY` | VPS | API Adzuna |
+| `INGEST_SECRET` | VPS et Netlify | Envoi des agrégats à `api-ingest` |
+| `SITE_URL` | VPS | Adresse du site Netlify, pour l'envoi |
+| `DATA_DIR` | VPS | Répertoire des stores |
+| `ALERT_*` | VPS et Netlify | Canal d'alerte (§10) **[DÉCISION OUVERTE]** |
+| `SOURCE_MODE` | VPS | `live` (défaut) ou `fixtures` (§13) |
 
-Jamais versionnées. Un `.env.example` documente chaque variable.
+Jamais versionnées. Sur le VPS, elles vivent dans un fichier d'environnement hors du dépôt, lisible par le seul utilisateur du service (droits 600). Un `.env.example` documente chaque variable.
 
 ### 3.6 Arborescence recommandée
 
@@ -145,11 +164,13 @@ Jamais versionnées. Un `.env.example` documente chaque variable.
 /
 ├─ SPEC.md · taxonomy.yaml · TAXONOMY_CHANGELOG.md · netlify.toml · package.json
 ├─ netlify/functions/        # une fonction par fichier .mts (§3.3)
+├─ scripts/                  # points d'entrée des jobs du VPS et des outils locaux
+├─ deploy/vps/               # unités systemd et procédure d'installation du VPS
 ├─ src/
 │  ├─ core/                  # normalize, taxonomy, classify, signals, salary, location, employer, dedup
 │  ├─ sources/               # source.ts (interface commune), francetravail/, adzuna/
-│  ├─ pipeline/              # collect, process, aggregate, reclassify, runState, lock
-│  ├─ storage/               # accès Blobs typé
+│  ├─ pipeline/              # collect, process, aggregate, reclassify, runState, push
+│  ├─ storage/               # stores typés : fichiers (VPS), Blobs (Netlify), mémoire (tests)
 │  └─ refs/                  # departements.json, regions.json
 ├─ web/                      # dashboard Vite
 ├─ fixtures/                 # réponses d'API enregistrées (mode fixtures)
@@ -223,7 +244,7 @@ Toutes les sources implémentent une interface commune **(exigé dès le lot 1)*
 ```ts
 interface Source {
   id: string;
-  collect(runId: string, ctx: CollectContext): Promise<CollectReport>; // écrit dans « raw », reprend sur checkpoint
+  collect(runId: string, ctx: CollectContext): Promise<CollectReport>; // écrit dans « raw », reprend aux partitions non terminées
   normalize(raw: unknown, runId: string): Offer[];                     // §6.1
 }
 ```
@@ -499,11 +520,13 @@ L'export ne contient que des agrégats et des intitulés : lecture publique, san
 
 ### 9.3 Après fusion
 
-Fusion → déploiement → `deploy-succeeded` détecte la nouvelle version → `reclassify-background` :
+Fusion → le job quotidien `update` du VPS récupère `main` et constate que la version de `taxonomy.yaml` diffère de `state/taxonomy-version` → reclassement :
 
-1. Relit `raw` semaine par semaine (avec checkpoint et auto-relance, §12), renormalise et reclasse.
+1. Relit `raw` semaine par semaine (reprise possible, §12), renormalise et reclasse.
 2. Réécrit `offers/*`.
-3. Recalcule tous les agrégats et ajoute l'entrée dans `meta.taxonomyHistory`.
+3. Recalcule tous les agrégats, ajoute l'entrée dans `meta.taxonomyHistory`, puis les envoie au site.
+
+Le déploiement Netlify qui suit la fusion ne reclasse rien : il publie seulement le dashboard et les fonctions. Une taxonomie fusionnée est appliquée aux données au plus tard le lendemain.
 
 Les séries restent comparables dans le temps puisque tout l'historique est reclassé avec la même version.
 
@@ -519,15 +542,18 @@ Les séries restent comparables dans le temps puisque tout l'historique est recl
   - aucun run réussi depuis 8 jours.
 
   Canal : ntfy, e-mail ou Slack **[DÉCISION OUVERTE]**.
+
+  Les alertes partent du VPS, sauf « aucun run réussi depuis 8 jours », vérifiée sur Netlify par `watchdog` pour couvrir un VPS arrêté.
 - Résumé hebdomadaire de 5 lignes (volumes, plus fortes hausses) : optionnel, v2.
-- Logs structurés JSON : `runId`, étape, partition, durée, compteurs, erreurs.
+- Logs structurés JSON : `runId`, étape, partition, durée, compteurs, erreurs. Sur le VPS, ils vont dans le journal systemd.
 
 ---
 
 ## 11. Sécurité, données personnelles, licences
 
-- Secrets uniquement en variables d'environnement Netlify.
-- `INTERNAL_SECRET` sur les fonctions internes, `ADMIN_TOKEN` sur `api-admin`, comparaison à temps constant.
+- Secrets uniquement en variables d'environnement : fichier d'environnement du VPS (droits 600, hors du dépôt) et variables Netlify.
+- `INGEST_SECRET` sur `api-ingest`, comparaison à temps constant. **Aucun jeton personnel Netlify sur le VPS (exigé)** : un tel jeton donne accès à tout le compte Netlify, sans portée possible. L'administration des runs passe par SSH (job `admin`).
+- VPS : utilisateur système dédié au projet, aucun port entrant ouvert pour lui, dépôt récupéré en lecture seule.
 - **Données personnelles (exigé)** : les champs de contact des offres (nom, e-mail, téléphone, coordonnées de recruteurs : objet `contact` côté France Travail) sont **supprimés avant toute écriture**, y compris dans `raw`. Les noms d'entreprise (personnes morales) sont conservés.
 - **Licences** :
   - France Travail : respecter la licence de réutilisation de la base des offres, notamment la mention de la source **[À VÉRIFIER : termes exacts]**.
@@ -540,9 +566,9 @@ Les séries restent comparables dans le temps puisque tout l'historique est recl
 
 - Chaque partition est écrite sous une clé déterministe (`runId` + partition) : une relance réécrit la même clé, sans doublon.
 - État de run dans `state/runs/{runId}.json` : étapes, partitions terminées, tentatives, compteurs, erreurs. Un collecteur relancé reprend aux partitions non terminées.
-- **Échéance** : une fonction background surveille son temps. À 13 minutes, elle enregistre un checkpoint et se rappelle elle-même avec le même `runId` (5 enchaînements maximum, puis alerte).
+- **Durée** : le VPS n'impose pas de limite de plateforme. Chaque job s'arrête au bout de 60 minutes ; un job interrompu (délai dépassé, redémarrage du VPS) est repris par la relance suivante grâce à l'état de run.
 - **Retry** : backoff exponentiel (1, 2, 4, 8, 16 s ; 5 essais) sur `429`, `5xx` et erreurs réseau ; respecter `Retry-After`.
-- **Verrou** : un seul process ou une seule reclassification à la fois (`state/locks/…`, TTL 20 minutes).
+- **Verrou** : un seul job à la fois sur le VPS (`flock` sur un fichier de `DATA_DIR`) ; un job qui trouve le verrou pris attend qu'il se libère.
 - Le process est **rejouable intégralement** depuis `raw`.
 
 ---
@@ -558,7 +584,7 @@ Les séries restent comparables dans le temps puisque tout l'historique est recl
   - dédoublonnage ;
   - type d'employeur.
 - **Test de cohérence de `taxonomy.yaml`** : schéma zod, compilation de tous les motifs, `id` uniques, groupes référencés existants, `requalify.to` existant. Exécuté en CI et par la routine mensuelle.
-- **Mode fixtures** : `SOURCE_MODE=fixtures` → les collecteurs lisent des réponses enregistrées dans `fixtures/`, sans appel d'API. Permet `netlify dev`, les tests de bout en bout du pipeline et le développement du dashboard sans clés.
+- **Mode fixtures** : `SOURCE_MODE=fixtures` → les collecteurs lisent des réponses enregistrées dans `fixtures/`, sans appel d'API. Permet les tests de bout en bout du pipeline, son exécution locale et le développement du dashboard sans clés.
 - **CI GitHub Actions** sur chaque PR : lint, typecheck, tests.
 
 ---
@@ -568,12 +594,12 @@ Les séries restent comparables dans le temps puisque tout l'historique est recl
 | Lot | Contenu | Critères d'acceptation |
 |---|---|---|
 | **0 — Socle** | Dépôt, TypeScript, Vitest, ESLint, CI, `netlify.toml`, arborescence (§3.6). Chargement et validation de `taxonomy.yaml`, normalisation, classification, signaux, technos, référentiel départements → régions, `.env.example`, `docs/decisions.md`. | `npm test` vert ; 100 % des cas de l'annexe B ; test de cohérence de la taxonomie vert. |
-| **1 — Collecte France Travail** | OAuth, client bridé (8/s) avec retry, passes A et B, partitionnement adaptatif, suppression des champs de contact, écriture `raw`, état de run, `api-admin`, mode fixtures. | Run réel national complet en moins de 10 minutes ; rapport de compteurs cohérent ; aucun champ de contact dans `raw` (test) ; relance d'une partition sans doublon. |
+| **1 — Collecte France Travail** | OAuth, client bridé (8/s) avec retry, passes A et B, partitionnement adaptatif, suppression des champs de contact, écriture `raw`, état de run, `api-admin` (remplacé au lot 5 par le job `admin`, D21), mode fixtures. | Run réel national complet en moins de 10 minutes ; rapport de compteurs cohérent ; aucun champ de contact dans `raw` (test) ; relance d'une partition sans doublon. |
 | **2 — Traitement & agrégats** | Schéma `Offer`, salaires, localisation, employeurs, dédoublonnage intra-source, index `seen`, nouveauté, disparition et premier run, agrégats 1 à 13 (sans Adzuna), `meta.json`, `quality.json`. | Process d'une semaine réelle en moins de 5 minutes ; tests des parseurs verts ; semaines partielles marquées. |
 | **3 — Adzuna** | Collecte avec budget, normalisation, dédoublonnage inter-sources, stats mensuelles. | Budget jamais dépassé (test) ; salaires prédits exclus (test) ; taux de recouvrement calculé. |
-| **4 — Dashboard MVP** | Pages Vue d'ensemble, Métiers, Salaires, Carte, Données & qualité ; filtres globaux dans l'URL. | Vue d'ensemble affichée en moins de 2 s en 4G ; `n` affiché partout ; masquage `n < 5` ; lisible sur mobile. |
-| **5 — Planification & alertes** | `weekly-kickoff`, `weekly-process`, auto-relance, verrous, alertes. | Deux runs hebdomadaires consécutifs sans intervention ; alerte déclenchée sur un échec simulé. |
-| **6 — Revue mensuelle** | Export `.md` / `.json`, `deploy-succeeded`, `reclassify-background`, `TAXONOMY_CHANGELOG.md`, `docs/monthly-review-prompt.md`. | Une PR de taxonomie de test déclenche le reclassement complet et le marqueur de version apparaît sur les courbes. |
+| **4 — Dashboard MVP** | Pages Vue d'ensemble, Métiers, Salaires, Carte, Données & qualité ; filtres globaux dans l'URL. `api-ingest`, `api-data` et l'envoi des agrégats (`push`). | Vue d'ensemble affichée en moins de 2 s en 4G ; `n` affiché partout ; masquage `n < 5` ; lisible sur mobile ; agrégats envoyés par `push` visibles sans déploiement. |
+| **5 — VPS, planification & alertes** | Installation du VPS (`deploy/vps/` : unités systemd, procédure), jobs `weekly-run` et `admin`, relances, verrou, alertes, `watchdog`, sauvegarde de `DATA_DIR` ; retrait de `collect-francetravail-background` et d'`api-admin`. | Deux runs hebdomadaires consécutifs sans intervention ; alerte déclenchée sur un échec simulé ; sauvegarde en place. |
+| **6 — Revue mensuelle** | Export `.md` / `.json`, job `update` et reclassement, `TAXONOMY_CHANGELOG.md`, `docs/monthly-review-prompt.md`. | Une PR de taxonomie de test déclenche le reclassement complet et le marqueur de version apparaît sur les courbes. |
 | **7 — v2** | Pages Technologies et Employeurs complètes, indicateurs §7.3, sources v2 (§4.3). | Défini au moment du lancement. |
 
 ---
@@ -582,13 +608,14 @@ Les séries restent comparables dans le temps puisque tout l'historique est recl
 
 | # | Point | Lot |
 |---|---|---|
-| 1 | Plan Netlify du compte (à crédits ou legacy) et disponibilité des fonctions background. | 0 |
+| 1 | Plan Netlify du compte (à crédits ou legacy) et disponibilité des fonctions background. **Tranché (D21)** : plan legacy sans fonctions background ; le pipeline tourne sur le VPS. | 0 |
 | 2 | France Travail : plafond réel de pagination (1 150 ou 3 000), noms exacts des champs, format de `minCreationDate`/`maxCreationDate`, sémantique de `motsCles`, paramètre `region`, présence de `codeNAF`, format de `lieuTravail.libelle`, codes `typeContrat`. | 1 |
 | 3 | Liste des codes M18 du ROME 4.0 (de nouveaux codes ont pu apparaître, comme M1811 pour la data). | 1 |
 | 4 | Termes de la licence de réutilisation des offres France Travail. | 1 |
 | 5 | Adzuna : tag de catégorie IT pour `fr`, libellés de régions dans `location.area`, support de `what_or` sur `history`/`histogram`/`geodata`, attribution, licence commerciale. | 3 |
-| 6 | Netlify : appel d'une fonction background depuis `deploy-succeeded` ; protection par mot de passe selon le plan. | 6 / 4 |
+| 6 | Netlify : protection par mot de passe selon le plan. | 4 |
 | 7 | Accès de la tâche planifiée Claude au site (`WebFetch`) ; sinon repli GitHub Action (§9.2). | 6 |
+| 8 | VPS : système et version, Node 22, systemd, espace disque pour `DATA_DIR`, accès en lecture au dépôt. | 5 |
 
 ## 16. Décisions ouvertes
 
@@ -597,6 +624,7 @@ Les séries restent comparables dans le temps puisque tout l'historique est recl
 3. Réponse d'Adzuna sur l'usage commercial (en cas de refus, Free-Work remplace Adzuna au lot 3).
 4. Source de population active pour la densité régionale.
 5. Nom du dépôt et du domaine.
+6. Moyen de sauvegarde de `DATA_DIR` hors du VPS (§3.4).
 
 ---
 
