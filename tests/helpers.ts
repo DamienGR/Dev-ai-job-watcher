@@ -1,3 +1,4 @@
+import type { Offer } from '../src/core/offer';
 import { regionOfDepartement } from '../src/refs';
 import type { FtApi, FtOffer, FtPage } from '../src/sources/francetravail/api';
 import type { Clock } from '../src/sources/http';
@@ -104,4 +105,52 @@ export function offers(
     intitule,
     dateCreation: new Date(start + i * stepHours * 3_600_000).toISOString(),
   }));
+}
+
+/** Offre normalisée minimale (schéma §6.1), à compléter par `overrides`. */
+export function makeOffer(overrides: Partial<Offer> & { sourceId: string }): Offer {
+  const base: Offer = {
+    uid: `francetravail:${overrides.sourceId}`,
+    source: 'francetravail',
+    sourceId: overrides.sourceId,
+    runId: '2026-W40',
+    collectedVia: ['rome'],
+    title: 'Développeur Java',
+    titleNorm: 'developpeur java',
+    description: 'Description',
+    descriptionIsFull: true,
+    createdAt: '2026-09-29T10:00:00.000Z',
+    firstSeenRun: '2026-W40',
+    lastSeenRun: '2026-W40',
+    closedRun: null,
+    isBackfill: false,
+    company: 'EXEMPLE',
+    companyNorm: 'exemple',
+    employerType: 'inconnu',
+    nafCode: null,
+    companySizeBand: null,
+    location: { label: '31 - TOULOUSE', communeInsee: '31555', departement: '31', region: '76', lat: 43.6045, lng: 1.4442, precision: 'commune' },
+    remote: 'unknown',
+    contract: 'cdi',
+    fullTime: true,
+    experience: '1_3',
+    cadre: true,
+    salary: { minAnnual: null, maxAnnual: null, midAnnual: null, source: 'none', raw: null },
+    tjm: null,
+    romeCode: 'M1805',
+    role: 'dev_backend',
+    group: 'g1_dev',
+    secondaryRoles: [],
+    requalified: false,
+    signals: { aiAny: false, genai: false, travel: false },
+    techs: [],
+    taxonomyVersion: 3,
+    dedup: { key: null, duplicateOf: null },
+  };
+  return { ...base, ...overrides };
+}
+
+/** Salaire déclaré d'une valeur unique. */
+export function declared(mid: number): Offer['salary'] {
+  return { minAnnual: mid, maxAnnual: mid, midAnnual: mid, source: 'declared', raw: String(mid) };
 }

@@ -1,0 +1,27 @@
+{
+  "description": "Population active de 15 à 64 ans par région (actifs ayant un emploi et chômeurs), dénominateur de la densité d'offres pour 100 000 actifs (SPEC.md §7.1, indicateur 11a).",
+  "source": "Insee, recensement de la population 2023 (RP2023), exploitation principale, géographie au 01/01/2026 : dossier complet de chaque région, tableau EMP T1 « Population de 15 à 64 ans par type d'activité » (https://www.insee.fr/fr/statistiques/2011101?geo=REG-<code>).",
+  "method": "Ensemble des 15-64 ans × part des actifs (en %, arrondie à 0,1 par l'Insee), arrondi à l'unité ; l'arrondi de la part donne une incertitude inférieure à 0,1 %. Mayotte (06) n'a pas de tableau EMP T1 dans le RP2023 : valeur null, densité non calculée.",
+  "retrievedAt": "2026-10-03",
+  "millesime": "RP2023",
+  "values": {
+    "84": 3904039,
+    "27": 1267543,
+    "53": 1570182,
+    "24": 1176180,
+    "94": 156266,
+    "44": 2603328,
+    "32": 2739489,
+    "11": 6309143,
+    "28": 1516794,
+    "75": 2793018,
+    "76": 2761057,
+    "52": 1841460,
+    "93": 2315983,
+    "01": 167332,
+    "02": 159672,
+    "03": 114125,
+    "04": 402395,
+    "06": null
+  }
+}
