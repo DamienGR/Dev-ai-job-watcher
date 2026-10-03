@@ -40,20 +40,34 @@ curl -X POST "$SITE/api/admin/run" -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H 'content-type: application/json' -d '{"step":"collect-ft","runId":"2026-W41"}'
 ```
 
+## Traitement et agrégats
+
+```sh
+npm run collect:ft -- --mode fixtures --run-id 2026-W41   # collecte d'abord
+npm run process -- --run-id 2026-W41                      # puis traitement, dans .data/
+```
+
+Le traitement relit `raw` du run, normalise et classe les offres (schéma `Offer`, SPEC.md
+§6.1), applique la règle de rétention de la passe B, met à jour l'index `seen` (nouveautés,
+disparitions, premier run) et écrit `offers/<run>.jsonl.gz`, puis recalcule tous les agrégats
+(`aggregates/*.json`, SPEC.md §7) à partir de `offers/*`. Il est rejouable : une relance du
+même run donne le même résultat. Il refuse un run dont la collecte est en cours, ou plus
+ancien que le dernier run traité.
+
 ## Organisation
 
 ```
 taxonomy.yaml           taxonomie des métiers (source de vérité, conventions en tête)
 TAXONOMY_CHANGELOG.md   journal des versions de la taxonomie
 netlify.toml            site Netlify unique : dashboard + fonctions
-src/core/               normalize, taxonomy, classify, signals, salary (TJM)
-src/refs/               départements (101) et régions (18), codes INSEE
+src/core/               normalize, taxonomy, classify, signals, salary, location, employer, dedup, stats
+src/refs/               départements (101), régions (18), population active INSEE par région
 src/sources/            interface Source, client HTTP bridé, collecteur France Travail (Adzuna au lot 3)
-src/pipeline/           identifiant et état des runs, journaux, appels internes (traitement aux lots 2 à 6)
+src/pipeline/           état des runs, traitement (process, index seen), agrégats (aggregates/)
 src/storage/            stores Netlify Blobs, mémoire (tests) et disque (scripts)
 src/functions/          logique des fonctions Netlify, testable
 netlify/functions/      fonctions Netlify : collect-francetravail-background, api-admin
-scripts/                collecte locale et sonde de l'API France Travail
+scripts/                collecte et traitement locaux, sonde de l'API France Travail
 web/                    dashboard Vite (page d'attente jusqu'au lot 4)
 fixtures/               réponses d'API fictives, mode SOURCE_MODE=fixtures
 tests/                  tests Vitest ; tests/fixtures/titles.json = cas de classification

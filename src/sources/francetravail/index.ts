@@ -1,13 +1,14 @@
 import { resolve } from 'node:path';
 import type { Offer } from '../../core/offer';
-import type { Taxonomy } from '../../core/taxonomy';
+import { compileTaxonomy, type CompiledTaxonomy, type Taxonomy } from '../../core/taxonomy';
 import { requireEnv } from '../../pipeline/env';
 import type { Clock } from '../http';
 import type { SourceMode } from '../mode';
 import type { CollectContext, CollectReport, Source } from '../source';
 import { LiveFtApi, type FtApi } from './api';
-import { collectFranceTravail } from './collect';
+import { collectFranceTravail, type FtRawPartition } from './collect';
 import { FixtureFtApi } from './fixtures';
+import { normalizeFtPartition } from './normalize';
 
 export const FT_FIXTURES_DIR = 'fixtures/francetravail';
 
@@ -30,13 +31,18 @@ export async function createFtApi(
 export class FranceTravailSource implements Source {
   readonly id = 'francetravail' as const;
 
+  private compiled: CompiledTaxonomy | null = null;
+
   constructor(private readonly deps: { api: FtApi; taxonomy: Taxonomy; concurrency?: number }) {}
 
   collect(runId: string, ctx: CollectContext): Promise<CollectReport> {
     return collectFranceTravail(runId, { ...ctx, ...this.deps });
   }
 
-  normalize(): Offer[] {
-    throw new Error('France Travail : la normalisation des offres arrive au lot 2 (SPEC.md §14)');
+  /** Offres normalisées d'une partition de `raw` (offres étrangères ou invalides écartées). */
+  normalize(raw: unknown, runId: string): Offer[] {
+    this.compiled ??= compileTaxonomy(this.deps.taxonomy);
+    const partition = raw as FtRawPartition;
+    return normalizeFtPartition({ ...partition, runId }, this.compiled);
   }
 }

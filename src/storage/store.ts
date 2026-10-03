@@ -52,3 +52,17 @@ export async function deletePrefix(store: BlobStore, prefix: string): Promise<nu
   for (const key of keys) await store.delete(key);
   return keys.length;
 }
+
+/** Écrit une liste d'objets en JSON Lines compressé (une ligne par objet). */
+export async function setGzipJsonLines(store: BlobStore, key: string, items: readonly unknown[]): Promise<void> {
+  const text = items.map((item) => JSON.stringify(item)).join('\n');
+  await store.set(key, await gzipAsync(Buffer.from(text, 'utf8')));
+}
+
+/** Lit un fichier JSON Lines compressé ; `null` si la clé n'existe pas. */
+export async function getGzipJsonLines<T>(store: BlobStore, key: string): Promise<T[] | null> {
+  const data = await store.get(key);
+  if (data === null) return null;
+  const text = (await gunzipAsync(data)).toString('utf8');
+  return text === '' ? [] : text.split('\n').map((line) => JSON.parse(line) as T);
+}

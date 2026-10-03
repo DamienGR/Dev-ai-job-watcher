@@ -316,3 +316,151 @@ constat.
 - La maintenance du VPS (système, Node 22, timers) revient à Damien.
 - D20 : « la collecte peut tourner en production dès que le site Netlify est configuré » se lit
   désormais « dès que le VPS est installé (lot 5) ».
+
+## Lot 2 — Traitement et agrégats (2026-10-03)
+
+### D22. Traitement lancé par script
+
+Conformément à D21, le traitement ne tourne pas dans une fonction Netlify background : c'est
+une fonction `processRun(runId, { stores, log, taxonomy })` (`src/pipeline/process.ts`),
+lancée par `npm run process -- --run-id <run>` après la collecte, sur les stores du disque. Elle
+ne dépend que de l'interface des stores et ne sait pas où elle tourne. Il n'y a pas de fonction
+`process-background`. Suivent SPEC.md 1.1 : l'envoi des agrégats par `api-ingest` (lot 4) et
+le job `admin` (lot 5), qui remplacera l'étape `process` d'`api-admin` (elle répond toujours
+501).
+
+- **Pas de reprise partielle** : le traitement d'une semaine réelle prend environ 8 s (D30) ;
+  un traitement interrompu est rejoué en entier (§12).
+- **Verrou** : le verrou du VPS (`flock`, §12) arrive au lot 5 avec les jobs. En attendant, un
+  traitement refuse de démarrer si le même run est « en cours » depuis moins de 20 minutes.
+- **Rejouable** (§12) : avant le premier traitement d'un run, l'index `seen` est copié sous
+  `index/seen-before/<run>.json.gz` ; une relance repart de cette copie et réécrit les mêmes
+  clés. Un run plus ancien que le dernier traité est refusé : il effacerait les suivants. Le
+  retraitement de tout l'historique relève de la reclassification (lot 6).
+- Compte rendu dans `state/runs/<run>/process.json` (compteurs, état de la collecte, erreur),
+  source de `quality.json`.
+
+### D23. Salaires
+
+Règles exigées de §6.3 appliquées telles quelles ; latitudes prises :
+
+- `salaire.libelle` : seul le début est lu (`Annuel|Mensuel|Horaire de X Euros [à Y Euros]
+  [sur N mois]`) ; la suite (« - Mutuelle + TR ») est un commentaire libre de l'employeur. Le
+  nombre de mois d'un salaire mensuel est aussi cherché dans cette suite (« - sur 13 mois »).
+- Repli sur `salaire.commentaire` si le libellé est absent ou non reconnu (« Salaire selon
+  profil »). Montant suivi de « k » = milliers, le « k » final valant pour les deux bornes ;
+  sans « k », un montant ≥ 10 000 est annuel, un montant de 1 000 à 9 999 est mensuel (× 12)
+  si le texte parle de mois et pas d'année ; tout montant plus petit est ignoré, ce qui écarte
+  les TJM (« 500 € par jour ») et les durées (« 3 à 5 ans »).
+- Le commentaire de salaire porte souvent un TJM (« 500 € par jour » : 175 offres retenues du
+  run W40, presque tous les TJM trouvés) : il est ajouté au texte du signal `tjm` et de
+  `parseTjm`.
+- **Écart à la règle exigée « mensuel × nombre de mois », validé par Damien le 2026-10-03** :
+  un montant mensuel d'au moins 18 000 € est un salaire annuel saisi dans le mauvais champ
+  (« Mensuel de 45000 Euros », soit 540 000 € par an une fois multiplié par 12) et il est lu
+  tel quel. Sur le run W40, cela récupère 21 salaires que les bornes de cohérence écartaient. Le seuil s'applique à chaque borne :
+  « Mensuel de 2500 Euros à 30000 Euros » donne 30 000 € dans les deux cas.
+- Hors bornes : la borne est écartée et l'offre comptée dans `salaryOutOfBounds`
+  (`quality.json`) : 47 offres sur le run W40 (salaires d'alternance ou de temps partiel sous
+  18 000 €, montants horaires ou mensuels incohérents).
+
+### D24. Localisation
+
+- Ordre de précision : code commune (`lieuTravail.commune`) ; sinon préfixe département du
+  libellé (« 75 - Paris ») ; sinon nom de région (« Île-de-France », graphies sans accent et
+  anciennes régions comprises) ; sinon « France » → `pays`. Sans libellé ni commune :
+  `aucune`.
+- Collectivités d'outre-mer hors des 18 régions (977 Saint-Barthélemy…) : en France, mais
+  `precision='pays'`, comptées au seul niveau national.
+- Hors de France (§6.2) : tout autre libellé (« Luxembourg », « Belgique », « Montréal, QC,
+  Canada »…) et le code pays INSEE 99. Écartées avant classification, comptées dans
+  `quality.json` ; leurs libellés les plus fréquents sont gardés dans le compte rendu du run
+  pour repérer une erreur d'exclusion.
+
+### D25. Correspondances France Travail (§6.1)
+
+- Contrat : `CDI`, `CDD`, `MIS` → intérim, `LIB` → freelance, autres codes (`CCE`, `DDI`,
+  `SAI`…) → `autre`. Alternance : drapeau `alternance` ou `natureContrat` d'apprentissage ou de
+  professionnalisation (les deux coïncident sur le run W40). Le signal TJM ne fait passer en
+  `freelance` que les contrats `autre` ou inconnus, jamais un CDI.
+- Expérience : `D` → `debutant` ; sinon durée de `experienceLibelle` (« 3 An(s) », « 18
+  Mois ») en années : moins d'un an → `debutant`, puis `1_3`, `3_5`, `5_plus` ; « Expérience
+  exigée » sans durée → `unknown`.
+- `cadre` : `qualificationCode` 9 (« Cadre ») ; autre code → `false` ; absent (68 % des
+  offres) → `null`. `fullTime` : `dureeTravailLibelleConverti`. `companySizeBand` :
+  `trancheEffectifEtab` tel quel.
+- Champs lus avec un schéma zod permissif ; une offre sans `id`, `intitule` ou date de
+  création valide est écartée et comptée (`invalid`).
+
+### D26. Employeurs
+
+`companyNorm` suit §6.7 (normalisation, ponctuation, formes juridiques, `groupe`, `group`,
+`france`). Les motifs de nom des types d'employeur sont essayés sur `companyNorm` **et** sur le
+nom normalisé avec sa ponctuation : sans cela, `ap-hp` et `ernst ?& ?young` de la taxonomie ne
+pourraient jamais matcher. Le type `client_final` (`*`) ne vaut que si le NAF est connu (47 %
+des offres, D18).
+
+La clé de dédoublonnage inter-sources (§6.8) est calculée dès maintenant
+(`sha1(titreClé|companyNorm|département ou région)`, `null` sans entreprise) ; son usage
+arrive avec Adzuna au lot 3. Le dédoublonnage intra-source se fait par `uid` : une offre
+présente dans les deux passes n'est comptée qu'une fois, avec `collectedVia: ['keyword', 'rome']`.
+
+### D27. Nouveauté, disparition, premier run (§6.9)
+
+- L'index ne garde que les offres retenues (après règle de rétention et exclusion des offres
+  étrangères), avec `closedRun` en plus des champs de §3.4.
+- Disparition : une offre France Travail vue avant et absente du run est fermée
+  (`closedRun = run`), **seulement si la collecte est complète et sans partition tronquée** ;
+  sinon une absence peut venir d'une partition manquante. Une offre fermée puis revue est
+  rouverte.
+- `isBackfill` : offre découverte au premier run et créée une semaine ISO antérieure.
+- Le stock actif d'un run est le contenu de `offers/<run>.jsonl.gz` : `closedRun` n'est pas
+  réécrit dans les fichiers des semaines passées, l'index fait foi pour la durée de vie (v2).
+
+### D28. Agrégats (§7)
+
+- **Flux** (nouvelles offres, intitulés, technos, salaires, conditions, employeurs, carte,
+  émergence) : chaque offre compte une fois (dernière version de son `uid`, tous runs
+  confondus), dans sa semaine ou son mois de création (Europe/Paris). Les doublons
+  inter-sources (`duplicateOf`) sont exclus. Le mois d'une semaine est celui de son jeudi.
+- **Format** : tables `{ columns, rows }` ; un fichier peut en contenir plusieurs
+  (`timeseries.json` : `newOffers` et `stock`). Les tables additives (comptages par groupe)
+  n'ont pas de lignes « tous » : le dashboard somme. Les tables non additives (quantiles, top)
+  ont des lignes `*` : `region='*'` = France entière, `group='*'`, `role='*'`,
+  `experience='*'`, et `month='*'` = les 12 derniers mois (`meta.rollingMonths`).
+- **Salaires** : cellules de moins de 5 offres omises (le dashboard affiche « n < 5 ») ;
+  `nSalary / n` donne le taux de renseignement. Prime IA = médiane des groupes collectés par
+  mots-clés (g3 à g8) − médiane de `g1_dev`, par mois × expérience.
+- **Semaines partielles** (`meta.partialWeeks`) : semaines de création antérieures au premier
+  run (rattrapage), semaine du dernier run (pas terminée), et toute semaine dont le run de la
+  semaine suivante manque, a échoué ou n'a pas eu une collecte complète. `meta.partialMonths`
+  : mois touchés par une semaine partielle.
+- **Carte** : `nCore` = groupes du périmètre (hors `hors_perimetre` et `non_classe`), densité
+  = `nCore` pour 100 000 actifs (D29). Points : seules les offres avec coordonnées (24 % sur le
+  run W40, France Travail ne les donne pas toujours) ; aucun référentiel communal n'est ajouté
+  (§3.4).
+- **Émergence** : moyenne des mois précédents couverts par les données (3 au plus) ; le
+  premier mois n'a pas de tendance. Rôles : `seuil` (≥ 5 offres alors que le mois précédent en
+  avait moins), `baisse` (moitié ou moins de la moyenne, si celle-ci atteint 5), `stable`.
+  Non classés : offres du filet ROME seulement (§9.1).
+- `quality.json` : une ligne par run et par source, colonnes de compteurs de §7.1 ; la passe
+  se lit dans `collectedA` / `collectedB`.
+
+### D29. Population active INSEE (§7.1, indicateur 11a ; décision ouverte §16.4)
+
+Choisie par Damien le 2026-10-03 : population active de 15 à 64 ans par région, recensement
+2023 (dossiers complets INSEE, tableau EMP T1), dans `src/refs/population-active.json` avec
+source et méthode. Mayotte n'a pas ce tableau : densité non calculée (`null`).
+
+### D30. Premier traitement réel (run 2026-W40)
+
+Traitement de la collecte nationale du 2026-10-03 en local : 7 à 8 s, dont la relecture et les
+agrégats. 4 997 offres lues, 3 654 distinctes, 103 lectures écartées hors de France
+(Luxembourg 89), 443 écartées par la règle de rétention, **3 211 retenues**. Salaire
+exploitable : 37 % (1 177 offres, médiane 42 000 €) ; TJM : 179 offres ; coordonnées : 24 % ; sans région : 17. Agrégats de
+3 à 135 Ko par fichier (`salaries.json` : 119 Ko), loin des 2 Mo.
+
+À signaler pour la revue de taxonomie (non corrigé ici, `taxonomy.yaml` inchangée) :
+classification à 57 % (1 819 offres classées) ; télétravail inconnu pour 85 % des offres ;
+« Coach en développement personnel (PNL / NLP) » classé `nlp_engineer` (offre FX00008 des
+fixtures, désormais retenue en passe B).
