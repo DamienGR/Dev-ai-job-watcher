@@ -25,8 +25,8 @@
 #   l'historique. Les `id` sont stables et ne sont jamais renommés.
 # =============================================================================
 
-version: 2
-updated: 2026-10-02
+version: 3
+updated: 2026-10-03
 
 # -----------------------------------------------------------------------------
 # Filet de collecte France Travail (codes ROME 4.0)
@@ -35,9 +35,10 @@ updated: 2026-10-02
 # secondary : collectés systématiquement, fort taux de hors-périmètre attendu
 # extended  : collectés pour reconnaître le « périmètre élargi » (g9), masqué
 #             par défaut dans le dashboard
-# À VÉRIFIER au lot 0 : liste complète des codes M18xx du ROME 4.0.
+# Codes M18xx du ROME 4.0 vérifiés sur l'API le 2026-10-03 (M1801 à M1820) ;
+# libellés et volumes dans TAXONOMY_CHANGELOG.md (v3).
 rome_codes:
-  core: [M1805, M1811]
+  core: [M1805, M1811, M1818]
   secondary: [M1806, M1802, M1803]
   extended: [M1801, M1810]
 

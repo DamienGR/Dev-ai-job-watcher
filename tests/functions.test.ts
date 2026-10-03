@@ -110,7 +110,7 @@ describe('collect-francetravail-background', () => {
 
     expect(response.status).toBe(200);
     expect(report).toMatchObject({ status: 'complete', offersByPass: { A: 6, B: 3 } });
-    expect(await stores.raw.list('ft/2026-W41/a-d31')).toEqual(['ft/2026-W41/a-d31.json.gz']);
+    expect(await stores.raw.list('ft/2026-W41/a-fr')).toEqual(['ft/2026-W41/a-fr.json.gz']);
   });
 
   it('relance l’erreur pour que Netlify retente l’exécution', async () => {

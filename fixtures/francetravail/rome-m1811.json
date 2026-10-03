@@ -1,0 +1,65 @@
+{
+  "description": "Passe A, code ROME M1811 (Data engineer) : une offre fictive, département 31",
+  "match": {
+    "codeROME": "M1811"
+  },
+  "offers": [
+    {
+      "natureContrat": "Contrat travail",
+      "alternance": false,
+      "nombrePostes": 1,
+      "accessibleTH": false,
+      "offresManqueCandidats": false,
+      "entrepriseAdaptee": false,
+      "employeurHandiEngage": false,
+      "origineOffre": {
+        "origine": "1",
+        "urlOrigine": "https://candidat.francetravail.fr/offres/recherche/detail/FX00001"
+      },
+      "contact": {
+        "nom": "EXEMPLE DATA - Mme Jeanne Exemple",
+        "coordonnees1": "1 rue de l'Exemple",
+        "coordonnees2": "31000 TOULOUSE",
+        "courriel": "recrutement@exemple.fr",
+        "telephone": "01 23 45 67 89",
+        "urlPostulation": "https://recrutement.exemple.fr/postuler"
+      },
+      "agence": {
+        "telephone": "3949",
+        "courriel": "agence.exemple@francetravail.fr"
+      },
+      "id": "FX00001",
+      "intitule": "Data Engineer (H/F)",
+      "description": "Au sein de l'équipe data, vous concevez les pipelines (Python, Airflow, dbt, Snowflake) sur AWS. Télétravail 2 jours par semaine. Candidature : recrutement@exemple.fr ou 05 61 00 00 00.",
+      "dateCreation": "2026-09-28T10:15:00.000Z",
+      "dateActualisation": "2026-09-30T08:00:00.000Z",
+      "lieuTravail": {
+        "libelle": "31 - TOULOUSE",
+        "latitude": 43.6045,
+        "longitude": 1.4442,
+        "codePostal": "31000",
+        "commune": "31555"
+      },
+      "romeCode": "M1811",
+      "romeLibelle": "Data engineer",
+      "appellationlibelle": "Data engineer",
+      "entreprise": {
+        "nom": "EXEMPLE DATA"
+      },
+      "typeContrat": "CDI",
+      "typeContratLibelle": "Contrat à durée indéterminée",
+      "experienceExige": "E",
+      "experienceLibelle": "3 An(s)",
+      "salaire": {
+        "libelle": "Annuel de 45000.0 Euros à 55000.0 Euros sur 12 mois"
+      },
+      "dureeTravailLibelleConverti": "Temps plein",
+      "qualificationCode": "9",
+      "qualificationLibelle": "Cadre",
+      "codeNAF": "62.02A",
+      "secteurActivite": "62",
+      "secteurActiviteLibelle": "Conseil en systèmes et logiciels informatiques",
+      "trancheEffectifEtab": "20 à 49 salariés"
+    }
+  ]
+}

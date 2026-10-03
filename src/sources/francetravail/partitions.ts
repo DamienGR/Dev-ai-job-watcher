@@ -4,10 +4,11 @@ import type { PartitionState } from '../../pipeline/runState';
 import { DEPARTEMENTS, REGIONS } from '../../refs';
 
 /**
- * Plafond de résultats accessibles par requête (SPEC.md §4.1) : borne prudente de la spec,
- * cohérente avec la limite documentée de `range` (dernier indice 1149). À confirmer sur l'API.
+ * Plafond de résultats accessibles par requête (SPEC.md §4.1), mesuré sur l'API réelle le
+ * 2026-10-03 : premier indice de `range` ≤ 3000, 150 résultats par page, soit les indices
+ * 0 à 3149 (docs/decisions.md, D18).
  */
-export const FT_MAX_RESULTS = 1150;
+export const FT_MAX_RESULTS = 3150;
 /** Borne basse des découpages par date de création. */
 export const EARLIEST_CREATION = Date.UTC(2000, 0, 1);
 
@@ -43,19 +44,15 @@ export function collectionKeywords(t: Taxonomy): string[] {
   return [...bySlug.values()];
 }
 
-/** Partitions de départ : passe A par département, passe B par mot-clé (SPEC.md §4.1). */
+/**
+ * Partitions de départ (SPEC.md §4.1) : passe A en une partition nationale, passe B par
+ * mot-clé. La passe A n'est pas découpée par département : les offres sans département en
+ * seraient absentes (docs/decisions.md, D19).
+ */
 export function rootPartitions(t: Taxonomy): FtPartition[] {
-  const codeROME = romeCodes(t).join(',');
-  const passA = DEPARTEMENTS.map(
-    (d): FtPartition => ({
-      id: `a-d${d.code.toLowerCase()}`,
-      stem: `a-d${d.code.toLowerCase()}`,
-      parent: null,
-      pass: 'A',
-      level: 'departement',
-      params: { codeROME, departement: d.code },
-    }),
-  );
+  const passA: FtPartition[] = [
+    { id: 'a-fr', stem: 'a-fr', parent: null, pass: 'A', level: 'national', params: { codeROME: romeCodes(t).join(',') } },
+  ];
   const passB = collectionKeywords(t).map(
     (keyword): FtPartition => ({
       id: `b-k${slug(keyword)}`,
@@ -110,7 +107,7 @@ function splitByDates(p: FtPartition, referenceTime: Date): FtPartition[] {
  * Liste vide si plus aucun découpage n'est possible.
  */
 export function splitPartition(p: FtPartition, { romeCodes: codes, referenceTime }: SplitContext): FtPartition[] {
-  if (p.pass === 'A' && p.level === 'departement' && codes.length > 1) {
+  if (p.pass === 'A' && p.level === 'national' && codes.length > 1) {
     return codes.map((code) => child(p, `r${code.toLowerCase()}`, 'rome', { ...p.params, codeROME: code }));
   }
   if (p.pass === 'B' && p.level === 'keyword') {

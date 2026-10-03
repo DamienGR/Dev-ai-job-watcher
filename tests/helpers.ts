@@ -18,7 +18,8 @@ export function fakeClock(start = 0): Clock & { time: number; sleeps: number[] }
 
 export interface UniverseOffer {
   id: string;
-  departement: string;
+  /** `null` : offre localisée au seul niveau national (« France »), sans département. */
+  departement: string | null;
   romeCode: string;
   dateCreation: string;
   intitule: string;
@@ -31,7 +32,7 @@ export function apiOffer(o: UniverseOffer): FtOffer {
     intitule: o.intitule,
     description: `Offre ${o.id}. Contact : jeanne.exemple@exemple.fr, 06 12 34 56 78.`,
     dateCreation: o.dateCreation,
-    lieuTravail: { libelle: `${o.departement} - VILLE`, commune: `${o.departement}001` },
+    lieuTravail: o.departement === null ? { libelle: 'France' } : { libelle: `${o.departement} - VILLE`, commune: `${o.departement}001` },
     romeCode: o.romeCode,
     entreprise: { nom: 'EXEMPLE SAS', description: 'Écrivez à rh@exemple.fr' },
     contact: { nom: 'Jeanne Exemple', courriel: 'jeanne.exemple@exemple.fr', telephone: '0612345678' },
@@ -42,6 +43,7 @@ export function apiOffer(o: UniverseOffer): FtOffer {
 /**
  * API France Travail simulée sur un « univers » d'offres : applique les filtres de la vraie API
  * (département, région, codes ROME, mots-clés, dates de création) et la pagination `range`.
+ * Comme sur l'API réelle, une offre sans département n'est renvoyée que sans filtre géographique.
  */
 export class FakeFtApi implements FtApi {
   readonly stats = { calls: 0, retries: 0 };
@@ -69,8 +71,8 @@ export class FakeFtApi implements FtApi {
     const min = params.minCreationDate ? Date.parse(params.minCreationDate) : -Infinity;
     const max = params.maxCreationDate ? Date.parse(params.maxCreationDate) : Infinity;
     const matching = this.universe
-      .filter((o) => !params.departement || params.departement.split(',').includes(o.departement))
-      .filter((o) => !params.region || regionOfDepartement(o.departement) === params.region)
+      .filter((o) => !params.departement || (o.departement !== null && params.departement.split(',').includes(o.departement)))
+      .filter((o) => !params.region || (o.departement !== null && regionOfDepartement(o.departement) === params.region))
       .filter((o) => !params.codeROME || params.codeROME.split(',').includes(o.romeCode))
       .filter((o) => !params.motsCles || o.intitule.toLowerCase().includes(params.motsCles.toLowerCase()))
       .filter((o) => {
@@ -87,7 +89,7 @@ export function offers(
   n: number,
   { prefix, departement, romeCode = 'M1805', intitule = 'Développeur Java', from = '2026-06-01T00:00:00Z', stepHours = 7 }: {
     prefix: string;
-    departement: string;
+    departement: string | null;
     romeCode?: string;
     intitule?: string;
     from?: string;

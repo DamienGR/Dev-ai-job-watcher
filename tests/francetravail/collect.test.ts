@@ -29,7 +29,11 @@ const universe: UniverseOffer[] = [
   ...offers(400, { prefix: 'T', departement: '31' }),
   ...offers(5, { prefix: 'P', departement: '75', romeCode: 'M1811' }),
   ...offers(3, { prefix: 'F', departement: '69', intitule: 'Forward Deployed Engineer' }),
+  ...offers(2, { prefix: 'N', departement: null, romeCode: 'M1818' }),
 ];
+
+/** Appels de la passe A (sans mot-clé). */
+const passACalls = (api: FakeFtApi) => api.calls.filter((c) => c.motsCles === undefined);
 
 describe('collecte France Travail (SPEC.md §4.1, lot 1)', () => {
   it('collecte toutes les partitions et pagine au-delà de 150 résultats', async () => {
@@ -39,14 +43,23 @@ describe('collecte France Travail (SPEC.md §4.1, lot 1)', () => {
 
     expect(report.status).toBe('complete');
     expect(report.partitions).toEqual({ total: ROOTS, pending: 0, done: ROOTS, split: 0, failed: 0 });
-    // 3 pages pour la Haute-Garonne (0-149, 150-299, 300-399), 1 appel ailleurs.
+    // 3 pages pour la passe A nationale (0-149, 150-299, 300-409), 1 appel par mot-clé.
     expect(report.apiCalls).toBe(ROOTS + 2);
-    expect(api.calls.filter((c) => c.departement === '31').map((c) => c.range)).toEqual(['0-149', '150-299', '300-399']);
-    expect(report.offersByPass).toEqual({ A: 408, B: 3 });
+    expect(passACalls(api).map((c) => c.range)).toEqual(['0-149', '150-299', '300-409']);
+    expect(report.offersByPass).toEqual({ A: 410, B: 3 });
 
-    const a31 = await getGzipJson<FtRawPartition>(stores.raw, rawKey(RUN, 'a-d31'));
-    expect(a31?.total).toBe(400);
-    expect(new Set(a31?.offers.map((o) => o.id)).size).toBe(400);
+    const national = await getGzipJson<FtRawPartition>(stores.raw, rawKey(RUN, 'a-fr'));
+    expect(national?.total).toBe(410);
+    expect(new Set(national?.offers.map((o) => o.id)).size).toBe(410);
+  });
+
+  it('collecte en passe A les offres sans département (docs/decisions.md, D19)', async () => {
+    const stores = memoryStores();
+    await collect(new FakeFtApi(universe), stores);
+
+    const national = await getGzipJson<FtRawPartition>(stores.raw, rawKey(RUN, 'a-fr'));
+    const withoutDepartement = national?.offers.filter((o) => (o.lieuTravail as { libelle: string }).libelle === 'France');
+    expect(withoutDepartement?.map((o) => o.id)).toEqual(['N00000', 'N00001']);
   });
 
   it("n'écrit aucun champ de contact dans raw (critère du lot 1)", async () => {
@@ -70,11 +83,11 @@ describe('collecte France Travail (SPEC.md §4.1, lot 1)', () => {
     const stores = memoryStores();
     await collect(new FakeFtApi(universe), stores);
     const keysBefore = await stores.raw.list(`ft/${RUN}/`);
-    const before = await getGzipJson<FtRawPartition>(stores.raw, rawKey(RUN, 'a-d31'));
+    const before = await getGzipJson<FtRawPartition>(stores.raw, rawKey(RUN, 'a-fr'));
 
     // Remet une partition en attente, comme après une interruption, puis relance l'étape.
     const state = (await loadStepState(stores.state, RUN, 'collect-ft'))!;
-    const p = state.partitions.find((x) => x.id === 'a-d31')!;
+    const p = state.partitions.find((x) => x.id === 'a-fr')!;
     p.status = 'pending';
     state.status = 'running';
     await saveStepState(stores.state, state);
@@ -82,11 +95,12 @@ describe('collecte France Travail (SPEC.md §4.1, lot 1)', () => {
     const report = await collect(api, stores);
 
     expect(report.status).toBe('complete');
-    expect(api.calls.every((c) => c.departement === '31')).toBe(true);
+    expect(api.calls.map((c) => c.range)).toEqual(['0-149', '150-299', '300-409']);
+    expect(passACalls(api)).toHaveLength(api.calls.length);
     expect(await stores.raw.list(`ft/${RUN}/`)).toEqual(keysBefore);
-    const after = await getGzipJson<FtRawPartition>(stores.raw, rawKey(RUN, 'a-d31'));
+    const after = await getGzipJson<FtRawPartition>(stores.raw, rawKey(RUN, 'a-fr'));
     expect(after?.offers).toEqual(before?.offers);
-    expect(report.offersByPass.A).toBe(408);
+    expect(report.offersByPass.A).toBe(410);
   });
 
   it('ne refait rien sur un run complet, et repart de zéro avec reset', async () => {
@@ -117,11 +131,11 @@ describe('collecte France Travail (SPEC.md §4.1, lot 1)', () => {
     expect(report.truncatedPartitions).toBe(0);
     const state = (await loadStepState(stores.state, RUN, 'collect-ft'))!;
     const split = state.partitions.filter((p) => p.status === 'split').map((p) => p.id);
-    expect(split).toContain('a-d75');
-    expect(split).toContain('a-d75-rm1805');
-    expect(state.partitions.some((p) => p.parent === 'a-d75-rm1805' && p.level === 'dates')).toBe(true);
+    expect(split).toContain('a-fr');
+    expect(split).toContain('a-fr-rm1805');
+    expect(state.partitions.some((p) => p.parent === 'a-fr-rm1805' && p.level === 'dates')).toBe(true);
 
-    const raws = (await rawPartitions(stores)).filter((r) => r.partition.params.departement === '75');
+    const raws = (await rawPartitions(stores)).filter((r) => r.partition.pass === 'A');
     expect(raws.every((r) => r.offers.length <= 10)).toBe(true);
     expect(new Set(raws.flatMap((r) => r.offers.map((o) => o.id))).size).toBe(30);
   });
@@ -157,6 +171,18 @@ describe('collecte France Travail (SPEC.md §4.1, lot 1)', () => {
     const truncated = (await rawPartitions(stores)).find((r) => r.truncated)!;
     expect(truncated.offers).toHaveLength(10);
     expect(truncated.total).toBe(15);
+  });
+
+  it("lit jusqu'au plafond réel de l'API : 3 150 résultats, premier indice ≤ 3 000 (D18)", async () => {
+    const api = new FakeFtApi(offers(3200, { prefix: 'Z', departement: '13', stepHours: 0 }));
+    const report = await collect(api, memoryStores());
+
+    expect(report.truncatedPartitions).toBe(1);
+    expect(report.errors.some((e) => /3200 offres pour un plafond de 3150/.test(e.message))).toBe(true);
+    const starts = passACalls(api).map((c) => Number(c.range?.split('-')[0]));
+    expect(Math.max(...starts)).toBe(3000);
+    expect(passACalls(api).at(-1)?.range).toBe('3000-3149');
+    expect(report.offersByPass.A).toBe(3150);
   });
 
   it("enregistre son état à l'échéance et reprend sans refaire les partitions terminées", async () => {
@@ -199,13 +225,14 @@ describe('collecte France Travail (SPEC.md §4.1, lot 1)', () => {
   it('retente dans la même exécution une partition en erreur transitoire', async () => {
     let failures = 0;
     const flaky = new FakeFtApi(universe, {
-      fail: (params) => (params.departement === '75' && failures++ === 0 ? new Error('ECONNRESET') : null),
+      fail: (params) => (params.motsCles === undefined && failures++ === 0 ? new Error('ECONNRESET') : null),
     });
     const report = await collect(flaky, memoryStores());
 
     expect(report.status).toBe('complete');
-    expect(report.errors).toEqual([{ partition: 'a-d75', message: 'ECONNRESET' }]);
-    expect(flaky.calls.filter((c) => c.departement === '75')).toHaveLength(2);
+    expect(report.errors).toEqual([{ partition: 'a-fr', message: 'ECONNRESET' }]);
+    // Premier appel en échec, puis la partition entière à la vague suivante.
+    expect(passACalls(flaky).map((c) => c.range)).toEqual(['0-149', '0-149', '150-299', '300-409']);
   });
 
   it("n'écrit rien si l'accès est refusé dès le jeton", async () => {

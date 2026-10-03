@@ -11,8 +11,9 @@ export interface FtFixture {
 
 /**
  * API simulée à partir de `fixtures/francetravail/*.json` (SPEC.md §13), sans clé ni réseau.
- * Une requête reçoit les offres de toutes les fixtures dont les paramètres `match` sont
- * présents à l'identique ; aucune correspondance donne un résultat vide (HTTP 204).
+ * Une requête reçoit les offres de toutes les fixtures dont chaque paramètre `match` figure
+ * parmi les valeurs, séparées par des virgules, du paramètre de même nom (comme `codeROME`
+ * dans la vraie API) ; aucune correspondance donne un résultat vide (HTTP 204).
  */
 export class FixtureFtApi implements FtApi {
   readonly stats = { calls: 0, retries: 0 };
@@ -33,7 +34,9 @@ export class FixtureFtApi implements FtApi {
     this.stats.calls += 1;
     const seen = new Set<unknown>();
     const offers = this.fixtures
-      .filter((fixture) => Object.entries(fixture.match).every(([name, value]) => params[name] === value))
+      .filter((fixture) =>
+        Object.entries(fixture.match).every(([name, value]) => params[name]?.split(',').includes(value)),
+      )
       .flatMap((fixture) => fixture.offers)
       .filter((offer) => !seen.has(offer.id) && seen.add(offer.id));
     return { total: offers.length, offers: offers.slice(first, last + 1) };

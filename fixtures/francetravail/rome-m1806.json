@@ -1,67 +1,9 @@
 {
-  "description": "Passe A, Paris : trois offres fictives",
+  "description": "Passe A, code ROME M1806 (Consultant fonctionnel des SI) : 2 offres fictives, département 75",
   "match": {
-    "departement": "75"
+    "codeROME": "M1806"
   },
   "offers": [
-    {
-      "natureContrat": "Contrat travail",
-      "alternance": false,
-      "nombrePostes": 1,
-      "accessibleTH": false,
-      "offresManqueCandidats": false,
-      "entrepriseAdaptee": false,
-      "employeurHandiEngage": false,
-      "origineOffre": {
-        "origine": "1",
-        "urlOrigine": "https://candidat.francetravail.fr/offres/recherche/detail/FX00004"
-      },
-      "contact": {
-        "nom": "EXEMPLE AGENTS - Mme Jeanne Exemple",
-        "coordonnees1": "1 rue de l'Exemple",
-        "coordonnees2": "31000 TOULOUSE",
-        "courriel": "recrutement@exemple.fr",
-        "telephone": "01 23 45 67 89",
-        "urlPostulation": "https://recrutement.exemple.fr/postuler"
-      },
-      "agence": {
-        "telephone": "3949",
-        "courriel": "agence.exemple@francetravail.fr"
-      },
-      "id": "FX00004",
-      "intitule": "Forward Deployed Engineer IA (H/F)",
-      "description": "Déployez nos agents IA chez nos clients grands comptes. Déplacements fréquents chez nos clients. TJM : 650 €/jour pour les profils freelance.",
-      "dateCreation": "2026-09-29T08:00:00.000Z",
-      "dateActualisation": "2026-09-29T08:00:00.000Z",
-      "lieuTravail": {
-        "libelle": "75 - PARIS 02",
-        "latitude": 48.8682,
-        "longitude": 2.3428,
-        "codePostal": "75002",
-        "commune": "75102"
-      },
-      "romeCode": "M1805",
-      "romeLibelle": "Études et développement informatique",
-      "appellationlibelle": "Ingénieur / Ingénieure d'études informatique",
-      "entreprise": {
-        "nom": "EXEMPLE AGENTS"
-      },
-      "typeContrat": "CDI",
-      "typeContratLibelle": "Contrat à durée indéterminée",
-      "experienceExige": "E",
-      "experienceLibelle": "5 An(s)",
-      "salaire": {
-        "libelle": "Annuel de 70000.0 Euros à 90000.0 Euros sur 12 mois"
-      },
-      "dureeTravailLibelleConverti": "Temps plein",
-      "qualificationCode": "9",
-      "qualificationLibelle": "Cadre",
-      "codeNAF": "58.29C",
-      "secteurActivite": "58",
-      "secteurActiviteLibelle": "Édition de logiciels applicatifs",
-      "trancheEffectifEtab": "50 à 99 salariés",
-      "deplacementLibelle": "Fréquents National"
-    },
     {
       "natureContrat": "Contrat travail",
       "alternance": false,

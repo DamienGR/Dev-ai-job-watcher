@@ -17,11 +17,18 @@ const roots = rootPartitions(taxonomy);
 const root = (id: string) => roots.find((p) => p.id === id)!;
 
 describe('plan de collecte France Travail (SPEC.md §4.1)', () => {
-  it('prévoit un département par partition en passe A, avec tous les codes ROME', () => {
+  it('prévoit une seule partition nationale en passe A, avec tous les codes ROME', () => {
     const passA = roots.filter((p) => p.pass === 'A');
-    expect(passA).toHaveLength(101);
-    expect(passA.map((p) => p.params.departement)).toEqual(expect.arrayContaining(['01', '2A', '2B', '75', '971', '976']));
-    expect(root('a-d31').params).toEqual({ codeROME: 'M1805,M1811,M1806,M1802,M1803,M1801,M1810', departement: '31' });
+    expect(passA).toEqual([
+      {
+        id: 'a-fr',
+        stem: 'a-fr',
+        parent: null,
+        pass: 'A',
+        level: 'national',
+        params: { codeROME: 'M1805,M1811,M1818,M1806,M1802,M1803,M1801,M1810' },
+      },
+    ]);
   });
 
   it('prévoit un mot-clé par partition en passe B, pour les seuls groupes keyword_pass', () => {
@@ -42,34 +49,34 @@ describe('plan de collecte France Travail (SPEC.md §4.1)', () => {
   });
 
   it('découpe la passe A par code ROME, puis par dates de création', () => {
-    const byRome = splitPartition(root('a-d75'), context);
-    expect(byRome.map((p) => p.params.codeROME)).toEqual(romeCodes(taxonomy));
-    expect(byRome[0]).toMatchObject({ id: 'a-d75-rm1805', parent: 'a-d75', level: 'rome' });
+    const byRome = splitPartition(root('a-fr'), context);
+    expect(byRome.map((p) => p.params)).toEqual(romeCodes(taxonomy).map((codeROME) => ({ codeROME })));
+    expect(byRome[0]).toMatchObject({ id: 'a-fr-rm1805', parent: 'a-fr', level: 'rome' });
 
     const byDates = splitPartition(byRome[0]!, context);
     expect(byDates.map((p) => [p.params.minCreationDate, p.params.maxCreationDate])).toEqual([
       ['2000-01-01T00:00:00Z', '2013-05-19T02:30:00Z'],
       ['2013-05-19T02:30:01Z', '2026-10-05T05:00:00Z'],
     ]);
-    expect(byDates[0]!.id).toBe('a-d75-rm1805-c20000101t000000-20130519t023000');
-    expect(byDates.every((p) => p.level === 'dates' && p.stem === 'a-d75-rm1805')).toBe(true);
+    expect(byDates[0]!.id).toBe('a-fr-rm1805-c20000101t000000-20130519t023000');
+    expect(byDates.every((p) => p.level === 'dates' && p.stem === 'a-fr-rm1805')).toBe(true);
   });
 
   it('coupe une fenêtre de dates en deux moitiés contiguës, jusqu’à 2 secondes', () => {
     const window = (from: string, to: string): FtPartition => ({
       id: 'x',
-      stem: 'a-d75-rm1805',
+      stem: 'a-fr-rm1805',
       parent: null,
       pass: 'A',
       level: 'dates',
-      params: { codeROME: 'M1805', departement: '75', minCreationDate: from, maxCreationDate: to },
+      params: { codeROME: 'M1805', minCreationDate: from, maxCreationDate: to },
     });
     const halves = splitPartition(window('2026-09-01T00:00:00Z', '2026-09-01T00:00:09Z'), context);
     expect(halves.map((p) => [p.params.minCreationDate, p.params.maxCreationDate])).toEqual([
       ['2026-09-01T00:00:00Z', '2026-09-01T00:00:04Z'],
       ['2026-09-01T00:00:05Z', '2026-09-01T00:00:09Z'],
     ]);
-    expect(halves[0]!.id).toBe('a-d75-rm1805-c20260901t000000-20260901t000004');
+    expect(halves[0]!.id).toBe('a-fr-rm1805-c20260901t000000-20260901t000004');
     expect(splitPartition(window('2026-09-01T00:00:00Z', '2026-09-01T00:00:01Z'), context)).toEqual([]);
   });
 

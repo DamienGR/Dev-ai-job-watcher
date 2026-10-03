@@ -137,7 +137,8 @@ contenu qu'à un navigateur : elle n'a pas pu être lue d'ici. Une documentation
 retient donc les valeurs de la spec : plafond de 1 150 résultats par requête, dates au format
 `2026-10-05T00:00:00Z`, 8 appels/s. Le script `npm run probe:ft` interroge l'API réelle et
 tranche chaque point (pagination, dates, `motsCles`, `region`, champs, codes ROME M18) ; il
-doit être lancé avant la mise en service, dès que les identifiants sont disponibles.
+doit être lancé avant la mise en service, dès que les identifiants sont disponibles. Lancé le
+2026-10-03 : résultats et ajustements en D18 et D19.
 
 ### D12. Un objet d'état par étape
 
@@ -147,8 +148,8 @@ s'écraseraient. L'état est lu en cohérence forte (`consistency: 'strong'`).
 
 ### D13. Découpage adaptatif
 
-- Passe A : département → code ROME → dates de création ; passe B : mot-clé → région →
-  département → dates. Une région d'un seul département passe directement aux dates.
+- Passe A : partition nationale → code ROME → dates de création (D19) ; passe B : mot-clé →
+  région → département → dates. Une région d'un seul département passe directement aux dates.
 - Dates : division en deux de la fenêtre [2000-01-01, début du run], puis des moitiés, jusqu'à
   passer sous le plafond. La borne haute est l'instant de référence enregistré dans l'état :
   une reprise recalcule les mêmes clés.
@@ -193,3 +194,51 @@ ne doit contenir aucune donnée collectée.
   tests d'importer ces `.mts`.
 - `api-admin` : corps `{ step, runId, reset? }` ; les étapes des lots suivants répondent 501.
   L'URL du site vient du contexte Netlify (`context.site.url`), à défaut de `URL`.
+
+### D18. Résultats de la sonde (2026-10-03)
+
+`npm run probe:ft` et deux sondes complémentaires (300 appels au total, aucune nouvelle
+tentative) sur l'API réelle :
+
+- **Pagination** : premier indice de `range` ≤ 3000 (« La position de début doit être
+  inférieure ou égale à 3000. »), 150 résultats par page au plus (« La plage de résultats
+  demandée est trop importante. » au-delà). Sur `departement=75` (14 753 offres), les pages
+  jusqu'à l'indice 3149 renvoient des offres distinctes. `FT_MAX_RESULTS` passe de 1 150 à
+  **3 150**.
+- **Dates** : `YYYY-MM-DDTHH:MM:SSZ` sans millisecondes ; une date seule ou des millisecondes
+  donnent un HTTP 400, et `minCreationDate` / `maxCreationDate` sont obligatoirement fournis
+  ensemble. Le code était déjà conforme.
+- **`motsCles`** : plusieurs mots, séparés par une espace ou une virgule, sont combinés en ET
+  (`data` 1 137, `engineer` 731, `data engineer` 465), recherchés dans l'intitulé et la
+  description. Un mot-clé de plusieurs mots ramène donc un sur-ensemble de l'expression exacte ;
+  la règle de rétention de la passe B fait le tri.
+- **`region`** : accepté (codes INSEE, DROM compris) ; `departement` accepte plusieurs valeurs.
+  Les offres localisées à la seule région ou au seul pays échappent aux filtres plus fins (D19).
+- **Champs** : tous les champs de SPEC.md §4.1 existent sous le nom prévu. `codeNAF` n'est
+  renseigné que sur 47 % des offres (format `62.02A`) ; `lieuTravail.libelle` vaut
+  « département - commune » (`75 - Paris 7e Arrondissement`) et `commune` le code INSEE ;
+  `typeContrat` observés : `CDI`, `LIB`, `CDD`, `MIS`. `contact` est présent sur toutes les
+  offres : son retrait (D14) est indispensable.
+- **Codes ROME** : M1801 à M1820 existent. M1818 (ingénieur d'étude informatique : ingénieur
+  logiciel, architecte logiciel) est ajouté au `core` de la taxonomie (v3, détail dans
+  `TAXONOMY_CHANGELOG.md`).
+- **Volumes** : la passe A compte environ 2 900 offres avec M1818 (2 714 sans), loin des 15 à
+  30 k annoncés par SPEC.md §4.1. La passe B compte 2 070 offres avant dédoublonnage, pour
+  75 mots-clés dont 22 ne renvoient rien ; aucun ne dépasse 536 résultats.
+
+### D19. Passe A en une partition nationale
+
+Écart à SPEC.md §4.1 (passe A, point 2, non marqué « exigé »), validé par Damien le
+2026-10-03. Partitionner par département perd les offres qui n'en ont pas : sur les codes ROME
+de la taxonomie v2, 2 714 offres au niveau national contre 2 623 en additionnant les 101
+départements, soit 91 offres (3,4 %) jamais collectées. Les découpages par code ROME et par
+dates, eux, ne perdent rien.
+
+La passe A part donc d'une seule partition nationale (`a-fr`), redécoupée par code ROME puis
+par dates si elle dépasse le plafond, ce qui reste un partitionnement adaptatif (exigé). Avec
+le volume actuel, elle tient sous le plafond : une vingtaine d'appels au lieu de 120 environ.
+Contrepartie : un échec rejoue la partition entière, soit une vingtaine de pages.
+
+La passe B garde le découpage de la spec (région puis département), qui a la même perte
+(`motsCles=data` : 1 137 au national, 1 117 en additionnant les régions). Il ne se déclenche
+pas aujourd'hui, aucun mot-clé n'approchant le plafond.

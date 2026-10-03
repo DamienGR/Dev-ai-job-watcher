@@ -69,8 +69,9 @@ out('Jeton OAuth obtenu (scope `api_offresdemploiv2 o2dsoffre`).');
 
 out();
 out('## 1. Plafond de pagination (`range`, §4.1)');
-const broad = { codeROME: 'M1805' };
-out(`Requête nationale \`codeROME=M1805\` : ${await probe(broad)}.`);
+// Requête assez large pour dépasser le plafond (Paris, tous métiers confondus).
+const broad = { departement: '75' };
+out(`Requête \`departement=75\` : ${await probe(broad)}.`);
 for (const [first, last] of [
   [0, 149],
   [1000, 1149],
