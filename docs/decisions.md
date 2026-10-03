@@ -256,20 +256,21 @@ statistiques agrégées sur les offres, lui convient au regard de la licence. En
 
 ## Lot 2 — Traitement et agrégats (2026-10-03)
 
-D21 est réservé à la décision d'hébergement de la collecte et du traitement (Netlify ou
-serveur de Damien), en cours de discussion.
+D21 (hébergement : collecte et traitement sur le serveur de Damien par cron, Netlify pour le
+dashboard et les fonctions de lecture) est validée par Damien le 2026-10-03 et rédigée à part,
+avec la révision de la spec.
 
-### D22. Traitement indépendant de l'hébergement
+### D22. Traitement lancé par script
 
-Le plan Netlify du compte pourrait ne pas offrir de fonctions background (D21 en attente). Le
-traitement est donc une fonction `processRun(runId, { stores, log, taxonomy })`
-(`src/pipeline/process.ts`) qui ne dépend que de l'interface des stores : le script
-`npm run process` l'appelle sur le disque, une fonction Netlify ou un cron pourra l'appeler sur
-Netlify Blobs. La fonction `process-background` et le branchement de l'étape `process` dans
-`api-admin` attendront D21 (l'étape répond toujours 501).
+Conformément à D21, le traitement ne tourne pas dans une fonction Netlify background : c'est
+une fonction `processRun(runId, { stores, log, taxonomy })` (`src/pipeline/process.ts`),
+lancée par `npm run process -- --run-id <run>` après la collecte, sur les stores du disque. Elle
+ne dépend que de l'interface des stores et ne sait pas où elle tourne. Il n'y a pas de fonction
+`process-background` ; l'envoi des agrégats vers Netlify et le sort de l'étape `process` dans
+`api-admin` (qui répond toujours 501) relèvent de la mise en œuvre de D21.
 
 - **Pas de checkpoint ni d'auto-relance** (§12) : le traitement d'une semaine réelle prend 7 s
-  (D29), loin des 13 minutes d'une fonction background.
+  (D30).
 - **Verrou** : le verrou global (`state/locks/…`) arrive au lot 5 avec la planification. En
   attendant, un traitement refuse de démarrer si le même run est « en cours » depuis moins de
   20 minutes (TTL de §12).
