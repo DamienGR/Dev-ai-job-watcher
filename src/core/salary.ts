@@ -8,6 +8,11 @@ export const SALARY_MIN = 18_000;
 export const SALARY_MAX = 250_000;
 /** Durée légale annuelle du travail : conversion d'un taux horaire en brut annuel. */
 export const HOURS_PER_YEAR = 1607;
+/**
+ * Montant « mensuel » à partir duquel France Travail a reçu en fait un salaire annuel
+ * (« Mensuel de 45000 Euros ») : lu tel quel (décision de Damien, docs/decisions.md D23).
+ */
+export const MONTHLY_AS_ANNUAL_FROM = 18_000;
 
 export interface Salary {
   minAnnual: number | null;
@@ -56,7 +61,10 @@ function parseFtLibelle(libelle: string): number[] | null {
   // Le nombre de mois figure parfois dans le commentaire accolé (« … Euros - sur 13 mois »).
   const monthCount = months ?? /\bsur (\d+(?:[.,]\d+)?) mois\b/i.exec(libelle)?.[1] ?? '12';
   const factor = kind === 'annuel' ? 1 : kind === 'mensuel' ? Number(monthCount.replace(',', '.')) : HOURS_PER_YEAR;
-  return [low, high].filter((v): v is string => v !== undefined).map((v) => Number(v) * factor);
+  return [low, high]
+    .filter((v): v is string => v !== undefined)
+    .map(Number)
+    .map((v) => (kind === 'mensuel' && v >= MONTHLY_AS_ANNUAL_FROM ? v : v * factor));
 }
 
 // Commentaire libre (texte normalisé) : « 45 - 55 k€ », « 45k-55k », « 45 000 - 50 000 € annuel
@@ -111,7 +119,8 @@ function parseFtCommentaire(commentaire: string): number[] | null {
 /**
  * Salaire d'une offre France Travail (SPEC.md §6.3, exigé) : `salaire.libelle`, puis repli sur
  * `salaire.commentaire`. Tout est ramené en brut annuel (mensuel × nombre de mois, 12 par
- * défaut ; horaire × 1 607 h) ; rien d'exploitable donne `source='none'`.
+ * défaut, sauf montant mensuel d'au moins 18 000 € lu comme annuel ; horaire × 1 607 h) ;
+ * rien d'exploitable donne `source='none'`.
  */
 export function parseFtSalary(libelle: string | null | undefined, commentaire: string | null | undefined): SalaryParse {
   const raw = [libelle, commentaire].filter((v): v is string => typeof v === 'string' && v.trim() !== '').join(' | ') || null;

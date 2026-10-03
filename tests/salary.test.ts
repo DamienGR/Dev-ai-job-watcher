@@ -46,6 +46,13 @@ describe('salaires France Travail (SPEC.md §6.3, annexe C)', () => {
     ['Annuel de 60000.0 Euros à 50000.0 Euros', null, [50_000, 60_000, 55_000, 'declared']],
     ['Annuel de 10000.0 Euros à 45000.0 Euros', null, [45_000, 45_000, 45_000, 'declared']],
     ['Annuel de 50000.0 Euros', 'Selon profil', [50_000, 50_000, 50_000, 'declared']],
+    // Salaire annuel saisi comme mensuel : 18 000 € et plus lus tels quels (D23)
+    ['Mensuel de 45000.0 Euros à 55000.0 Euros', null, [45_000, 55_000, 50_000, 'declared']],
+    ['Mensuel de 18000.0 Euros', null, [18_000, 18_000, 18_000, 'declared']],
+    ['Mensuel de 22404.24 Euros à 55541.0 Euros', null, [22_404, 55_541, 38_973, 'declared']],
+    ['Mensuel de 17999.0 Euros', null, [215_988, 215_988, 215_988, 'declared']],
+    ['Mensuel de 2500.0 Euros à 30000.0 Euros', null, [30_000, 30_000, 30_000, 'declared']],
+    ['Mensuel de 800.0 Euros à 1300.0 Euros', null, [null, null, null, 'none']],
     // Repli sur le commentaire
     [null, '45k-55k', [45_000, 55_000, 50_000, 'declared']],
     [null, 'De 40 à 45 k€ selon expérience', [40_000, 45_000, 42_500, 'declared']],

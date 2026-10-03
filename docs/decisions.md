@@ -296,10 +296,14 @@ Règles exigées de §6.3 appliquées telles quelles ; latitudes prises :
 - Le commentaire de salaire porte souvent un TJM (« 500 € par jour » : 175 offres retenues du
   run W40, presque tous les TJM trouvés) : il est ajouté au texte du signal `tjm` et de
   `parseTjm`.
+- **Écart à la règle exigée « mensuel × nombre de mois », validé par Damien le 2026-10-03** :
+  un montant mensuel d'au moins 18 000 € est un salaire annuel saisi dans le mauvais champ
+  (« Mensuel de 45000 Euros », soit 540 000 € par an une fois multiplié par 12) et il est lu
+  tel quel. Sur le run W40, cela récupère 21 salaires que les bornes de cohérence écartaient. Le seuil s'applique à chaque borne :
+  « Mensuel de 2500 Euros à 30000 Euros » donne 30 000 € dans les deux cas.
 - Hors bornes : la borne est écartée et l'offre comptée dans `salaryOutOfBounds`
-  (`quality.json`). Sur le run W40, 73 offres sont concernées, dont 21 salaires annuels saisis
-  comme mensuels (« Mensuel de 45000 Euros ») : la règle exigée (mensuel × 12) les écarte. Un
-  correctif (mensuel ≥ 10 000 lu comme annuel) reste à décider.
+  (`quality.json`) : 47 offres sur le run W40 (salaires d'alternance ou de temps partiel sous
+  18 000 €, montants horaires ou mensuels incohérents).
 
 ### D24. Localisation
 
@@ -394,7 +398,7 @@ source et méthode. Mayotte n'a pas ce tableau : densité non calculée (`null`)
 Traitement de la collecte nationale du 2026-10-03 en local : 7 s, dont la relecture et les
 agrégats. 4 997 offres lues, 3 654 distinctes, 103 lectures écartées hors de France
 (Luxembourg 89), 443 écartées par la règle de rétention, **3 211 retenues**. Salaire
-exploitable : 36 % ; TJM : 179 offres ; coordonnées : 24 % ; sans région : 17. Agrégats de
+exploitable : 37 % (1 177 offres, médiane 42 000 €) ; TJM : 179 offres ; coordonnées : 24 % ; sans région : 17. Agrégats de
 3 à 135 Ko par fichier (`salaries.json` : 119 Ko), loin des 2 Mo.
 
 À signaler pour la revue de taxonomie (non corrigé ici, `taxonomy.yaml` inchangée) :
