@@ -1,0 +1,121 @@
+{
+  "description": "Passe A, code ROME M1806 (Consultant fonctionnel des SI) : 2 offres fictives, département 75",
+  "match": {
+    "codeROME": "M1806"
+  },
+  "offers": [
+    {
+      "natureContrat": "Contrat travail",
+      "alternance": false,
+      "nombrePostes": 1,
+      "accessibleTH": false,
+      "offresManqueCandidats": false,
+      "entrepriseAdaptee": false,
+      "employeurHandiEngage": false,
+      "origineOffre": {
+        "origine": "1",
+        "urlOrigine": "https://candidat.francetravail.fr/offres/recherche/detail/FX00005"
+      },
+      "contact": {
+        "nom": "EXEMPLE BANQUE - Mme Jeanne Exemple",
+        "coordonnees1": "1 rue de l'Exemple",
+        "coordonnees2": "31000 TOULOUSE",
+        "courriel": "recrutement@exemple.fr",
+        "telephone": "01 23 45 67 89",
+        "urlPostulation": "https://recrutement.exemple.fr/postuler"
+      },
+      "agence": {
+        "telephone": "3949",
+        "courriel": "agence.exemple@francetravail.fr"
+      },
+      "id": "FX00005",
+      "intitule": "Product Owner IA agentique H/F",
+      "description": "Pilotez la roadmap de nos copilotes. Hybride : 3 jours sur site, 2 jours en télétravail.",
+      "dateCreation": "2026-09-27T11:20:00.000Z",
+      "dateActualisation": "2026-09-28T16:00:00.000Z",
+      "lieuTravail": {
+        "libelle": "75 - PARIS 09",
+        "latitude": 48.8768,
+        "longitude": 2.3378,
+        "codePostal": "75009",
+        "commune": "75109"
+      },
+      "romeCode": "M1806",
+      "romeLibelle": "Conseil et maîtrise d'ouvrage en systèmes d'information",
+      "appellationlibelle": "Product owner",
+      "entreprise": {
+        "nom": "EXEMPLE BANQUE"
+      },
+      "typeContrat": "CDI",
+      "typeContratLibelle": "Contrat à durée indéterminée",
+      "experienceExige": "E",
+      "experienceLibelle": "4 An(s)",
+      "salaire": {
+        "libelle": "Salaire selon profil",
+        "commentaire": "60 - 70 k€ brut annuel"
+      },
+      "dureeTravailLibelleConverti": "Temps plein",
+      "qualificationCode": "9",
+      "qualificationLibelle": "Cadre",
+      "codeNAF": "64.19Z",
+      "secteurActivite": "64",
+      "secteurActiviteLibelle": "Autres intermédiations monétaires",
+      "trancheEffectifEtab": "1000 salariés et plus"
+    },
+    {
+      "natureContrat": "Contrat travail",
+      "alternance": false,
+      "nombrePostes": 1,
+      "accessibleTH": false,
+      "offresManqueCandidats": false,
+      "entrepriseAdaptee": false,
+      "employeurHandiEngage": false,
+      "origineOffre": {
+        "origine": "1",
+        "urlOrigine": "https://candidat.francetravail.fr/offres/recherche/detail/FX00006"
+      },
+      "contact": {
+        "nom": "EXEMPLE ERP - Mme Jeanne Exemple",
+        "coordonnees1": "1 rue de l'Exemple",
+        "coordonnees2": "31000 TOULOUSE",
+        "courriel": "recrutement@exemple.fr",
+        "telephone": "01 23 45 67 89",
+        "urlPostulation": "https://recrutement.exemple.fr/postuler"
+      },
+      "agence": {
+        "telephone": "3949",
+        "courriel": "agence.exemple@francetravail.fr"
+      },
+      "id": "FX00006",
+      "intitule": "Consultant SAP S/4HANA",
+      "description": "Accompagnement de projets de migration S/4HANA.",
+      "dateCreation": "2026-09-10T08:00:00.000Z",
+      "dateActualisation": "2026-09-30T08:00:00.000Z",
+      "lieuTravail": {
+        "libelle": "75 - PARIS 08",
+        "latitude": 48.8727,
+        "longitude": 2.3125,
+        "codePostal": "75008",
+        "commune": "75108"
+      },
+      "romeCode": "M1806",
+      "romeLibelle": "Conseil et maîtrise d'ouvrage en systèmes d'information",
+      "appellationlibelle": "Consultant / Consultante SAP",
+      "entreprise": {
+        "nom": "EXEMPLE ERP"
+      },
+      "typeContrat": "MIS",
+      "typeContratLibelle": "Mission intérimaire - 6 Mois",
+      "experienceExige": "E",
+      "experienceLibelle": "5 An(s)",
+      "salaire": {},
+      "dureeTravailLibelleConverti": "Temps plein",
+      "qualificationCode": "8",
+      "qualificationLibelle": "Agent de maîtrise",
+      "codeNAF": "78.20Z",
+      "secteurActivite": "78",
+      "secteurActiviteLibelle": "Activités des agences de travail temporaire",
+      "trancheEffectifEtab": "100 à 199 salariés"
+    }
+  ]
+}

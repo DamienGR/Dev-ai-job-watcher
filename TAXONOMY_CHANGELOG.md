@@ -10,6 +10,38 @@ Toute modification de [`taxonomy.yaml`](taxonomy.yaml) incrémente `version`, me
 
 Un `id` n'est jamais supprimé ni renommé : un rôle abandonné passe en `status: deprecated`.
 
+## v3 — 2026-10-03
+
+Correction du filet de collecte France Travail (`rome_codes`) : la liste des codes M18 du
+ROME 4.0, marquée « À VÉRIFIER » (SPEC.md §15.3), a été relevée sur l'API réelle par la sonde
+du lot 1. Aucun motif modifié, aucun id ajouté, supprimé ou renommé.
+
+**M1818 ajouté à `core`.** « Ingénieur / Ingénieure d'étude informatique » : 186 offres
+actives au 2026-10-03. Appellations les plus fréquentes sur 150 offres : ingénieur logiciel
+(36), architecte logiciel (34), ingénieur d'étude et développement informatique (22),
+ingénieur d'étude logiciel informatique (17). C'est un code de développement au même titre
+que M1805, absent de la v2 parce que la liste avait été établie avant la vérification. Avec la
+v2, ces offres n'étaient collectées que si un mot-clé de la passe B les rattrapait.
+
+Contrôle de classification sur les intitulés types, avec les motifs actuels : « Ingénieur
+logiciel », « Ingénieur études et développement Java » et « Ingénieur d'étude et développement
+informatique » → `software_engineer` ; « Architecte logiciel » → `tech_lead_architecte`. Les
+intitulés génériques « Ingénieur d'étude informatique » et « Ingénieur d'étude logiciel
+informatique » restent `non_classe` : à examiner à la première revue mensuelle sur données
+réelles, pas corrigé ici.
+
+**Codes M18 relevés et non retenus** (offres actives au 2026-10-03) : M1804 télécoms (65),
+M1807 systèmes de communication, surtout défense (127), M1808 cartographe (35), M1809
+météorologue (11), M1812 RSSI (90), M1813 intégrateur logiciels métiers / ERP (173), M1814
+Scrum Master (114), M1815 test et validation logiciel (33), M1816 technicien réseaux et
+télécoms (183), M1817 administrateur sécurité informatique (8), M1819 technicien en
+cybersécurité (17), M1820 méthodes et qualité informatique (23). M1813, M1814 et M1815 sont
+dans le périmètre informatique : à réexaminer à la revue mensuelle, chiffres de classification
+à l'appui.
+
+Pas de cas ajouté dans `tests/fixtures/titles.json` : aucun motif n'a changé. Le test du plan
+de collecte (`tests/francetravail/partitions.test.ts`) vérifie la nouvelle liste de codes.
+
 ## v2 — 2026-10-02
 
 Correction de deux défauts relevés au lot 0. Aucune offre n'est encore collectée : chaque

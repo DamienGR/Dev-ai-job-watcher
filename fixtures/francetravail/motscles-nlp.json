@@ -1,0 +1,63 @@
+{
+  "description": "Passe B, mot-clé « NLP » : une offre hors informatique (PNL), à écarter par la règle de rétention (§4.1)",
+  "match": {
+    "motsCles": "NLP"
+  },
+  "offers": [
+    {
+      "natureContrat": "Contrat travail",
+      "alternance": false,
+      "nombrePostes": 1,
+      "accessibleTH": false,
+      "offresManqueCandidats": false,
+      "entrepriseAdaptee": false,
+      "employeurHandiEngage": false,
+      "origineOffre": {
+        "origine": "1",
+        "urlOrigine": "https://candidat.francetravail.fr/offres/recherche/detail/FX00008"
+      },
+      "contact": {
+        "nom": "EXEMPLE BIEN-ETRE - Mme Jeanne Exemple",
+        "coordonnees1": "1 rue de l'Exemple",
+        "coordonnees2": "31000 TOULOUSE",
+        "courriel": "recrutement@exemple.fr",
+        "telephone": "01 23 45 67 89",
+        "urlPostulation": "https://recrutement.exemple.fr/postuler"
+      },
+      "agence": {
+        "telephone": "3949",
+        "courriel": "agence.exemple@francetravail.fr"
+      },
+      "id": "FX00008",
+      "intitule": "Coach en développement personnel (PNL / NLP) (H/F)",
+      "description": "Accompagnement individuel en programmation neuro-linguistique.",
+      "dateCreation": "2026-09-24T09:30:00.000Z",
+      "dateActualisation": "2026-09-24T09:30:00.000Z",
+      "lieuTravail": {
+        "libelle": "33 - BORDEAUX",
+        "latitude": 44.8378,
+        "longitude": -0.5792,
+        "codePostal": "33000",
+        "commune": "33063"
+      },
+      "romeCode": "K1103",
+      "romeLibelle": "Développement personnel et bien-être de la personne",
+      "appellationlibelle": "Coach en développement personnel",
+      "entreprise": {
+        "nom": "EXEMPLE BIEN-ETRE"
+      },
+      "typeContrat": "LIB",
+      "typeContratLibelle": "Profession libérale",
+      "experienceExige": "D",
+      "experienceLibelle": "Débutant accepté",
+      "salaire": {},
+      "dureeTravailLibelleConverti": "Temps partiel",
+      "qualificationCode": "7",
+      "qualificationLibelle": "Technicien",
+      "codeNAF": "96.09Z",
+      "secteurActivite": "96",
+      "secteurActiviteLibelle": "Autres services personnels n.c.a.",
+      "trancheEffectifEtab": "0 salarié"
+    }
+  ]
+}

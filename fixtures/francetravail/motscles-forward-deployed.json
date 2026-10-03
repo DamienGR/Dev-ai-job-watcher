@@ -1,0 +1,123 @@
+{
+  "description": "Passe B, mot-clé « forward deployed » : une offre déjà vue en passe A et une nouvelle",
+  "match": {
+    "motsCles": "forward deployed"
+  },
+  "offers": [
+    {
+      "natureContrat": "Contrat travail",
+      "alternance": false,
+      "nombrePostes": 1,
+      "accessibleTH": false,
+      "offresManqueCandidats": false,
+      "entrepriseAdaptee": false,
+      "employeurHandiEngage": false,
+      "origineOffre": {
+        "origine": "1",
+        "urlOrigine": "https://candidat.francetravail.fr/offres/recherche/detail/FX00004"
+      },
+      "contact": {
+        "nom": "EXEMPLE AGENTS - Mme Jeanne Exemple",
+        "coordonnees1": "1 rue de l'Exemple",
+        "coordonnees2": "31000 TOULOUSE",
+        "courriel": "recrutement@exemple.fr",
+        "telephone": "01 23 45 67 89",
+        "urlPostulation": "https://recrutement.exemple.fr/postuler"
+      },
+      "agence": {
+        "telephone": "3949",
+        "courriel": "agence.exemple@francetravail.fr"
+      },
+      "id": "FX00004",
+      "intitule": "Forward Deployed Engineer IA (H/F)",
+      "description": "Déployez nos agents IA chez nos clients grands comptes. Déplacements fréquents chez nos clients. TJM : 650 €/jour pour les profils freelance.",
+      "dateCreation": "2026-09-29T08:00:00.000Z",
+      "dateActualisation": "2026-09-29T08:00:00.000Z",
+      "lieuTravail": {
+        "libelle": "75 - PARIS 02",
+        "latitude": 48.8682,
+        "longitude": 2.3428,
+        "codePostal": "75002",
+        "commune": "75102"
+      },
+      "romeCode": "M1805",
+      "romeLibelle": "Études et développement informatique",
+      "appellationlibelle": "Ingénieur / Ingénieure d'études informatique",
+      "entreprise": {
+        "nom": "EXEMPLE AGENTS"
+      },
+      "typeContrat": "CDI",
+      "typeContratLibelle": "Contrat à durée indéterminée",
+      "experienceExige": "E",
+      "experienceLibelle": "5 An(s)",
+      "salaire": {
+        "libelle": "Annuel de 70000.0 Euros à 90000.0 Euros sur 12 mois"
+      },
+      "dureeTravailLibelleConverti": "Temps plein",
+      "qualificationCode": "9",
+      "qualificationLibelle": "Cadre",
+      "codeNAF": "58.29C",
+      "secteurActivite": "58",
+      "secteurActiviteLibelle": "Édition de logiciels applicatifs",
+      "trancheEffectifEtab": "50 à 99 salariés",
+      "deplacementLibelle": "Fréquents National"
+    },
+    {
+      "natureContrat": "Contrat travail",
+      "alternance": false,
+      "nombrePostes": 1,
+      "accessibleTH": false,
+      "offresManqueCandidats": false,
+      "entrepriseAdaptee": false,
+      "employeurHandiEngage": false,
+      "origineOffre": {
+        "origine": "1",
+        "urlOrigine": "https://candidat.francetravail.fr/offres/recherche/detail/FX00007"
+      },
+      "contact": {
+        "nom": "EXEMPLE INDUSTRIE - Mme Jeanne Exemple",
+        "coordonnees1": "1 rue de l'Exemple",
+        "coordonnees2": "31000 TOULOUSE",
+        "courriel": "recrutement@exemple.fr",
+        "telephone": "01 23 45 67 89",
+        "urlPostulation": "https://recrutement.exemple.fr/postuler"
+      },
+      "agence": {
+        "telephone": "3949",
+        "courriel": "agence.exemple@francetravail.fr"
+      },
+      "id": "FX00007",
+      "intitule": "Applied AI, Forward Deployed Machine Learning Engineer - EMEA",
+      "description": "Mission de déploiement de modèles chez nos clients industriels. Full remote possible.",
+      "dateCreation": "2026-09-26T13:00:00.000Z",
+      "dateActualisation": "2026-09-26T13:00:00.000Z",
+      "lieuTravail": {
+        "libelle": "69 - LYON 03",
+        "latitude": 45.7597,
+        "longitude": 4.8422,
+        "codePostal": "69003",
+        "commune": "69383"
+      },
+      "romeCode": "M1805",
+      "romeLibelle": "Études et développement informatique",
+      "appellationlibelle": "Ingénieur / Ingénieure d'études informatique",
+      "entreprise": {
+        "nom": "EXEMPLE INDUSTRIE"
+      },
+      "typeContrat": "CDI",
+      "typeContratLibelle": "Contrat à durée indéterminée",
+      "experienceExige": "E",
+      "experienceLibelle": "3 An(s)",
+      "salaire": {
+        "libelle": "Annuel de 60000.0 Euros à 75000.0 Euros sur 12 mois"
+      },
+      "dureeTravailLibelleConverti": "Temps plein",
+      "qualificationCode": "9",
+      "qualificationLibelle": "Cadre",
+      "codeNAF": "28.99B",
+      "secteurActivite": "28",
+      "secteurActiviteLibelle": "Fabrication d'autres machines spécialisées",
+      "trancheEffectifEtab": "500 à 999 salariés"
+    }
+  ]
+}

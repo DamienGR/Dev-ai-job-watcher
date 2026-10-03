@@ -125,3 +125,120 @@ donc exclues des motifs `full_remote` et `hybrid` par un lookbehind
 (`(?<!(pas de|pas en|sans|aucun) )`), et le motif « télétravail … N jours » reste dans la
 phrase. Les négations anglaises (« not fully remote ») ne sont pas traitées : elles sont rares
 dans les offres France Travail.
+
+## Lot 1 — Collecte France Travail (2026-10-02)
+
+### D11. Points [À VÉRIFIER] : valeurs de la spec, tranchées par une sonde
+
+La documentation de l'API sur francetravail.io est une application web qui ne livre son
+contenu qu'à un navigateur : elle n'a pas pu être lue d'ici. Une documentation tierce
+(bibliothèque `api-offres-emploi`) indique pour `range` un premier indice ≤ 1000, un dernier
+≤ 1149 et 150 résultats par page, ce qui concorde avec la borne prudente de la spec. Le code
+retient donc les valeurs de la spec : plafond de 1 150 résultats par requête, dates au format
+`2026-10-05T00:00:00Z`, 8 appels/s. Le script `npm run probe:ft` interroge l'API réelle et
+tranche chaque point (pagination, dates, `motsCles`, `region`, champs, codes ROME M18) ; il
+doit être lancé avant la mise en service, dès que les identifiants sont disponibles. Lancé le
+2026-10-03 : résultats et ajustements en D18 et D19.
+
+### D12. Un objet d'état par étape
+
+`state/runs/<runId>/<étape>.json` (ex. `runs/2026-W41/collect-ft.json`) au lieu d'un seul
+`runs/<runId>.json` (SPEC.md §3.4) : les deux collecteurs tournent en parallèle et
+s'écraseraient. L'état est lu en cohérence forte (`consistency: 'strong'`).
+
+### D13. Découpage adaptatif
+
+- Passe A : partition nationale → code ROME → dates de création (D19) ; passe B : mot-clé →
+  région → département → dates. Une région d'un seul département passe directement aux dates.
+- Dates : division en deux de la fenêtre [2000-01-01, début du run], puis des moitiés, jusqu'à
+  passer sous le plafond. La borne haute est l'instant de référence enregistré dans l'état :
+  une reprise recalcule les mêmes clés.
+- Une partition impossible à découper (fenêtre de moins de 2 s) est lue jusqu'au plafond,
+  marquée `truncated` et signalée dans les erreurs du run.
+- Une partition vide (HTTP 204) est quand même écrite dans `raw` (total 0) : la couverture de
+  la collecte reste lisible.
+
+### D14. Données personnelles retirées avant écriture
+
+Outre l'objet `contact` (exigé, §11), l'objet `agence` (coordonnées de l'agence France
+Travail) est retiré. Par précaution, les e-mails et numéros de téléphone cités dans
+`description` et `entreprise.description` sont masqués (`[e-mail masqué]`,
+`[téléphone masqué]`) ; les montants, codes postaux et SIRET sont laissés intacts (testé).
+
+### D15. Erreurs, nouvelles tentatives et reprise
+
+- Client HTTP : 5 nouvelles tentatives (1, 2, 4, 8, 16 s) sur 429, 5xx et erreurs réseau ;
+  `Retry-After` respecté, plafonné à 60 s. Un 401 renouvelle le jeton une fois.
+- Partition : une erreur 4xx (hors 429) la met en échec tout de suite ; une erreur transitoire
+  est retentée une fois dans la même exécution. Les partitions en échec sont retentées à la
+  relance suivante (`api-admin`, puis `weekly-process` au lot 5).
+- Jeton refusé : la collecte échoue avant toute écriture.
+- Échéance : la fonction background rend la main à 13 min, état enregistré ; la reprise
+  automatique (rappel de la fonction, 5 enchaînements au plus) arrive au lot 5 avec la
+  planification. Un run complet n'est pas refait, sauf `reset`.
+- 4 partitions traitées en parallèle, sous un limiteur commun de 8 appels/s.
+
+### D16. Fixtures synthétiques
+
+`fixtures/francetravail/` contient des offres fictives au format de l'API, pas de réponses
+réelles : la licence de réutilisation des offres (§15.4) n'est pas encore vérifiée et le dépôt
+ne doit contenir aucune donnée collectée.
+
+### D17. Outillage
+
+- `npm run collect:ft` lance la collecte en local, stockage sur disque (`.data/`, ignoré par
+  git), en mode `live` ou `fixtures` ; `npm run probe:ft` lance la sonde. Les deux lisent
+  `.env` s'il existe et s'exécutent avec `tsx`.
+- La logique des fonctions Netlify est dans `src/functions/` (testable) ; les fichiers
+  `netlify/functions/*.mts` ne font que la brancher. `allowImportingTsExtensions` permet aux
+  tests d'importer ces `.mts`.
+- `api-admin` : corps `{ step, runId, reset? }` ; les étapes des lots suivants répondent 501.
+  L'URL du site vient du contexte Netlify (`context.site.url`), à défaut de `URL`.
+
+### D18. Résultats de la sonde (2026-10-03)
+
+`npm run probe:ft` et deux sondes complémentaires (300 appels au total, aucune nouvelle
+tentative) sur l'API réelle :
+
+- **Pagination** : premier indice de `range` ≤ 3000 (« La position de début doit être
+  inférieure ou égale à 3000. »), 150 résultats par page au plus (« La plage de résultats
+  demandée est trop importante. » au-delà). Sur `departement=75` (14 753 offres), les pages
+  jusqu'à l'indice 3149 renvoient des offres distinctes. `FT_MAX_RESULTS` passe de 1 150 à
+  **3 150**.
+- **Dates** : `YYYY-MM-DDTHH:MM:SSZ` sans millisecondes ; une date seule ou des millisecondes
+  donnent un HTTP 400, et `minCreationDate` / `maxCreationDate` sont obligatoirement fournis
+  ensemble. Le code était déjà conforme.
+- **`motsCles`** : plusieurs mots, séparés par une espace ou une virgule, sont combinés en ET
+  (`data` 1 137, `engineer` 731, `data engineer` 465), recherchés dans l'intitulé et la
+  description. Un mot-clé de plusieurs mots ramène donc un sur-ensemble de l'expression exacte ;
+  la règle de rétention de la passe B fait le tri.
+- **`region`** : accepté (codes INSEE, DROM compris) ; `departement` accepte plusieurs valeurs.
+  Les offres localisées à la seule région ou au seul pays échappent aux filtres plus fins (D19).
+- **Champs** : tous les champs de SPEC.md §4.1 existent sous le nom prévu. `codeNAF` n'est
+  renseigné que sur 47 % des offres (format `62.02A`) ; `lieuTravail.libelle` vaut
+  « département - commune » (`75 - Paris 7e Arrondissement`) et `commune` le code INSEE ;
+  `typeContrat` observés : `CDI`, `LIB`, `CDD`, `MIS`. `contact` est présent sur toutes les
+  offres : son retrait (D14) est indispensable.
+- **Codes ROME** : M1801 à M1820 existent. M1818 (ingénieur d'étude informatique : ingénieur
+  logiciel, architecte logiciel) est ajouté au `core` de la taxonomie (v3, détail dans
+  `TAXONOMY_CHANGELOG.md`).
+- **Volumes** : la passe A compte environ 2 900 offres avec M1818 (2 714 sans), loin des 15 à
+  30 k annoncés par SPEC.md §4.1. La passe B compte 2 070 offres avant dédoublonnage, pour
+  75 mots-clés dont 22 ne renvoient rien ; aucun ne dépasse 536 résultats.
+
+### D19. Passe A en une partition nationale
+
+Écart à SPEC.md §4.1 (passe A, point 2, non marqué « exigé »), validé par Damien le
+2026-10-03. Partitionner par département perd les offres qui n'en ont pas : sur les codes ROME
+de la taxonomie v2, 2 714 offres au niveau national contre 2 623 en additionnant les 101
+départements, soit 91 offres (3,4 %) jamais collectées. Les découpages par code ROME et par
+dates, eux, ne perdent rien.
+
+La passe A part donc d'une seule partition nationale (`a-fr`), redécoupée par code ROME puis
+par dates si elle dépasse le plafond, ce qui reste un partitionnement adaptatif (exigé). Avec
+le volume actuel, elle tient sous le plafond : une vingtaine d'appels au lieu de 120 environ.
+Contrepartie : un échec rejoue la partition entière, soit une vingtaine de pages.
+
+La passe B garde le découpage de la spec (région puis département), qui a la même perte
+(`motsCles=data` : 1 137 au national, 1 117 en additionnant les régions). Il ne se déclenche
+pas aujourd'hui, aucun mot-clé n'approchant le plafond.

@@ -13,5 +13,5 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
-  # Lue à l'exécution pour la classification et le reclassement (SPEC.md §6.5, §9.3).
-  included_files = ["taxonomy.yaml"]
+  # Taxonomie lue à l'exécution (SPEC.md §6.5, §9.3) ; fixtures pour SOURCE_MODE=fixtures (§13).
+  included_files = ["taxonomy.yaml", "fixtures/**"]
