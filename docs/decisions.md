@@ -242,3 +242,14 @@ Contrepartie : un échec rejoue la partition entière, soit une vingtaine de pag
 La passe B garde le découpage de la spec (région puis département), qui a la même perte
 (`motsCles=data` : 1 137 au national, 1 117 en additionnant les régions). Il ne se déclenche
 pas aujourd'hui, aucun mot-clé n'approchant le plafond.
+
+### D20. Licence de réutilisation des offres France Travail (§15.4)
+
+Validée par Damien le 2026-10-03, après la fusion du lot 1 : l'usage du projet, des
+statistiques agrégées sur les offres, lui convient au regard de la licence. En conséquence :
+
+- la collecte France Travail peut tourner en production dès que le site Netlify est configuré ;
+- le dashboard (lot 4) affiche la mention de la source, « Source : France Travail », comme le
+  demande SPEC.md §11 ;
+- rien ne change pour le dépôt : il ne contient toujours aucune donnée collectée (CLAUDE.md),
+  et les fixtures restent fictives (D16).
