@@ -464,3 +464,106 @@ exploitable : 37 % (1 177 offres, médiane 42 000 €) ; TJM : 179 offres ; coor
 classification à 57 % (1 819 offres classées) ; télétravail inconnu pour 85 % des offres ;
 « Coach en développement personnel (PNL / NLP) » classé `nlp_engineer` (offre FX00008 des
 fixtures, désormais retenue en passe B).
+
+## Lot 4 — Dashboard MVP (2026-10-03)
+
+### D31. Le lot 4 passe avant le lot 3
+
+Choisi par Damien le 2026-10-03. Le lot 3 (Adzuna) attend des actions de sa part : créer le
+compte développeur et ses clés, et dire si le projet relève de la « recherche personnelle »,
+que les conditions d'Adzuna autorisent, ou d'un usage professionnel, qui demande leur accord
+écrit même pour des agrégats. Le dashboard ne dépend que des données France Travail.
+
+- La règle « un lot à la fois » (CLAUDE.md, SPEC.md §0) vaut toujours : le lot 3 démarrera
+  après la fusion du lot 4.
+- Le dashboard n'affiche que France Travail. Le filtre « source » propose Adzuna, grisé
+  (« à venir ») ; `api-ingest` accepte déjà `adzuna-stats.json`.
+- La mention d'Adzuna exigée par ses conditions pour des agrégats (« The Adzuna API », avec un
+  lien vers adzuna.fr) sera ajoutée au pied de page avec le lot 3.
+- Inchangé : aucune collecte réelle sur le VPS avant le lot 5.
+
+### D32. Dashboard public (§16.1, §15.6)
+
+Choisi par Damien le 2026-10-03. Vérifié sur la documentation Netlify (§15.6) : sur les plans
+legacy, la protection par mot de passe intégrée est réservée au plan Pro, absent du compte
+(D21). Le dashboard et `api-data` sont donc publics ; la page garde `noindex`. Seul l'envoi
+(`api-ingest`) est protégé. Le domaine reste `dev-ai-job-watcher.netlify.app` (§16.5) tant
+que Damien n'en choisit pas un autre.
+
+### D33. Envoi et lecture des agrégats
+
+- `api-ingest` : `PUT /api/ingest/*`, la route à joker acceptant aussi
+  `review/AAAA-MM.json` (lot 6). Le nom doit figurer dans la liste du §3.4
+  (`src/pipeline/aggregateFiles.ts`), le corps être un objet JSON de 4 Mo au plus ; il est
+  écrit tel quel dans le store Blobs `aggregates`. Secret absent côté Netlify : tout est refusé.
+- `api-data` : `GET /api/data/*`, réponse compressée en gzip si le client l'accepte.
+  Cache (précision du §3.3) : `meta.json` sans cache (`no-cache`), puisqu'il annonce le run ;
+  les autres fichiers en `max-age=3600`, demandés par le dashboard avec `?v=<generatedAt>`,
+  une adresse propre à chaque envoi. Un nouvel envoi est donc visible au rechargement suivant,
+  sans déploiement ni purge.
+- `push` : `src/pipeline/push.ts`, lancé par `npm run push`. Fichiers envoyés par ordre
+  alphabétique, `meta.json` en dernier, avec les relances du §12 ; une erreur arrête l'envoi
+  avant `meta.json`, et le dashboard reste sur le run précédent. Le lot 5 l'intègre au job
+  `weekly-run` et à `admin`.
+- Mise en service : Damien saisit `INGEST_SECRET` dans Netlify ; le VPS reçoit `SITE_URL` et
+  le même secret dans son fichier d'environnement au lot 5. D'ici là, le site affiche « Tableau
+  de bord en préparation ».
+
+### D34. Indicateurs et règles d'affichage
+
+- **n < 5** (§8.3) : masque les statistiques calculées sur moins de 5 observations
+  (quantiles, parts, densités, variations, base 100). Les comptages s'affichent tels quels :
+  ce sont les `n` eux-mêmes.
+- **Filtres** (§8.2) : appliqués là où l'agrégat a la dimension. Sinon, une note sous le titre
+  dit lesquels ne s'appliquent pas (par exemple, `techs.json` n'a ni région ni contrat).
+  Périmètre par défaut : groupes `dashboard: true` (g1 à g8). « Inclure le périmètre élargi »
+  ajoute g9 et les offres non classées.
+- **Période** : 3, 6 ou 12 derniers mois, ou tout l'historique, jusqu'au dernier run. Les
+  quantiles ne s'additionnent pas : salaires, prime IA et TJM restent sur les 12 derniers mois
+  (lignes `*` de D28), ce que la page indique.
+- **Tuiles** : semaine de référence = celle qui précède le dernier run, la plus récente que la
+  collecte du lundi couvre en entier. Écart = rapport à la moyenne des 4 semaines précédentes.
+  Part IA = g3 à g8 / g1 à g8, hors filtres de groupe et de rôle. Médiane IA / dev = prime IA
+  de `salaries.json` (12 derniers mois, France entière). Rôles émergents actifs = rôles des
+  groupes `emergent` ayant au moins une offre sur les 4 dernières semaines complètes.
+- **Ce qui bouge** : rôles, 4 dernières semaines complètes contre les 4 précédentes (au moins
+  10 offres sur les 8) ; technos, part des descriptions complètes qui les citent au mois de
+  référence contre la moyenne des 3 mois précédents (mois d'au moins 5 offres).
+- **Métiers** : variation sur 3 mois = 13 dernières semaines complètes contre les 13
+  précédentes ; base 100 = première période d'au moins 5 offres ; part du total = part des
+  offres de tout le périmètre affiché. En vue « rôles », les 8 plus fréquents ont leur courbe,
+  les autres sont regroupés. Part de télétravail : parmi les offres qui le précisent (85 %
+  ne le précisent pas sur le run W40, D30), avec son `n`.
+- **Périodes partielles** : hachurées sur les courbes, badge « partiel » sur les tuiles et
+  listes. Avec un seul run, toutes les semaines passées sont du rattrapage : c'est attendu.
+
+### D35. `conditions.json` gagne la dimension rôle
+
+La part de télétravail du tableau des rôles (§8.1) demande le rôle, absent de l'indicateur 9
+(D28). Colonnes : `month, group, role, dimension, value, n`. Les comptages restant additifs,
+le dashboard somme les rôles d'un groupe. 114 Ko sur le run W40, loin des 2 Mo.
+
+### D36. Technique du dashboard
+
+- Vite + TypeScript sans framework, pages en hash (`#/metiers?region=11`) : aucune redirection
+  Netlify. Les calculs vivent dans `web/src/lib/` (sans DOM), testés dans `tests/web/`.
+- **ECharts** importé module par module (courbes, infobulles, légende, hachures, marqueurs) ;
+  tableaux HTML pour les salaires, avec une bande p25–p75 en CSS.
+- **Carte** : Leaflet et `leaflet.markercluster`, chargés à la demande sur la seule page Carte,
+  plutôt que MapLibre (plus lourd, tuiles vectorielles inutiles ici). Fond de tuiles
+  OpenStreetMap avec attribution, acceptable pour un trafic faible (politique d'usage des
+  tuiles OSM) ; à remplacer si le trafic grandit. Contours des 13 régions métropolitaines :
+  france-geojson (IGN Admin Express, Licence ouverte), simplifiés à 0,001° (25 Ko compressés,
+  `web/public/geo/`). Les 5 DROM figurent dans le tableau des régions.
+- **Couleurs** : palette catégorielle à 8 places dans l'ordre fixe des groupes g1 à g8,
+  validée pour les daltonismes en clair et en sombre ; gris pour g9 et les non classés ; rampe
+  bleue séquentielle pour les régions. Vue par rôles : les 8 rôles affichés prennent chacun une
+  place de la palette, dans l'ordre de la taxonomie (une couleur fixe par rôle est impossible
+  avec plus de 60 rôles pour 8 places, et deux courbes de même couleur seraient illisibles). Thème clair, sombre ou système, mémorisé dans le
+  navigateur.
+- **Performance** (critère du lot) : Vue d'ensemble affichée en 0,9 s en 4G simulée
+  (9 Mbit/s, 170 ms) et en 2,4 s en 4G lente avec un processeur 4 fois plus lent
+  (1,6 Mbit/s, 150 ms), données du run W40, transfert de 208 Ko. `meta.json` est préchargé
+  par `index.html`.
+- En local, `npm run dev:web` et `npm run preview:web` servent `/api/data/*` depuis
+  `.data/aggregates` (ou `DATA_DIR`).

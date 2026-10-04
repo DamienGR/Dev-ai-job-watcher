@@ -488,7 +488,7 @@ Période · région (France entière par défaut) · groupes · rôles · source
 - Semaines partielles hachurées ; marqueurs verticaux aux changements de version de taxonomie.
 - Mention des sources en pied de page (France Travail ; Adzuna, avec l'attribution éventuellement exigée **[À VÉRIFIER]**).
 - Lisible sur mobile ; thème clair et sombre.
-- **Accès** : public ou protégé **[DÉCISION OUVERTE]**. Les données sont des agrégats publics sans données personnelles. La protection par mot de passe de Netlify dépend du plan **[À VÉRIFIER]**.
+- **Accès** : public, non indexé par les moteurs (**tranché, D32**). Les données sont des agrégats publics sans données personnelles. La protection par mot de passe intégrée de Netlify est réservée au plan Pro sur les plans legacy (§15.6, vérifié).
 
 ---
 
@@ -591,6 +591,8 @@ Les séries restent comparables dans le temps puisque tout l'historique est recl
 
 ## 14. Plan de livraison
 
+Ordre de livraison : le lot 4 passe avant le lot 3, qui attend le compte Adzuna (D31).
+
 | Lot | Contenu | Critères d'acceptation |
 |---|---|---|
 | **0 — Socle** | Dépôt, TypeScript, Vitest, ESLint, CI, `netlify.toml`, arborescence (§3.6). Chargement et validation de `taxonomy.yaml`, normalisation, classification, signaux, technos, référentiel départements → régions, `.env.example`, `docs/decisions.md`. | `npm test` vert ; 100 % des cas de l'annexe B ; test de cohérence de la taxonomie vert. |
@@ -613,13 +615,13 @@ Les séries restent comparables dans le temps puisque tout l'historique est recl
 | 3 | Liste des codes M18 du ROME 4.0 (de nouveaux codes ont pu apparaître, comme M1811 pour la data). | 1 |
 | 4 | Termes de la licence de réutilisation des offres France Travail. | 1 |
 | 5 | Adzuna : tag de catégorie IT pour `fr`, libellés de régions dans `location.area`, support de `what_or` sur `history`/`histogram`/`geodata`, attribution, licence commerciale. | 3 |
-| 6 | Netlify : protection par mot de passe selon le plan. | 4 |
+| 6 | Netlify : protection par mot de passe selon le plan. **Tranché (D32)** : réservée au plan Pro sur les plans legacy ; dashboard public. | 4 |
 | 7 | Accès de la tâche planifiée Claude au site (`WebFetch`) ; sinon repli GitHub Action (§9.2). | 6 |
 | 8 | VPS : système et version, Node 22, systemd, espace disque pour `DATA_DIR`, accès en lecture au dépôt. | 5 |
 
 ## 16. Décisions ouvertes
 
-1. Accès au dashboard : public ou protégé.
+1. Accès au dashboard : public ou protégé. **Tranché (D32)** : public.
 2. Canal d'alerte : ntfy, e-mail ou Slack.
 3. Réponse d'Adzuna sur l'usage commercial (en cas de refus, Free-Work remplace Adzuna au lot 3).
 4. Source de population active pour la densité régionale.

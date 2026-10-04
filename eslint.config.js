@@ -12,4 +12,10 @@ export default defineConfig([
       globals: globals.node,
     },
   },
+  {
+    files: ['web/src/**/*.ts'],
+    languageOptions: {
+      globals: globals.browser,
+    },
+  },
 ]);
