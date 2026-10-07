@@ -1,6 +1,6 @@
-# Un seul site Netlify : dashboard statique + fonctions (SPEC.md §3).
-# Les fonctions arrivent à partir du lot 1 ; leur planification et leur route sont
-# déclarées dans chaque fichier (`export const config`), cron en UTC.
+# Site Netlify : dashboard statique, API de lecture et d'envoi des agrégats, watchdog (SPEC.md §3,
+# D21). La collecte et le traitement tournent sur le VPS. Route ou planification de chaque
+# fonction : dans son fichier (`export const config`), cron en UTC.
 # Rappel : aucun run de collecte ne doit déclencher de déploiement (SPEC.md §3.2).
 
 [build]
@@ -13,5 +13,3 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
-  # Taxonomie lue à l'exécution (SPEC.md §6.5, §9.3) ; fixtures pour SOURCE_MODE=fixtures (§13).
-  included_files = ["taxonomy.yaml", "fixtures/**"]

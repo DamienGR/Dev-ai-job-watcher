@@ -13,7 +13,7 @@ import { fileStores } from '../src/storage/filesystem';
 const { values } = parseArgs({
   options: {
     'run-id': { type: 'string' },
-    'data-dir': { type: 'string', default: '.data' },
+    'data-dir': { type: 'string', default: process.env.DATA_DIR ?? '.data' },
     quiet: { type: 'boolean', default: false },
   },
 });

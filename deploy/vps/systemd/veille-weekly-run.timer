@@ -1,0 +1,12 @@
+# Lundi 05:00, puis relances à 06:00 et 07:00 UTC (SPEC.md §3.3) ; une relance ne fait rien
+# si le run de la semaine est complet. Persistent : un lancement manqué (VPS arrêté) part au
+# redémarrage.
+[Unit]
+Description=Veille emploi Dev & IA : run hebdomadaire, lundi 05:00, 06:00 et 07:00 UTC
+
+[Timer]
+OnCalendar=Mon *-*-* 05,06,07:00:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

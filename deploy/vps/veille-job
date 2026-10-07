@@ -1,0 +1,48 @@
+#!/bin/sh
+# Lanceur des jobs du VPS (SPEC.md §3.3, §12 ; D41), sous l'utilisateur `veille` :
+#
+#   deploy/vps/veille-job weekly-run [--run-id 2026-W41] [--force]
+#   deploy/vps/veille-job admin <commande> [--run-id …] [--reset] [--force]
+#   deploy/vps/veille-job backup
+#   deploy/vps/veille-job restic <commande restic>      (init, snapshots, restore…)
+#
+# Charge le fichier d'environnement (hors du dépôt, droits 600, SPEC.md §3.5), puis lance le
+# job sous le verrou de DATA_DIR : un seul job à la fois ; un job qui trouve le verrou pris
+# attend qu'il se libère. Les timers systemd de deploy/vps/systemd/ passent par ce lanceur.
+set -eu
+
+ENV_FILE="${VEILLE_ENV_FILE:-$HOME/.config/dev-ai-job-watcher/env}"
+if [ ! -r "$ENV_FILE" ]; then
+  echo "veille-job : fichier d'environnement introuvable : $ENV_FILE" >&2
+  exit 78
+fi
+case "$(stat -c %a "$ENV_FILE")" in
+  600 | 400) ;;
+  *)
+    echo "veille-job : $ENV_FILE doit être lisible par son seul propriétaire (chmod 600 $ENV_FILE)" >&2
+    exit 78
+    ;;
+esac
+set -a
+. "$ENV_FILE"
+set +a
+
+export DATA_DIR="${DATA_DIR:-$HOME/data}"
+mkdir -p "$DATA_DIR"
+REPO="$(cd "$(dirname "$0")/../.." && pwd)"
+cd "$REPO"
+
+job="${1:-}"
+if [ $# -gt 0 ]; then shift; fi
+case "$job" in
+  weekly-run | admin | backup)
+    exec flock "$DATA_DIR/.lock" "$REPO/node_modules/.bin/tsx" "scripts/$job.ts" "$@"
+    ;;
+  restic)
+    exec flock "$DATA_DIR/.lock" restic "$@"
+    ;;
+  *)
+    echo "usage : veille-job weekly-run|admin|backup|restic [arguments]" >&2
+    exit 64
+    ;;
+esac
