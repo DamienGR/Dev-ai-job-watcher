@@ -27,6 +27,9 @@ set -a
 . "$ENV_FILE"
 set +a
 
+# ntfy.sh compte ses limites par bloc IPv6 /64, partagé chez OVH avec d'autres clients et déjà
+# saturé : les jobs Node passent par l'IPv4 (D43).
+export NODE_OPTIONS="--dns-result-order=ipv4first${NODE_OPTIONS:+ $NODE_OPTIONS}"
 export DATA_DIR="${DATA_DIR:-$HOME/data}"
 mkdir -p "$DATA_DIR"
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"

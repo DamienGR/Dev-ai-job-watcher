@@ -675,3 +675,17 @@ quelques centaines de Mo par an.
 - Rappel (documentation Netlify) : une variable modifiée n'atteint les fonctions qu'au
   déploiement suivant. `ALERT_NTFY_URL`, et `INGEST_SECRET` s'il a été saisi après le
   déploiement du lot 4, prennent effet au déploiement de ce lot.
+
+### D43. Alertes du VPS envoyées en IPv4
+
+- Constat à l'installation (2026-10-07) : le premier `admin simulate-failure` a reçu HTTP 429
+  de ntfy.sh à chaque tentative. ntfy compte ses limites par adresse IPv4 et par bloc IPv6 /64
+  (`visitor-prefix-bits-ipv6`, 64 par défaut, documentation ntfy) ; le VPS OVH partage son /64
+  avec d'autres clients, et le quota du jour de ce bloc était épuisé, celui de son IPv4 intact.
+  Node essaie l'IPv6 en premier.
+- `veille-job` exporte `NODE_OPTIONS=--dns-result-order=ipv4first` (en tête d'une valeur
+  éventuelle du fichier d'env) : tous les jobs Node passent par l'IPv4, qui fonctionne aussi
+  pour France Travail et Netlify. Vérifié sur le VPS : alerte délivrée en IPv4.
+- Limite connue : `watchdog` publie depuis les adresses partagées de Netlify, comptées de la
+  même façon par ntfy.sh. Un échec y est journalisé (`alert.failed`) sans autre signal. À
+  revoir si une alerte du watchdog se perd (compte ntfy avec jeton, ou autre serveur ntfy).

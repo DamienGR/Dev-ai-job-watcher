@@ -123,7 +123,9 @@ deploy/vps/veille-job restic init              # une seule fois : crée le dép�
 ```
 
 `simulate-failure` joue un run fictif en mémoire, sans toucher aux données ni au site, et envoie
-la vraie alerte « Run 2000-W01 en échec ».
+la vraie alerte « Run 2000-W01 en échec ». `veille-job` fait passer Node par l'IPv4 : ntfy.sh
+limite les envois par bloc IPv6 /64, que le VPS partage avec d'autres clients OVH (D43). Si
+l'alerte échoue malgré tout, le journal du job contient `alert.failed` avec la réponse de ntfy.
 
 ## 8. Installer les timers
 
