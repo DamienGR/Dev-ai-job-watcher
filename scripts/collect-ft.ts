@@ -22,7 +22,7 @@ const { values } = parseArgs({
   options: {
     'run-id': { type: 'string' },
     mode: { type: 'string' },
-    'data-dir': { type: 'string', default: '.data' },
+    'data-dir': { type: 'string', default: process.env.DATA_DIR ?? '.data' },
     reset: { type: 'boolean', default: false },
     concurrency: { type: 'string', default: '4' },
     quiet: { type: 'boolean', default: false },

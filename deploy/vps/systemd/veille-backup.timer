@@ -1,0 +1,10 @@
+# Le lundi à 09:00 UTC, après la dernière relance de weekly-run (07:00, 60 minutes au plus).
+[Unit]
+Description=Veille emploi Dev & IA : sauvegarde, lundi 09:00 UTC
+
+[Timer]
+OnCalendar=Mon *-*-* 09:00:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

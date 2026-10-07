@@ -1,6 +1,6 @@
 import { getJson, setJson, type BlobStore } from '../storage/store';
 
-/** Étapes d'un run, relançables par `api-admin` (SPEC.md §3.3). */
+/** Étapes d'un run, relançables par le job `admin` du VPS (SPEC.md §3.3). */
 export const STEPS = ['collect-ft', 'collect-adzuna', 'process', 'reclassify'] as const;
 export type StepId = (typeof STEPS)[number];
 

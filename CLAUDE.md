@@ -24,6 +24,9 @@ toute modification.
   `npm run probe:ft` : sonde de l'API réelle (identifiants `FT_CLIENT_ID` / `FT_CLIENT_SECRET`).
 - `npm run process -- --run-id <run>` : traitement local d'un run collecté (offres, index,
   agrégats dans `.data/`).
+- `npm run weekly-run`, `npm run admin -- <commande>`, `npm run backup` : jobs du VPS, lancés en
+  production par `deploy/vps/veille-job` (fichier d'environnement, verrou) et les timers de
+  `deploy/vps/systemd/` ; procédure dans `deploy/vps/README.md`.
 
 ## Conventions
 

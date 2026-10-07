@@ -140,7 +140,7 @@ Netlify sert le dashboard et les agrégats.
 
 Sur le VPS, chaque store est un répertoire de `DATA_DIR` et chaque clé un fichier, écrit de façon atomique (fichier temporaire puis renommage). Dans Netlify Blobs, seul le store `aggregates` existe : c'est une copie de celui du VPS, réécrite à chaque envoi.
 
-**Sauvegarde (exigé)** : `raw` est irremplaçable, puisque France Travail ne renvoie aucun historique. `DATA_DIR` est copié hors du VPS au moins une fois par semaine, après `weekly-run` **[DÉCISION OUVERTE : moyen de sauvegarde, §16]**.
+**Sauvegarde (exigé)** : `raw` est irremplaçable, puisque France Travail ne renvoie aucun historique. `DATA_DIR` est copié hors du VPS au moins une fois par semaine, après `weekly-run`. **Tranché (D39)** : restic, chiffré, vers un bucket Cloudflare R2, le lundi à 09:00 UTC.
 
 Le référentiel département → région est **embarqué dans le code** (`src/refs/departements.json`, 101 entrées) : aucun référentiel communal n'est nécessaire (§6.2).
 
@@ -153,7 +153,8 @@ Le référentiel département → région est **embarqué dans le code** (`src/r
 | `INGEST_SECRET` | VPS et Netlify | Envoi des agrégats à `api-ingest` |
 | `SITE_URL` | VPS | Adresse du site Netlify, pour l'envoi |
 | `DATA_DIR` | VPS | Répertoire des stores |
-| `ALERT_*` | VPS et Netlify | Canal d'alerte (§10) **[DÉCISION OUVERTE]** |
+| `ALERT_NTFY_URL`, `ALERT_NTFY_TOKEN` (facultatif) | VPS et Netlify | Alertes ntfy (§10, D38) |
+| `RESTIC_REPOSITORY`, `RESTIC_PASSWORD`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | VPS | Sauvegarde de `DATA_DIR` (§3.4, D39) |
 | `SOURCE_MODE` | VPS | `live` (défaut) ou `fixtures` (§13) |
 
 Jamais versionnées. Sur le VPS, elles vivent dans un fichier d'environnement hors du dépôt, lisible par le seul utilisateur du service (droits 600). Un `.env.example` documente chaque variable.
@@ -541,7 +542,7 @@ Les séries restent comparables dans le temps puisque tout l'historique est recl
   - zéro offre France Travail collectée ;
   - aucun run réussi depuis 8 jours.
 
-  Canal : ntfy, e-mail ou Slack **[DÉCISION OUVERTE]**.
+  Canal : ntfy **(tranché, D38)**.
 
   Les alertes partent du VPS, sauf « aucun run réussi depuis 8 jours », vérifiée sur Netlify par `watchdog` pour couvrir un VPS arrêté.
 - Résumé hebdomadaire de 5 lignes (volumes, plus fortes hausses) : optionnel, v2.
@@ -591,7 +592,7 @@ Les séries restent comparables dans le temps puisque tout l'historique est recl
 
 ## 14. Plan de livraison
 
-Ordre de livraison : le lot 4 passe avant le lot 3, qui attend le compte Adzuna (D31).
+Ordre de livraison : les lots 4 puis 5 passent avant le lot 3, qui attend le compte Adzuna (D31, D37).
 
 | Lot | Contenu | Critères d'acceptation |
 |---|---|---|
@@ -617,16 +618,16 @@ Ordre de livraison : le lot 4 passe avant le lot 3, qui attend le compte Adzuna 
 | 5 | Adzuna : tag de catégorie IT pour `fr`, libellés de régions dans `location.area`, support de `what_or` sur `history`/`histogram`/`geodata`, attribution, licence commerciale. | 3 |
 | 6 | Netlify : protection par mot de passe selon le plan. **Tranché (D32)** : réservée au plan Pro sur les plans legacy ; dashboard public. | 4 |
 | 7 | Accès de la tâche planifiée Claude au site (`WebFetch`) ; sinon repli GitHub Action (§9.2). | 6 |
-| 8 | VPS : système et version, Node 22, systemd, espace disque pour `DATA_DIR`, accès en lecture au dépôt. | 5 |
+| 8 | VPS : système et version, Node 22, systemd, espace disque pour `DATA_DIR`, accès en lecture au dépôt. **Vérifié** le 2026-10-03 : Ubuntu 26.04.1, Node 22, systemd 259, 33 Go libres, clé de déploiement en lecture seule (D41). | 5 |
 
 ## 16. Décisions ouvertes
 
 1. Accès au dashboard : public ou protégé. **Tranché (D32)** : public.
-2. Canal d'alerte : ntfy, e-mail ou Slack.
+2. Canal d'alerte : ntfy, e-mail ou Slack. **Tranché (D38)** : ntfy.
 3. Réponse d'Adzuna sur l'usage commercial (en cas de refus, Free-Work remplace Adzuna au lot 3).
 4. Source de population active pour la densité régionale.
 5. Nom du dépôt et du domaine.
-6. Moyen de sauvegarde de `DATA_DIR` hors du VPS (§3.4).
+6. Moyen de sauvegarde de `DATA_DIR` hors du VPS (§3.4). **Tranché (D39)** : restic vers Cloudflare R2.
 
 ---
 

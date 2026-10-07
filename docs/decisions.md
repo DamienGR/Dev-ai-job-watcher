@@ -567,3 +567,111 @@ le dashboard somme les rôles d'un groupe. 114 Ko sur le run W40, loin des 2 Mo.
   par `index.html`.
 - En local, `npm run dev:web` et `npm run preview:web` servent `/api/data/*` depuis
   `.data/aggregates` (ou `DATA_DIR`).
+
+## Lot 5 — VPS, planification et alertes (2026-10-07)
+
+### D37. Le lot 5 passe avant le lot 3
+
+Demandé par Damien le 2026-10-07, après la fusion du lot 4. Le lot 3 (Adzuna) attend toujours
+son compte développeur et sa réponse sur l'usage (D31) ; la collecte France Travail peut tourner
+chaque semaine sans lui, et l'historique ne se constitue qu'à partir du premier run (§2).
+
+- `weekly-run` ne comprend que la collecte France Travail, le traitement et l'envoi ; le lot 3
+  y ajoutera la collecte Adzuna et le job `monthly-adzuna-stats`.
+- `admin collect-adzuna` répond que l'étape arrive au lot 3, `admin reclassify` au lot 6.
+- L'alerte « budget Adzuna épuisé » (§10) arrive avec le lot 3.
+
+### D38. Alertes par ntfy (§16.2)
+
+Choisi par Damien le 2026-10-07, parmi ntfy, e-mail et Slack. `src/pipeline/alert.ts` publie en
+JSON à la racine du serveur (`https://ntfy.sh/`), seule forme qui transporte un titre accentué
+sans encodage particulier ; format vérifié sur la documentation ntfy (« Publish as JSON ») et
+par une publication réelle relue avec `GET /<sujet>/json?poll=1` le 2026-10-07.
+
+- Variables : `ALERT_NTFY_URL` (adresse du sujet, sur le VPS et dans Netlify) et, si le sujet
+  est protégé, `ALERT_NTFY_TOKEN` (`Authorization: Bearer`). Sur ntfy.sh, le sujet public est
+  protégé par son nom aléatoire ; les alertes ne contiennent aucun secret.
+- Une alerte n'échoue jamais bruyamment : relances du §12, puis `alert.failed` au journal.
+  Sans `ALERT_NTFY_URL`, l'alerte va au journal (`alert.unconfigured`).
+- Priorité 4 par défaut, 5 pour « zéro offre » et « aucun run depuis 8 jours ». Titre préfixé
+  par l'émetteur (`[VPS]` ou `[Netlify]`).
+
+### D39. Sauvegarde par restic vers Cloudflare R2 (§16.6, §3.4)
+
+Proposé par Damien le 2026-10-07 (à la place d'un bucket OVH, même code). Vérifié sur la
+documentation Cloudflare : formule gratuite de 10 Go-mois en stockage Standard, 1 million
+d'opérations d'écriture et 10 millions de lecture par mois, sortie gratuite ; R2 accepte la
+région `us-east-1` de restic comme alias de `auto`. Volume : environ 9 Mo par run (run W40),
+quelques centaines de Mo par an.
+
+- restic chiffre, déduplique et versionne ; il lit `RESTIC_REPOSITORY`, `RESTIC_PASSWORD`,
+  `AWS_ACCESS_KEY_ID` et `AWS_SECRET_ACCESS_KEY` dans l'environnement. Le mot de passe est
+  aussi rangé hors du VPS par Damien, sinon la sauvegarde est illisible après une perte du VPS.
+- Job `backup` le lundi à 09:00 UTC, après la dernière relance de `weekly-run`, sous le même
+  verrou : `restic backup DATA_DIR` (sans le fichier de verrou), puis `restic forget --prune`
+  en gardant 12 instantanés hebdomadaires et 24 mensuels. Comme `raw` n'est jamais effacé, le
+  dernier instantané contient tout l'historique.
+- Alerte si la sauvegarde échoue, et chaque semaine tant qu'elle n'est pas configurée.
+  Dernier résultat dans `state/backup.json`, affiché par `admin status`.
+- Testé en local avec restic 0.16.4 sur un dépôt fichier : sauvegarde, liste, restauration
+  identique à `DATA_DIR` (hors verrou).
+
+### D40. Job `weekly-run`
+
+`src/pipeline/weeklyRun.ts`, lancé par `scripts/weekly-run.ts`. État dans
+`state/runs/{runId}/weekly-run.json` : étapes faites, tentatives, alertes délivrées, historique.
+
+- Chaque lancement reprend à la première étape non faite (collecte, traitement, envoi) et ne
+  fait rien si le run est complet. 3 tentatives (05:00, 06:00, 07:00 UTC) ; au-delà, les
+  lancements sont ignorés sauf `admin weekly-run --force`, qui remet le compteur à zéro.
+- Collecte incomplète (partitions en échec) : attente de la relance suivante ; à la 3e
+  tentative, alerte puis traitement de ce qui a été collecté (option la plus utile : quelques
+  partitions manquantes ne doivent pas priver la semaine de chiffres ; le traitement ne clôt
+  alors aucune offre, D27). Collecte interrompue avec des partitions en attente : jamais
+  traitée, le traitement refuserait une collecte en cours.
+- Zéro offre collectée : alerte immédiate et traitement bloqué, sinon toutes les offres
+  actives seraient déclarées disparues.
+- Erreur du traitement : alerte dès la première tentative. Toute autre erreur (OAuth, envoi au
+  site) : alerte « run en échec » après la 3e tentative.
+- Une alerte de chaque type au plus par run ; une alerte non délivrée est retentée au
+  lancement suivant.
+- La collecte rend la main à 50 minutes (`deadline`), pour rester sous les 60 minutes du job.
+
+### D41. Installation sur le VPS : unités systemd utilisateur et lanceur
+
+- Unités **utilisateur** de `veille` (`~/.config/systemd/user/`, modèles dans
+  `deploy/vps/systemd/`) plutôt que des unités système : `veille` les installe sans `sudo`, et
+  `Linger=yes` (procédure du 3 octobre) les fait tourner sans session ouverte. Les heures sont
+  écrites en UTC dans `OnCalendar` (le VPS est à l'heure de Paris), `Persistent=true` rattrape
+  un lancement manqué au redémarrage, `TimeoutStartSec=60min` (§12).
+- `deploy/vps/veille-job` : charge le fichier d'environnement
+  `~/.config/dev-ai-job-watcher/env` (droits 600 exigés, sinon refus), fixe `DATA_DIR`
+  (`~/data` par défaut, hors du dépôt), puis lance le job sous `flock DATA_DIR/.lock` : un job
+  qui trouve le verrou pris attend (§12). Les timers et les commandes `admin` passent par lui.
+- Le fichier d'environnement est lu par le shell (`set -a; . fichier`) et non par
+  `EnvironmentFile=` : une seule syntaxe pour les timers et pour les commandes à la main.
+- Le store sur disque écrit désormais chaque clé de façon atomique (fichier temporaire puis
+  renommage, §3.4) : un job tué par le délai ne laisse pas de fichier tronqué.
+- `admin` (`scripts/admin.ts`) remplace `api-admin` : `collect-ft [--reset]`, `process`,
+  `push`, `weekly-run [--force]`, `status`, et `simulate-failure`, qui joue un run fictif en
+  mémoire et envoie la vraie alerte (critère « alerte déclenchée sur un échec simulé »).
+- Remote Control peut tourner en service (`veille-remote-control.service`, session tmux
+  `claude`, `claude remote-control --spawn worktree`), facultatif et à vérifier au premier
+  démarrage sur le VPS.
+- Mise à jour du code à la main (`git pull --ff-only`, `npm ci`) jusqu'au job `update` du
+  lot 6.
+
+### D42. `watchdog` et retrait des fonctions de collecte
+
+- `watchdog` : fonction planifiée Netlify (`0 9 * * *`). Elle lit `meta.json` dans Blobs et
+  alerte si le dernier run publié a plus de 8 jours, comptés depuis son lundi 05:00 UTC :
+  après un lundi en échec, l'alerte part le mardi à 09:00, puis chaque jour. Un run « réussi »
+  est donc un run dont les agrégats ont été envoyés. `meta.json` absent : alerte aussi.
+- Retirés : `collect-francetravail-background`, `api-admin`, leurs modules et
+  `src/pipeline/internal.ts` (appels internes). `INTERNAL_SECRET` et `ADMIN_TOKEN`
+  disparaissent ; `FT_CLIENT_ID` et `FT_CLIENT_SECRET` sont à supprimer des variables Netlify.
+  `safeEqual` rejoint `src/functions/http.ts`. `netlify.toml` n'embarque plus `taxonomy.yaml`
+  ni les fixtures : aucune fonction restante ne les lit.
+- Rappel (documentation Netlify) : une variable modifiée n'atteint les fonctions qu'au
+  déploiement suivant. `ALERT_NTFY_URL`, et `INGEST_SECRET` s'il a été saisi après le
+  déploiement du lot 4, prennent effet au déploiement de ce lot.

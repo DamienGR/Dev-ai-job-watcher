@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
@@ -32,4 +32,18 @@ describe.each<[string, () => BlobStore]>([
 it('refuse les clés qui sortent du répertoire', async () => {
   const store = new FileStore(join(dir, 'securite'));
   await expect(store.set('../evasion', new Uint8Array([1]))).rejects.toThrow('clé invalide');
+});
+
+it('écrit sur disque de façon atomique, sans laisser de fichier temporaire (SPEC.md §3.4)', async () => {
+  const root = join(dir, 'atomique');
+  const store = new FileStore(root);
+  await setJson(store, 'runs/2026-W41/weekly-run.json', { attempts: 1 });
+  await setJson(store, 'runs/2026-W41/weekly-run.json', { attempts: 2 });
+  expect(await readdir(join(root, 'runs', '2026-W41'))).toEqual(['weekly-run.json']);
+  expect(await getJson(store, 'runs/2026-W41/weekly-run.json')).toEqual({ attempts: 2 });
+
+  // Reste d'une écriture interrompue : ignoré par `list`, clé refusée.
+  await writeFile(join(root, 'runs', '2026-W41', 'weekly-run.json.abc123.tmp'), '{');
+  expect(await store.list('runs/')).toEqual(['runs/2026-W41/weekly-run.json']);
+  await expect(store.set('x.tmp', new Uint8Array([1]))).rejects.toThrow('clé invalide');
 });

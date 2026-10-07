@@ -1,0 +1,13 @@
+# Remote Control de Claude Code dans une session tmux « claude », relancée au démarrage du VPS
+# (facultatif, voir README.md). `tmux attach -t claude` pour la voir.
+[Unit]
+Description=Claude Code Remote Control (session tmux « claude »)
+
+[Service]
+Type=forking
+WorkingDirectory=%h/Dev-ai-job-watcher
+ExecStart=/usr/bin/tmux new-session -d -s claude "%h/.local/bin/claude remote-control --spawn worktree"
+ExecStop=/usr/bin/tmux kill-session -t claude
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,12 @@
+# Run hebdomadaire (SPEC.md §3.3) : collecte France Travail, traitement, envoi des agrégats.
+# Unité utilisateur de `veille` (D41), lancée par veille-weekly-run.timer.
+[Unit]
+Description=Veille emploi Dev & IA : run hebdomadaire
+Documentation=file:%h/Dev-ai-job-watcher/deploy/vps/README.md
+
+[Service]
+Type=oneshot
+ExecStart=%h/Dev-ai-job-watcher/deploy/vps/veille-job weekly-run
+# 60 minutes au plus par exécution, attente du verrou comprise (SPEC.md §3.2, §12).
+TimeoutStartSec=60min
+Nice=10

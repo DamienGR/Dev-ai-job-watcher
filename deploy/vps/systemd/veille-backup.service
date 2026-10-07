@@ -1,0 +1,10 @@
+# Sauvegarde de DATA_DIR hors du VPS par restic (SPEC.md §3.4, D39), sous le verrou des jobs.
+[Unit]
+Description=Veille emploi Dev & IA : sauvegarde hebdomadaire de DATA_DIR
+Documentation=file:%h/Dev-ai-job-watcher/deploy/vps/README.md
+
+[Service]
+Type=oneshot
+ExecStart=%h/Dev-ai-job-watcher/deploy/vps/veille-job backup
+TimeoutStartSec=60min
+Nice=10

@@ -1,4 +1,11 @@
-import { safeEqual } from '../pipeline/internal';
+import { createHash, timingSafeEqual } from 'node:crypto';
+
+/** Comparaison à temps constant (SPEC.md §11), y compris quand les longueurs diffèrent. */
+export function safeEqual(provided: string | null | undefined, expected: string | null | undefined): boolean {
+  if (!provided || !expected) return false;
+  const digest = (value: string) => createHash('sha256').update(value, 'utf8').digest();
+  return timingSafeEqual(digest(provided), digest(expected));
+}
 
 /** Jeton `Authorization: Bearer …` de la requête, `null` s'il manque. */
 export function bearerToken(req: Request): string | null {

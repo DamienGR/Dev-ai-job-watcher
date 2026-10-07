@@ -4,8 +4,9 @@ Veille quantitative du marché de l'emploi dev, data et IA en France : collecte 
 offres (France Travail, Adzuna), classification par une taxonomie versionnée, agrégats publiés
 sur un dashboard Netlify. Le cadrage complet est dans [SPEC.md](SPEC.md).
 
-**État** : lots 0 à 2 livrés (socle, collecte France Travail, traitement et agrégats) ; lot 4
-(dashboard) en cours, avant le lot 3 (Adzuna, D31). Les lots sont décrits au §14 de la spec.
+**État** : lots 0 à 2 et 4 livrés (socle, collecte France Travail, traitement et agrégats,
+dashboard) ; lot 5 (VPS, planification, alertes) en cours, avant le lot 3 (Adzuna, D31, D37).
+Les lots sont décrits au §14 de la spec.
 
 ## Démarrage
 
@@ -32,13 +33,7 @@ npm run collect:ft -- --run-id 2026-W41  # collecte réelle nationale, stockée 
 Le mode réel lit `FT_CLIENT_ID` et `FT_CLIENT_SECRET` dans l'environnement ou dans `.env`.
 Une collecte interrompue reprend où elle s'est arrêtée ; `--reset` repart de zéro.
 
-En production, la collecte tourne dans la fonction `collect-francetravail-background` et se
-relance à la main par `POST /api/admin/run` :
-
-```sh
-curl -X POST "$SITE/api/admin/run" -H "Authorization: Bearer $ADMIN_TOKEN" \
-  -H 'content-type: application/json' -d '{"step":"collect-ft","runId":"2026-W41"}'
-```
+En production, la collecte tourne sur le VPS dans le job `weekly-run` (voir plus bas).
 
 ## Traitement et agrégats
 
@@ -68,20 +63,35 @@ Le dashboard est un site statique (Vite, ECharts, Leaflet) qui lit les agrégats
 `DATA_DIR`) à `PUT /api/ingest/:name`, `meta.json` en dernier : le site passe au nouveau run
 sans déploiement. Pages, filtres et règles d'affichage : SPEC.md §8, décisions D31 à D36.
 
+## VPS : jobs planifiés, alertes, sauvegarde
+
+Sur le VPS (D21), des timers systemd de l'utilisateur `veille` lancent chaque lundi le job
+`weekly-run` (collecte, traitement, envoi ; relances à 06:00 et 07:00 UTC) puis la sauvegarde
+de `DATA_DIR` vers Cloudflare R2 (restic). Les alertes partent sur ntfy, depuis le VPS et depuis
+la fonction planifiée `watchdog` du site (aucun run réussi depuis 8 jours). Installation et
+commandes du quotidien : [deploy/vps/README.md](deploy/vps/README.md) ; décisions D37 à D42.
+
+```sh
+npm run weekly-run -- --run-id 2026-W41   # en local : même job, dans .data/ (ou DATA_DIR)
+npm run admin -- status --run-id 2026-W41 # état d'un run ; autres commandes en tête de scripts/admin.ts
+deploy/vps/veille-job admin status        # sur le VPS : environnement et verrou en plus
+```
+
 ## Organisation
 
 ```
 taxonomy.yaml           taxonomie des métiers (source de vérité, conventions en tête)
 TAXONOMY_CHANGELOG.md   journal des versions de la taxonomie
-netlify.toml            site Netlify unique : dashboard + fonctions
+netlify.toml            site Netlify : dashboard, API des agrégats, watchdog
 src/core/               normalize, taxonomy, classify, signals, salary, location, employer, dedup, stats
 src/refs/               départements (101), régions (18), population active INSEE par région
 src/sources/            interface Source, client HTTP bridé, collecteur France Travail (Adzuna au lot 3)
-src/pipeline/           état des runs, traitement (process, index seen), agrégats (aggregates/), envoi (push)
-src/storage/            stores Netlify Blobs, mémoire (tests) et disque (scripts)
+src/pipeline/           état des runs, traitement, agrégats (aggregates/), envoi, weekly-run, alertes, sauvegarde
+src/storage/            stores Netlify Blobs, mémoire (tests) et disque (VPS, scripts)
 src/functions/          logique des fonctions Netlify, testable
-netlify/functions/      fonctions Netlify : api-ingest, api-data, collect-francetravail-background, api-admin
-scripts/                collecte, traitement et envoi, sonde de l'API France Travail
+netlify/functions/      fonctions Netlify : api-ingest, api-data, watchdog
+scripts/                jobs du VPS (weekly-run, admin, backup), collecte, traitement, envoi, sonde FT
+deploy/vps/             lanceur veille-job, unités systemd, procédure d'installation du VPS
 web/                    dashboard Vite : pages (web/src/pages), calculs testés (web/src/lib)
 fixtures/               réponses d'API fictives, mode SOURCE_MODE=fixtures
 tests/                  tests Vitest ; tests/fixtures/titles.json = cas de classification
