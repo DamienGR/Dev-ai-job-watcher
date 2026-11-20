@@ -68,7 +68,7 @@ export function partialLegend(partial: readonly boolean[]): Child {
     'p',
     { class: 'note' },
     h('span', { class: 'hatch-key', 'aria-hidden': 'true' }),
-    ' Période partielle : rattrapage avant le premier run (offres déjà fermées jamais vues), semaine en cours ou collecte incomplète.',
+    ' Période partielle : rattrapage avant le premier run (offres déjà fermées jamais vues), mois en cours ou collecte incomplète.',
   );
 }
 

@@ -2,7 +2,7 @@ import type * as Leaflet from 'leaflet';
 import { cssVar, groupColor, sequentialRamp } from '../colors';
 import { periodOf } from '../lib/filters';
 import { fmtDecimal, fmtInt, fmtPct, MIN_N, shareOf } from '../lib/format';
-import { chartMonths, lastRunId, regionTotals, type GeoPointRow, type GeoRegionRow, type RegionTotals } from '../lib/indicators';
+import { chartMonths, referenceWeek, regionTotals, type GeoPointRow, type GeoRegionRow, type RegionTotals } from '../lib/indicators';
 import { lastWeeks, weekLongLabel } from '../lib/periods';
 import { rowsOf } from '../lib/table';
 import type { Table } from '../lib/types';
@@ -144,7 +144,8 @@ export const cartePage: Page = {
 
     const months = filters.period === '12m' ? null : chartMonths(meta, filters, regionRows.map((r) => r.month));
     const totals = regionTotals(regionRows, months, meta);
-    const weeks = new Set(lastWeeks(lastRunId(meta), pointWeeks));
+    // Dernières semaines complètes, comme les courbes (D44).
+    const weeks = new Set(lastWeeks(referenceWeek(meta), pointWeeks));
     const points = rowsOf<GeoPointRow>(pointsTable).filter((p) => weeks.has(p.week) && scope.roleOk(p.role));
     const pointCount = points.reduce((a, p) => a + p.n, 0);
 

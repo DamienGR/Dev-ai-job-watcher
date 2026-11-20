@@ -518,7 +518,8 @@ que Damien n'en choisit pas un autre.
   dit lesquels ne s'appliquent pas (par exemple, `techs.json` n'a ni région ni contrat).
   Périmètre par défaut : groupes `dashboard: true` (g1 à g8). « Inclure le périmètre élargi »
   ajoute g9 et les offres non classées.
-- **Période** : 3, 6 ou 12 derniers mois, ou tout l'historique, jusqu'au dernier run. Les
+- **Période** : 3, 6 ou 12 derniers mois, ou tout l'historique, jusqu'au dernier run (courbes
+  hebdomadaires : jusqu'à la semaine de référence, D44). Les
   quantiles ne s'additionnent pas : salaires, prime IA et TJM restent sur les 12 derniers mois
   (lignes `*` de D28), ce que la page indique.
 - **Tuiles** : semaine de référence = celle qui précède le dernier run, la plus récente que la
@@ -689,3 +690,23 @@ quelques centaines de Mo par an.
 - Limite connue : `watchdog` publie depuis les adresses partagées de Netlify, comptées de la
   même façon par ntfy.sh. Un échec y est journalisé (`alert.failed`) sans autre signal. À
   revoir si une alerte du watchdog se perd (compte ntfy avec jeton, ou autre serveur ntfy).
+
+## Après le lot 5 — Corrections du dashboard (2026-11-20)
+
+### D44. La semaine du dernier run n'est plus dessinée
+
+- Constat en production (run 2026-W47, 2026-11-16) : les nouvelles offres sont comptées dans
+  leur semaine de création, et le run du lundi 05:00 UTC ne voit que les quelques heures déjà
+  écoulées de sa propre semaine (5 offres pour W47, contre 830 à 990 pour les semaines
+  complètes). Hachuré, ce point proche de zéro faisait quand même croire à une chute.
+- Les courbes hebdomadaires (`chartWeeks` : vue d'ensemble et Métiers) s'arrêtent à la semaine
+  de référence (D34), celle qui précède le dernier run. La semaine du dernier run apparaît au
+  run suivant, une fois collectée. Les points de la carte prennent la même fenêtre : « les 4
+  dernières semaines » sont 4 semaines complètes.
+- §8.3 (exigé, semaines partielles hachurées) s'applique toujours aux semaines dessinées
+  (rattrapage avant le premier run, collecte incomplète) ; la semaine du dernier run n'est
+  simplement pas dessinée tant qu'elle n'a pas de données.
+- Inchangé : les courbes mensuelles gardent le mois du dernier run, hachuré. Il n'est pas
+  proche de zéro (plusieurs semaines complètes) et le masquer retirerait jusqu'à 4 semaines
+  de données. Les agrégats ne changent pas : correction du seul dashboard, sans nouveau
+  traitement sur le VPS.
