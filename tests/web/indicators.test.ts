@@ -45,8 +45,11 @@ describe('périodes de référence et périodes partielles', () => {
     expect(referenceWeek(meta)).toBe('2026-W40');
     expect(referenceMonth(meta)).toBe('2026-09');
     expect([isPartialWeek(meta, '2026-W39'), isPartialWeek(meta, '2026-W40'), isPartialWeek(meta, '2026-W41')]).toEqual([true, false, true]);
-    expect(chartWeeks(meta, { ...DEFAULT_FILTERS, period: '3m' }, [])).toEqual(lastWeeks('2026-W41', 13));
-    expect(chartWeeks(meta, { ...DEFAULT_FILTERS, period: 'all' }, ['2026-W38', '2026-W41'])).toEqual(['2026-W38', '2026-W39', '2026-W40', '2026-W41']);
+  });
+
+  it('arrête les courbes à la semaine de référence : la semaine du dernier run n’est pas encore collectée', () => {
+    expect(chartWeeks(meta, { ...DEFAULT_FILTERS, period: '3m' }, [])).toEqual(lastWeeks('2026-W40', 13));
+    expect(chartWeeks(meta, { ...DEFAULT_FILTERS, period: 'all' }, ['2026-W38', '2026-W41'])).toEqual(['2026-W38', '2026-W39', '2026-W40']);
   });
 });
 

@@ -117,9 +117,13 @@ export function isPartialMonth(meta: Meta, month: string): boolean {
   return month < monthOfWeek(meta.backfillBefore) || meta.partialMonths.includes(month);
 }
 
-/** Semaines affichées pour la période choisie, jusqu'au dernier run inclus. */
+/**
+ * Semaines affichées pour la période choisie, jusqu'à la semaine de référence incluse. La
+ * semaine du dernier run n'est pas dessinée : le run du lundi n'en voit que quelques heures et
+ * elle n'est collectée qu'au run suivant, d'où un point proche de zéro (D44).
+ */
 export function chartWeeks(meta: Meta, filters: Filters, dataWeeks: Iterable<string>): string[] {
-  const end = lastRunId(meta);
+  const end = referenceWeek(meta);
   const { weeks } = periodOf(filters);
   if (weeks) return lastWeeks(end, weeks);
   let first = end;

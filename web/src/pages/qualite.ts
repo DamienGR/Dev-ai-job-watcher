@@ -124,7 +124,8 @@ export const qualitePage: Page = {
           null,
           `Premier run : ${weekLongLabel(meta.firstRun)}. France Travail ne renvoie que les offres encore ouvertes : `,
           'les semaines antérieures au premier run sont reconstituées à partir de ces seules offres et sous-estiment le volume réel. ',
-          'La semaine du dernier run est en cours. Ces périodes sont hachurées sur les courbes et signalées « partiel » ailleurs.',
+          'Ces périodes sont hachurées sur les courbes et signalées « partiel » ailleurs. ',
+          'La semaine du dernier run vient de commencer : elle n’apparaît sur les courbes qu’une fois collectée, au run suivant.',
         ),
       ),
       card(
