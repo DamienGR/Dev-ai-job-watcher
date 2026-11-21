@@ -1004,3 +1004,40 @@ correction adaptée.
   production : 100 / 100 / 100 / 100 pour `/ia/`, `/methodologie/`, `/a-propos/` et l'accueil,
   LCP sous 1 s, CLS 0.
 - Textes à relire et valider par Damien avant la fusion (critère du lot S4, §14).
+
+## Site public — Lancement (§17.8, 2026-11-21)
+
+### D63. Préparation du lancement
+
+- **Balayage du dépôt** avant son passage en public, sur tout l'historique (35 commits de
+  `main`, toutes les branches du dépôt y étant fusionnées) : aucun secret (motifs de clés
+  Anthropic, GitHub, Slack, AWS, Netlify, JWT, clés privées, affectations de variables
+  sensibles), aucune adresse IP réelle, aucune donnée collectée (seuls fichiers non textuels :
+  images du site et contours GeoJSON des régions), adresses e-mail fictives dans les tests et
+  les fixtures. Deux points connus restent dans l'historique, sans réécriture (même choix que
+  pour l'e-mail, D52) : l'adresse Gmail de Damien dans 15 commits faits sur GitHub, et le nom
+  d'hôte OVH du VPS dans l'ancienne version de `deploy/vps/README.md` (retiré au lot S1). Ce
+  nom résout vers l'adresse publique du VPS, qui n'expose aucun port pour le projet.
+- **`robots.txt`** est écrit à chaque build (`web/site/seo.ts`) : il laisse les robots lire
+  les pages, qui portent `noindex` jusqu'au lancement. Avec `SITE_INDEXABLE=1`, il annonce
+  `sitemap.xml`, qui liste les pages hors page d'erreur avec leur URL canonique et, pour les
+  pages de texte, la date de leur dernière révision. Le build refuse d'ouvrir l'indexation
+  tant que l'adresse principale du site est en `netlify.app` (variable `URL` de Netlify) : le
+  domaine se branche d'abord.
+- **Indexation par une variable Netlify** plutôt que par un changement de code : Damien (ou
+  Claude, avec son accord) pose `SITE_INDEXABLE=1` pour la production, puis relance un
+  déploiement. Le retour en arrière est aussi simple. Les aperçus de PR gardent l'en-tête
+  `X-Robots-Tag: noindex` que Netlify leur ajoute.
+- **README** réécrit en vitrine : présentation, lien vers le site, capture de l'accueil
+  (`docs/images/accueil.png`, agrégats publics du 21 novembre 2026, contenu éditorial au sens
+  de D51), résumé de l'usage de l'IA et état du projet ; la documentation technique suit.
+- **Envoi des agrégats après le branchement du domaine** : la documentation de Netlify ne dit
+  pas si l'adresse `netlify.app` redirige alors vers le domaine principal. Si elle le fait, un
+  `PUT` du VPS vers l'ancienne adresse perdrait son en-tête `Authorization` (redirection vers
+  une autre origine) et l'envoi du lundi échouerait. `SITE_URL` passe donc à
+  `https://barometre.dg-tech.dev` dans le fichier d'environnement du VPS dès que le domaine
+  répond, avant le run suivant.
+- **Ordre du lancement** : politique Netlify des variables sensibles sur « Require approval »
+  (exigé), domaine branché et principal, `SITE_URL` du VPS, dépôt public, indexation, plan du
+  site déclaré dans Google Search Console, liens depuis le portfolio et LinkedIn.
+

@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { PAGES, SITE, type SitePage } from '../../web/site/config';
 import { siteInputs } from '../../web/site/plugin';
+import { renderRobots, renderSitemap, seoFiles } from '../../web/site/seo';
 import { escapeHtml, renderByline, renderContent, renderMarkdown, renderPage } from '../../web/site/template';
 import { legacyDashboardUrl } from '../../web/src/site/legacy';
 
@@ -162,6 +163,25 @@ describe('liens des textes (critère du lot S4)', () => {
     const internal = links.filter((l) => l.href.startsWith('/'));
     expect(internal.length).toBeGreaterThan(3);
     for (const { file, href } of internal) expect(paths.has(href.split('#')[0]!), `${file} : ${href}`).toBe(true);
+  });
+});
+
+describe('robots.txt et sitemap.xml (SPEC.md §17.5, D47)', () => {
+  it('avant le lancement, laisse lire les pages en noindex et ne publie pas de plan du site', () => {
+    expect(seoFiles(false)).toEqual({ 'robots.txt': 'User-agent: *\nAllow: /\n' });
+  });
+
+  it('au lancement, annonce le plan du site, qui liste les pages hors page d’erreur', () => {
+    const files = seoFiles(true, 'https://barometre.dg-tech.dev');
+    expect(files['robots.txt']).toBe(renderRobots(true));
+    expect(files['robots.txt']).toContain(`Sitemap: ${SITE.url}/sitemap.xml`);
+    const locs = [...renderSitemap().matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+    expect(locs).toEqual(PAGES.filter((p) => !p.error).map((p) => `${SITE.url}${p.path}`));
+    expect(renderSitemap()).toContain(`<loc>${SITE.url}/ia/</loc><lastmod>${page('ia').updated}</lastmod>`);
+  });
+
+  it('refuse d’ouvrir l’indexation avant le branchement du domaine', () => {
+    expect(() => seoFiles(true, 'https://dev-ai-job-watcher.netlify.app')).toThrow(/brancher d'abord le domaine/);
   });
 });
 
