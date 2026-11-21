@@ -22,7 +22,10 @@ l'adresse du dépôt et du site, et quelques précisions tirées de la mise en p
   `update` du VPS reclasse tout l'historique la nuit suivante (§9.3) et le journal du site
   (`/methodologie/journal/`) affiche la nouvelle version au déploiement suivant.
 - **Mise en place** : la tâche se crée depuis une session Claude du projet, après l'accord de
-  Damien, une fois l'export en ligne. Elle se suspend ou se supprime de la même façon.
+  Damien, une fois l'export en ligne. Elle se suspend ou se supprime de la même façon. Créée
+  le 2026-11-21 avec l'accord de Damien, sans connecteur ; première revue le 2026-12-01.
+  Chaque passage ouvre un fil du projet : hors du premier mardi, il le résout sans message,
+  pour ne pas laisser chaque semaine un fil vide.
 
 ## Prompt
 
@@ -32,7 +35,8 @@ le Baromètre emploi Dev & IA, statistiques hebdomadaires des offres d'emploi de
 publiées sur France Travail, en ligne sur https://barometre.dg-tech.dev.
 
 Si aujourd'hui, à l'heure de Paris, n'est pas le premier mardi du mois, arrête-toi tout de
-suite, sans rien faire ni rien écrire d'autre qu'une ligne qui le dit.
+suite, sans rien faire : n'écris aucun message et, si tu tournes dans un fil de projet,
+résous ce fil, qui n'a rien à montrer.
 
 1. Détermine le mois écoulé M (format AAAA-MM, heure de Paris).
 2. Lis l'export : https://barometre.dg-tech.dev/api/export/taxonomy-review.md?month=M
@@ -76,4 +80,6 @@ suite, sans rien faire ni rien écrire d'autre qu'une ligne qui le dit.
     décide.
 11. Si aucun changement n'est justifié, n'ouvre pas de PR et termine par un résumé de 5 lignes
     de ce que montre l'export.
+
+Accès au dépôt : si Dg-tech-dev/barometre-emploi-dev-ia n'est pas attaché à la session, ajoute-le (outil add_repo, accès en écriture) avant l'étape 3. Le prompt de référence est docs/monthly-review-prompt.md dans le dépôt.
 ```
