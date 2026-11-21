@@ -101,10 +101,11 @@ courbes.
 ## Limites connues
 
 - **Une seule source.** Les volumes ne représentent pas tout le marché (voir plus haut).
-- **La dernière semaine est provisoire.** Une partie des offres n’apparaît dans l’API qu’une
-  ou plusieurs semaines après sa date de création. Sur les semaines d’octobre et de novembre
-  2026, le compte d’une semaine a encore augmenté d’au moins 13 à 45 % après sa première
-  publication. Une mesure plus fine est en cours pour corriger l’affichage.
+- **La dernière semaine peut encore bouger.** Quelques offres n’apparaissent dans l’API
+  qu’une ou deux semaines après leur date de création. Mesuré sur les semaines d’octobre et de
+  novembre 2026, le nombre d’offres d’une semaine augmente en général de moins de 2 % après
+  sa première publication. Une seule exception à ce jour : la semaine du 2 novembre a gagné
+  16 % d’offres d’un coup, une semaine après sa publication.
 - **Un classement par l’intitulé.** Un intitulé vague (« Consultant », « Chef de projet ») ne
   trouve pas toujours son métier. La part des offres classées est donnée plus bas, run par run.
 - **Des salaires rares.** Seule une minorité d’offres annonce un salaire exploitable, et ces
