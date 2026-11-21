@@ -61,7 +61,7 @@ describe('mise à jour du code du VPS', () => {
       'git merge-base --is-ancestor HEAD FETCH_HEAD',
       'git diff --name-only HEAD FETCH_HEAD',
       'git merge --ff-only --quiet FETCH_HEAD',
-      'npm ci --no-audit --no-fund --loglevel=error',
+      'npm ci --ignore-scripts --no-audit --no-fund --loglevel=error',
     ]);
     expect(sent.map((a) => a.kind)).toEqual(['update-units']);
     expect(sent[0]!.message).toContain('systemctl --user daemon-reload');

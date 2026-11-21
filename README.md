@@ -200,6 +200,11 @@ PR « Taxonomie v<N> », selon [docs/monthly-review-prompt.md](docs/monthly-revi
 Après la fusion, le job `update` du VPS reclasse tout l'historique la nuit suivante, et la page
 « Journal de la taxonomie » du site affiche la version dès le déploiement (D65 à D69).
 
+## Sécurité
+
+Pour signaler une faille, voir [SECURITY.md](SECURITY.md) : un e-mail plutôt qu'une issue
+publique.
+
 ## Licence
 
 Code sous licence MIT ([LICENSE](LICENSE)). Le dépôt ne contient aucune donnée collectée ; les
