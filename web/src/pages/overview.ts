@@ -1,11 +1,9 @@
 import { groupColor } from '../colors';
 import { ignoredFilters } from '../lib/filters';
-import { fmtDelta, fmtDeltaPct, fmtInt, fmtPct, fmtSalary } from '../lib/format';
+import { fmtDeltaPct, fmtInt, fmtPct, fmtSalary } from '../lib/format';
+import { fmtPremium, fmtRoleMove, fmtTechMove, headline } from '../lib/headline';
 import {
-  activeEmergingRoles,
-  aiShare,
   chartWeeks,
-  newOffersTile,
   referenceMonth,
   roleMovers,
   scopedNewOffers,
@@ -18,7 +16,7 @@ import {
   type TechRow,
   type TechTotalRow,
 } from '../lib/indicators';
-import { lastWeeks, monthLabel, weekLongLabel } from '../lib/periods';
+import { monthLabel, weekLongLabel } from '../lib/periods';
 import { rowsOf } from '../lib/table';
 import type { SalariesFile, TechsFile, TimeseriesFile } from '../lib/types';
 import type { Page } from '../page';
@@ -59,13 +57,8 @@ export const overviewPage: Page = {
     ]);
     const all = rowsOf<NewOfferRow>(timeseries.newOffers);
     const scoped = scopedNewOffers(all, scope);
-    const anyGroup = all.filter((r) => scope.rowOk(r));
-
-    const week = newOffersTile(scoped, meta);
-    const ai = aiShare(anyGroup, meta, scope.groupOf, [week.week]);
-    const premium = rowsOf<PremiumRow>(salaries.aiPremium).find((r) => r.month === '*' && r.experience === '*');
-    const recentWeeks = lastWeeks(week.week, 4);
-    const emerging = activeEmergingRoles(anyGroup, meta, recentWeeks);
+    // Mêmes chiffres que l'accueil du site (SPEC.md §17.4).
+    const { week, ai, premium, emerging } = headline(meta, all, scope, rowsOf<PremiumRow>(salaries.aiPremium));
 
     const tiles = h(
       'div',
@@ -97,7 +90,7 @@ export const overviewPage: Page = {
         detail: premium
           ? [
               `IA n = ${fmtInt(premium.nAi)}, dev n = ${fmtInt(premium.nDev)}`,
-              premium.premium === null ? '' : ` · prime IA ${fmtDelta(premium.premium / 1000, 1)} k€`,
+              premium.premium === null ? '' : ` · prime IA ${fmtPremium(premium)}`,
               ' · 12 derniers mois, France entière',
             ]
           : null,
@@ -145,14 +138,14 @@ export const overviewPage: Page = {
             roles,
             'Nouvelles offres des 4 dernières semaines complètes contre les 4 précédentes (au moins 10 offres sur les 8 semaines).',
             (id) => roleLabel(meta, id),
-            (m) => `${fmtDelta(m.delta)} (${fmtInt(m.previous)} → ${fmtInt(m.recent)})`,
+            fmtRoleMove,
           ),
           moversBlock(
             'Technologies',
             technologies,
             `Part des offres à description complète qui citent la techno, en ${monthLabel(month)} contre la moyenne des 3 mois précédents.`,
             techLabel,
-            (m) => `${fmtDelta(m.delta * 100, 1)} pt (${fmtPct(m.previous)} → ${fmtPct(m.recent)})`,
+            fmtTechMove,
             ignoredNote(ignoredFilters(filters, ['groups'])),
           ),
         ),

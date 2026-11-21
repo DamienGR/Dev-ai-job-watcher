@@ -910,3 +910,46 @@ Lighthouse 13.6.0, mobile simulé, build de production servi par `vite preview` 
 
 La 404 perd des points de référencement par son `noindex`, voulu. Tant que le site reste en
 `noindex` (D47), toutes les pages perdent ces points de la même façon.
+
+## Site public — Accueil (lot S3, 2026-11-21)
+
+### D60. Contenu et données de l'accueil (§17.2, §17.4)
+
+- Accroche, quatre chiffres de la semaine de référence, mini-courbe, « ce qui bouge », schéma
+  du pipeline et encart « L'IA dans ce projet ». Le lien vers la page du même nom arrive avec
+  elle au lot S4 : pas de lien mort d'ici là.
+- Les quatre chiffres (nouvelles offres, part IA, prime IA, rôles émergents actifs) viennent
+  de `headline()` (`web/src/lib/headline.ts`), que la vue d'ensemble du tableau de bord
+  utilise aussi pour ses tuiles : mêmes fichiers (`timeseries.json`, `salaries.json`), mêmes
+  calculs, filtres par défaut du tableau de bord, même mise en forme (`fmtPremium`,
+  `fmtRoleMove`, `fmtTechMove`). Testé dans `tests/web/headline.test.ts`. L'écart à la
+  moyenne des 4 semaines n'est pas repris (voir D61).
+- Mini-courbe : nouvelles offres g1 à g8 par semaine, du premier run à la semaine de
+  référence. Dessinée en SVG sans ECharts (l'accueil charge 7 Ko de JavaScript compressé
+  contre 190 Ko pour le tableau de bord) ; semaines partielles hachurées et changements de
+  taxonomie marqués comme dans le tableau de bord (§8.3) ; tableau des valeurs pour les
+  lecteurs d'écran. Axes de courbe déplacés dans `web/src/lib/axis.ts`, sans ECharts.
+- « Ce qui bouge » : les trois premières hausses et baisses des métiers et des technologies,
+  calculées comme dans la vue d'ensemble (`roleMovers`, `techMovers`).
+- Hauteurs réservées pour les chiffres, la courbe et les listes : la page ne bouge pas à
+  l'arrivée des données (CLS 0).
+- Schéma du pipeline en texte (quatre étapes), sans chiffre qui vieillirait : les chiffres de
+  qualité des runs iront sur la page Méthodologie (S4).
+
+### D61. Constat : la semaine de référence est sous-comptée à sa publication (ouvert)
+
+Les nouvelles offres sont comptées par semaine de création (§6.9), mais une partie des offres
+n'apparaît dans l'API qu'une ou plusieurs semaines après leur date de création. Agrégats de
+production du 2026-11-21 :
+
+| Semaine de création | Offres créées (aujourd'hui) | Nouvelles offres du run suivant (toutes semaines) |
+|---|---|---|
+| 2026-W41 | 983 | 540 (run W42) |
+| 2026-W43 | 1 422 | 1 224 (run W44) |
+| 2026-W45 | 962 | 830 (run W46) |
+
+Le run suivant ne peut pas avoir vu plus d'offres de la semaine qu'il n'a trouvé d'offres
+nouvelles en tout : chaque semaine a donc gagné au moins 13 à 45 % après sa première
+publication. La semaine de référence des tuiles est la plus touchée ; l'écart de −35 % de la
+semaine 46 en vient probablement en partie. L'accueil reprend les chiffres du tableau de bord
+(§17.4) ; la correction est à décider par Damien.

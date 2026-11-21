@@ -248,6 +248,45 @@ main:focus {
   gap: 4px 16px;
 }
 
+/* Notes, pastilles « partiel », hachures et valeurs masquées (SPEC.md §8.3), communes au
+   tableau de bord et à l'accueil. */
+.note {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  margin: 4px 0 8px;
+}
+
+.badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  vertical-align: middle;
+}
+
+.badge-partial {
+  background-image: repeating-linear-gradient(135deg, var(--hatch) 0 2px, transparent 2px 6px);
+}
+
+.hatch-key {
+  display: inline-block;
+  width: 18px;
+  height: 12px;
+  vertical-align: middle;
+  border: 1px solid var(--border);
+  background-image: repeating-linear-gradient(135deg, var(--hatch) 0 2px, transparent 2px 6px);
+}
+
+.masked {
+  color: var(--text-muted);
+  font-size: 0.85em;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
 /* Pages de texte (mentions légales, 404, puis pages éditoriales). */
 .prose {
   max-width: 72ch;
@@ -289,10 +328,244 @@ main:focus {
   font-size: 0.9em;
 }
 
-/* Accueil. */
+/* Accueil (SPEC.md §17.2). Hauteurs réservées avant l'arrivée des données : la page ne bouge
+   pas au chargement. */
 .hero {
-  padding: 48px 0 32px;
+  padding: 40px 0 24px;
   max-width: 64ch;
+}
+
+.home-section {
+  margin-top: 40px;
+}
+
+.home-section > h2 {
+  font-size: 1.3rem;
+  margin-bottom: 8px;
+}
+
+.home-more {
+  margin: 12px 0 0;
+  font-size: 0.95rem;
+}
+
+.figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.figure {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  min-height: 150px;
+}
+
+.figure-loading {
+  background-image: linear-gradient(var(--surface-2), var(--surface-2));
+  background-size: 60% 14px;
+  background-position: 18px 20px;
+  background-repeat: no-repeat;
+}
+
+.figure-label {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.figure-value {
+  margin: 6px 0;
+  font-size: 2.2rem;
+  line-height: 1.1;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.figure-value.masked {
+  font-size: 1.6rem;
+}
+
+.figure-detail {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.trend {
+  min-height: 230px;
+}
+
+.trend-figure {
+  margin: 0;
+}
+
+.trend-head {
+  margin: 8px 0 12px;
+  color: var(--text-secondary);
+}
+
+.trend-value {
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.trend-plot {
+  position: relative;
+  height: 150px;
+  border-bottom: 1px solid var(--border);
+}
+
+.trend-plot svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.trend-area {
+  fill: var(--accent);
+  opacity: 0.12;
+}
+
+.trend-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+
+.trend-partial {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background-image: repeating-linear-gradient(135deg, var(--hatch) 0 2px, transparent 2px 6px);
+}
+
+.trend-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 1px dashed var(--text-muted);
+}
+
+.trend-axis {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.trend-figure {
+  position: relative;
+}
+
+.home-movers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 12px;
+  min-height: 280px;
+}
+
+.movers-card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+
+.movers-card h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.movers-list h4 {
+  margin: 12px 0 4px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.movers-list ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.movers-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--grid);
+}
+
+.movers-list .mover-value {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+
+.pipeline {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pipeline li {
+  border-top: 3px solid var(--accent);
+  background: var(--surface-1);
+  border-radius: 0 0 12px 12px;
+  padding: 12px 16px;
+}
+
+.pipeline-step {
+  font-weight: 700;
+}
+
+.pipeline p {
+  margin: 6px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.ai-note {
+  margin-top: 16px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+  max-width: 80ch;
+}
+
+.ai-note h3 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+
+.ai-note p {
+  margin: 0;
 }
 
 .hero h1 {
@@ -356,6 +629,14 @@ input:focus-visible {
 @media (max-width: 640px) {
   .logo-sub {
     display: none;
+  }
+
+  .figure {
+    min-height: 120px;
+  }
+
+  .figure-value {
+    font-size: 1.9rem;
   }
 
   .site-header {

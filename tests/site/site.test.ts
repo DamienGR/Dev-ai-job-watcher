@@ -78,6 +78,12 @@ describe('pages du site (SPEC.md §17.2)', () => {
     expect(build(page('mentions-legales'))).not.toContain('aria-current');
   });
 
+  it('prépare sur l’accueil les emplacements des chiffres, de la courbe et de « ce qui bouge »', () => {
+    const home = build(page('accueil'));
+    for (const slot of ['figures', 'trend', 'movers']) expect(home).toContain(`data-home-${slot}`);
+    expect(home).toContain('<a class="button" href="/tableau-de-bord/">');
+  });
+
   it('relie chaque page aux mentions légales et à la page 404 vers l’accueil et le tableau de bord', () => {
     for (const p of PAGES) expect(build(p)).toContain('<a href="/mentions-legales/">Mentions légales</a>');
     const notFound = build(page('404'));
