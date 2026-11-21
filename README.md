@@ -51,17 +51,23 @@ disparitions, premier run) et écrit `offers/<run>.jsonl.gz`, puis recalcule tou
 même run donne le même résultat. Il refuse un run dont la collecte est en cours, ou plus
 ancien que le dernier run traité.
 
-## Dashboard et envoi des agrégats
+## Site, dashboard et envoi des agrégats
 
 ```sh
 npm run process -- --run-id 2026-W41   # agrégats dans .data/aggregates
-npm run dev:web                         # dashboard sur http://localhost:5173, lit .data/aggregates
+npm run dev:web                         # site sur http://localhost:5173, lit .data/aggregates
 npm run build && npm run preview:web    # version de production, mêmes données locales
 npm run push                            # envoi au site : SITE_URL et INGEST_SECRET requis
+npm run site:images                     # images de partage et icône (Playwright, ponctuel)
 ```
 
-Le dashboard est un site statique (Vite, ECharts, Leaflet) qui lit les agrégats par
-`GET /api/data/:name`. `npm run push` envoie chaque fichier de `.data/aggregates` (ou
+Le site public (SPEC.md §17) est un site statique Vite à plusieurs pages : accueil, tableau de
+bord sous `/tableau-de-bord/`, mentions légales, page 404. Pages, titres et descriptions sont
+déclarés dans `web/site/config.ts` ; le gabarit commun (`web/site/template.ts`) injecte au build
+l'en-tête, la navigation, le pied de page et les textes Markdown de `web/content/`. Les anciens
+liens `/#/<page>` du dashboard mènent à `/tableau-de-bord/#/<page>`. Décisions D45 à D59.
+
+Le dashboard (ECharts, Leaflet) lit les agrégats par `GET /api/data/:name`. `npm run push` envoie chaque fichier de `.data/aggregates` (ou
 `DATA_DIR`) à `PUT /api/ingest/:name`, `meta.json` en dernier : le site passe au nouveau run
 sans déploiement. Pages, filtres et règles d'affichage : SPEC.md §8, décisions D31 à D36.
 
@@ -84,7 +90,7 @@ deploy/vps/veille-job admin status        # sur le VPS : environnement et verrou
 ```
 taxonomy.yaml           taxonomie des métiers (source de vérité, conventions en tête)
 TAXONOMY_CHANGELOG.md   journal des versions de la taxonomie
-netlify.toml            site Netlify : dashboard, API des agrégats, watchdog
+netlify.toml            site Netlify : site public, en-têtes de sécurité, API des agrégats, watchdog
 src/core/               normalize, taxonomy, classify, signals, salary, location, employer, dedup, stats
 src/refs/               départements (101), régions (18), population active INSEE par région
 src/sources/            interface Source, client HTTP bridé, collecteur France Travail (Adzuna au lot 3)
@@ -92,9 +98,11 @@ src/pipeline/           état des runs, traitement, agrégats (aggregates/), env
 src/storage/            stores Netlify Blobs, mémoire (tests) et disque (VPS, scripts)
 src/functions/          logique des fonctions Netlify, testable
 netlify/functions/      fonctions Netlify : api-ingest, api-data, watchdog
-scripts/                jobs du VPS (weekly-run, admin, backup), collecte, traitement, envoi, sonde FT
+scripts/                jobs du VPS (weekly-run, admin, backup), collecte, traitement, envoi, sonde FT, images du site
 deploy/vps/             lanceur veille-job, unités systemd, procédure d'installation du VPS
-web/                    dashboard Vite : pages (web/src/pages), calculs testés (web/src/lib)
+web/                    site Vite : pages HTML d'entrée, dashboard (web/src/pages), calculs testés (web/src/lib)
+web/site/               pages du site et gabarit commun, appliqué au build
+web/content/            textes des pages en Markdown
 fixtures/               réponses d'API fictives, mode SOURCE_MODE=fixtures
 tests/                  tests Vitest ; tests/fixtures/titles.json = cas de classification
 docs/decisions.md       décisions d'implémentation

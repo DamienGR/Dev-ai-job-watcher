@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { defineConfig, type Connect, type Plugin } from 'vite';
+import { siteInputs, sitePages } from './web/site/plugin';
 
 /**
  * En local (`npm run dev:web`, `vite preview`), `/api/data/:name` lit les agrégats produits par
@@ -30,13 +31,18 @@ function localData(): Plugin {
   };
 }
 
-// Dashboard statique (SPEC.md §8), servi par Netlify depuis `web/dist`.
+const webRoot = resolve(import.meta.dirname, 'web');
+
+// Site public statique (SPEC.md §17) : une page HTML par rubrique, dont le tableau de bord
+// (§8) ; servi par Netlify depuis `web/dist`.
 export default defineConfig({
   root: 'web',
-  plugins: [localData()],
+  appType: 'mpa',
+  plugins: [sitePages(webRoot), localData()],
   build: {
     outDir: 'dist',
     emptyOutDir: true,
     target: 'es2022',
+    rollupOptions: { input: siteInputs(webRoot) },
   },
 });

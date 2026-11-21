@@ -3,21 +3,24 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="robots" content="noindex" />
-    <meta name="description" content="Veille quantitative du marché de l'emploi dev, data et IA en France. Source : France Travail." />
     <meta name="color-scheme" content="light dark" />
-    <link rel="preload" href="/api/data/meta.json" as="fetch" crossorigin="anonymous" />
-    <link rel="icon" href="data:," />
-    <title>Veille emploi Dev &amp; IA</title>
+    <!-- site:head -->
   </head>
   <body>
-    <div id="app">
-      <main class="boot">
-        <h1>Veille emploi Dev &amp; IA</h1>
-        <p>Chargement du tableau de bord…</p>
-        <noscript>Le tableau de bord a besoin de JavaScript.</noscript>
+    <div class="site">
+      <!-- site:header -->
+      <main id="contenu" class="home" tabindex="-1">
+        <section class="hero">
+          <h1>Le marché de l’emploi tech en France, mesuré chaque semaine</h1>
+          <p class="lead">
+            Chaque lundi, les offres d’emploi publiées sur France Travail sont collectées, classées par métier et résumées en
+            indicateurs : nombre d’offres, part de celles qui demandent des compétences en IA, salaires, régions.
+          </p>
+          <p><a class="button" href="/tableau-de-bord/">Ouvrir le tableau de bord</a></p>
+        </section>
       </main>
+      <!-- site:footer -->
     </div>
-    <script type="module" src="/src/main.ts"></script>
+    <script type="module" src="/src/home.ts"></script>
   </body>
 </html>

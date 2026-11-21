@@ -1,8 +1,7 @@
+import './site/site';
 import './styles.css';
 import { loadFile, loadMeta, NoDataError } from './data';
 import { DEFAULT_FILTERS, filtersToParams, NON_CLASSE, parseFilters, PERIODS, scopeOf, type Filters } from './lib/filters';
-import { lastRunId } from './lib/indicators';
-import { weekLongLabel } from './lib/periods';
 import type { Meta } from './lib/types';
 import type { Page, PageContext } from './page';
 import { cartePage } from './pages/carte';
@@ -13,7 +12,9 @@ import { qualitePage } from './pages/qualite';
 import { salairesPage } from './pages/salaires';
 import { append, h } from './ui';
 
-// Dashboard (SPEC.md §8) : pages en hash (`#/metiers?region=11`), filtres globaux dans l'URL.
+// Tableau de bord (SPEC.md §8), sous `/tableau-de-bord/` (§17.2) : pages en hash
+// (`#/metiers?region=11`), filtres globaux dans l'URL. En-tête, thème et pied de page viennent
+// du gabarit commun du site (`web/site/`, `site/site.ts`).
 
 const PAGES: Page[] = [overviewPage, metiersPage, salairesPage, cartePage, qualitePage];
 
@@ -34,32 +35,12 @@ function hrefFor(page: Page, filters: Filters, pageParams?: URLSearchParams): st
   return `#/${page.id}${query ? `?${query}` : ''}`;
 }
 
-// Thème clair / sombre : suit le système, ou le choix enregistré.
-const THEMES = ['auto', 'light', 'dark'] as const;
-type Theme = (typeof THEMES)[number];
-function storedTheme(): Theme {
-  try {
-    const value = localStorage.getItem('theme');
-    return THEMES.includes(value as Theme) ? (value as Theme) : 'auto';
-  } catch {
-    return 'auto';
-  }
-}
-function applyTheme(theme: Theme): void {
-  if (theme === 'auto') delete document.documentElement.dataset.theme;
-  else document.documentElement.dataset.theme = theme;
-  try {
-    localStorage.setItem('theme', theme);
-  } catch {
-    // Stockage indisponible : le choix vaut pour cette visite.
-  }
-}
+const SITE_NAME = document.querySelector<HTMLMetaElement>('meta[property="og:site_name"]')?.content ?? '';
 
 const shell = {
-  nav: h('nav', { class: 'tabs', 'aria-label': 'Pages' }),
+  nav: h('nav', { class: 'tabs', 'aria-label': 'Pages du tableau de bord' }),
   filters: h('div', { class: 'filters-slot' }),
   main: h('main', { id: 'contenu', tabindex: -1 }),
-  footer: h('footer', { class: 'footer' }),
 };
 
 let disposers: (() => void)[] = [];
@@ -181,7 +162,7 @@ async function render(meta: Meta): Promise<void> {
     ...PAGES.map((p) => h('a', { href: hrefFor(p, filters), 'aria-current': p === route.page ? 'page' : null }, p.title)),
   );
   shell.filters.replaceChildren(route.page.id === 'qualite' ? '' : filterBar(meta, filters, route));
-  document.title = `${route.page.title} · Veille emploi Dev & IA`;
+  document.title = `${route.page.title} · Tableau de bord · ${SITE_NAME}`;
 
   const root = h('div', { class: 'page' });
   const heading = h(
@@ -226,47 +207,10 @@ function describe(meta: Meta, filters: Filters): string {
   return parts.join(' · ');
 }
 
-function footer(meta: Meta | null): HTMLElement[] {
-  const lines: (HTMLElement | null)[] = [
-    h('p', null, h('strong', null, 'Source : France Travail'), ' · statistiques agrégées, aucune annonce republiée, aucune donnée personnelle.'),
-    meta
-      ? h(
-          'p',
-          null,
-          `Dernier run : ${weekLongLabel(lastRunId(meta))} · taxonomie v${meta.taxonomy.version} · mis à jour le `,
-          new Date(meta.generatedAt).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Europe/Paris' }),
-          '.',
-        )
-      : null,
-  ];
-  return lines.filter((x): x is HTMLElement => x !== null);
-}
-
-function themeButton(): HTMLElement {
-  const labels: Record<Theme, string> = { auto: 'Thème : système', light: 'Thème : clair', dark: 'Thème : sombre' };
-  let theme = storedTheme();
-  const button = h('button', { type: 'button', class: 'theme' }, labels[theme]);
-  button.addEventListener('click', () => {
-    theme = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length]!;
-    applyTheme(theme);
-    button.textContent = labels[theme];
-    window.dispatchEvent(new Event('themechange'));
-  });
-  return button;
-}
-
 async function start(): Promise<void> {
-  applyTheme(storedTheme());
   const app = document.getElementById('app')!;
-  const header = h(
-    'header',
-    { class: 'header' },
-    h('a', { class: 'skip', href: '#contenu' }, 'Aller au contenu'),
-    h('div', { class: 'brand' }, h('p', { class: 'brand-title' }, 'Veille emploi Dev & IA'), h('p', { class: 'brand-sub' }, 'Marché de l’emploi dev, data et IA en France')),
-    themeButton(),
-  );
   app.replaceChildren();
-  append(app, [header, shell.nav, shell.filters, shell.main, shell.footer]);
+  append(app, [shell.nav, shell.filters, shell.main]);
 
   let meta: Meta;
   try {
@@ -286,10 +230,8 @@ async function start(): Promise<void> {
         ),
       ),
     );
-    shell.footer.replaceChildren(...footer(null));
     return;
   }
-  shell.footer.replaceChildren(...footer(meta));
   window.addEventListener('hashchange', () => {
     void render(meta);
   });

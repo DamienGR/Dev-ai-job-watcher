@@ -13,7 +13,7 @@ export default defineConfig([
     },
   },
   {
-    files: ['web/src/**/*.ts'],
+    files: ['web/src/**/*.ts', 'web/public/**/*.js'],
     languageOptions: {
       globals: globals.browser,
     },
