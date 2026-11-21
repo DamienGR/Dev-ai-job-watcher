@@ -16,5 +16,5 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["src", "tests", "netlify", "scripts", "*.ts"]
+  "include": ["src", "tests", "netlify", "scripts", "web/site", "*.ts"]
 }

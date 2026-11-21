@@ -799,3 +799,114 @@ Audit du 2026-10-30 : rien de bloquant. Choix de Damien :
   publique). Aucun nom d'hôte ni aucune adresse IP dans les fichiers de déploiement à venir.
 - Avant la bascule : politique Netlify des variables sensibles sur « Require approval »
   (exigé, §17.8), puis nouveau balayage du dépôt.
+
+## Site public — Socle (lot S2, 2026-11-21)
+
+### D53. Pages multiples et gabarit commun (§17.2 à §17.4, D48)
+
+- Les pages sont déclarées dans `web/site/config.ts` (adresse, fichier d'entrée, titre,
+  description, place dans la navigation, texte Markdown). Chaque page a un fichier HTML
+  d'entrée sous `web/`, entrée du build Vite ; le tableau de bord passe de `web/index.html` à
+  `web/tableau-de-bord/index.html`, son code ne change pas.
+- Gabarit : un plugin Vite (`web/site/plugin.ts`, `transformIndexHtml`) remplace les marqueurs
+  `<!-- site:head -->`, `<!-- site:header -->`, `<!-- site:content -->` et
+  `<!-- site:footer -->`, chacun sur sa propre ligne, en développement comme au build. Un
+  marqueur manquant ou en trop fait échouer le build.
+- Markdown converti par `marked` (dépendance de développement, version 18.1.3, sortie depuis
+  plus de deux semaines) plutôt que par le petit convertisseur du journal de la taxonomie :
+  les pages éditoriales du lot S4 auront besoin de liens et de tableaux. Les textes sont du
+  contenu du dépôt, non assaini.
+- La navigation ne montre que les pages livrées : « Tableau de bord » au lot S2, les autres
+  rubriques avec leur lot. `appType: 'mpa'` : en local, une adresse inconnue répond 404 au
+  lieu de servir l'accueil.
+- En-tête, thème et pied de page quittent le code du tableau de bord pour le gabarit
+  (`web/src/site/`). Le pied de page lit la date du dernier run dans `meta.json` sur toutes
+  les pages ; `loadMeta` ne fait qu'une requête par page.
+- Corrigé au passage : le lien d'évitement « Aller au contenu » mettait `#contenu` dans le
+  fragment, que le tableau de bord lisait comme une page inconnue (retour à la vue d'ensemble,
+  filtres perdus). Il donne désormais le focus au contenu sans toucher au fragment.
+- `#app` réserve la hauteur de l'écran : sans cela, le pied de page, devenu statique, était
+  repoussé au chargement du tableau de bord (CLS de 0,27 mesuré, 0 après correction).
+
+### D54. Anciens liens du tableau de bord (§17.4, exigé)
+
+`/#/<page>?<filtres>` mène à `/tableau-de-bord/#/<page>?<filtres>` : le script de l'accueil
+appelle `location.replace` (pas d'entrée dans l'historique), au chargement et sur
+`hashchange`. Seuls les fragments commençant par `#/` sont concernés. Le script est un module,
+exécuté après l'analyse de la page : l'accueil peut s'afficher un instant avant la
+redirection, accepté pour ces seuls anciens liens. Règle testée (`tests/site/site.test.ts`),
+redirection vérifiée dans Chromium.
+
+### D55. Identité (§17.3)
+
+- Nom D46 partout (titres, en-tête, images de partage) ; le dépôt garde le sien.
+- Logotype : une jauge de baromètre, en SVG dans l'en-tête et en favicon ; icône 180 × 180
+  pour l'écran d'accueil des téléphones.
+- Images de partage 1200 × 630 : une pour l'accueil, une pour le tableau de bord ; les pages
+  sans image propre reprennent celle de l'accueil. Générées par `npm run site:images`
+  (`scripts/site-images.ts`) avec Playwright, qui n'est pas une dépendance du projet : outil
+  ponctuel, relancé quand une page en gagne une ou change de titre.
+- Thème partagé par tout le site. Le choix enregistré est appliqué avant le premier affichage
+  par `public/theme.js`, script classique bloquant de 0,3 Ko, plutôt qu'un script en ligne
+  qu'il faudrait autoriser par une empreinte dans la CSP.
+- Couleur des liens : nouveau jeton `--link` (`#256abf` en clair, 4,9:1 sur le fond ; inchangé
+  en sombre). L'accent `#2a78d6`, à 3,97:1, échouait au contraste de Lighthouse ; il reste la
+  couleur des séries et du logotype. Le bouton de l'accueil prend aussi `#256abf`.
+
+### D56. Référencement technique (§17.5, D47)
+
+- `noindex` sur toutes les pages tant que `SITE.indexable` est faux, c'est-à-dire jusqu'au
+  lancement ; `SITE_INDEXABLE=1` au build sert à mesurer le site tel qu'il sera indexé. La
+  page 404 reste toujours `noindex`, sans URL canonique.
+- Titre, description, URL canonique et balises Open Graph sur chaque page. L'adresse de base
+  vient de la variable `URL` que Netlify fournit au build (adresse principale du site) ; elle
+  deviendra `https://barometre.dg-tech.dev` quand le domaine sera branché comme adresse
+  principale, sans changement de code. En local : `https://barometre.dg-tech.dev`.
+- `robots.txt` et `sitemap.xml` arrivent au lancement, avec l'indexation (§17.5).
+- Le lien « Code source sur GitHub » du pied de page mène à un dépôt encore privé : il
+  fonctionnera au passage en public (§17.8).
+
+### D57. En-têtes de sécurité (lot S2)
+
+Dans `netlify.toml`, pour tout le site :
+
+- CSP : scripts du seul site ; styles en ligne permis (infobulles d'ECharts écrites en HTML
+  avec des attributs `style`, positionnement de Leaflet) ; images du site, `data:` et tuiles
+  `tile.openstreetmap.org` ; requêtes vers le seul site ; ni objets, ni cadres, ni
+  formulaires. Un test vérifie que l'hôte des tuiles de `carte.ts` est autorisé.
+- `Strict-Transport-Security`, `X-Content-Type-Options`, `X-Frame-Options`,
+  `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`.
+- `/assets/*` (noms de fichiers tirés du contenu) : cache d'un an, `immutable`.
+- Vérifié dans Chromium avec cette CSP, en local puis sur l'aperçu Netlify de la PR (vraies
+  données) : les cinq pages du tableau de bord, la carte et ses tuiles, l'accueil, les
+  mentions légales et la 404, sans erreur de la page dans la console.
+- Seule erreur, sur les aperçus Netlify uniquement : la barre d'outils que Netlify y ajoute
+  ouvre un cadre vers `app.netlify.com`, bloqué par la CSP. La production n'a pas cette barre ;
+  la CSP n'est pas élargie pour elle.
+
+### D58. Mentions légales (§17.2)
+
+- Éditeur repris des mentions légales de `dg-tech.dev`, le même éditeur (relevé du
+  2026-11-21) : nom, statut, SIREN, TVA, adresse, contact.
+- Hébergeur : Netlify, Inc., à l'adresse de ses conditions d'utilisation relevée le
+  2026-11-21 (101 2nd Street, San Francisco). Les mentions de `dg-tech.dev` donnent une
+  ancienne adresse (44 Montgomery Street).
+- Le serveur OVHcloud de la collecte est cité sans nom d'hôte ni adresse (D52).
+- Sources et licences (France Travail, Insee, IGN via france-geojson, OpenStreetMap), absence
+  de cookies et de mesure d'audience, thème gardé dans le navigateur, journaux de
+  l'hébergeur, adresse IP transmise aux serveurs de tuiles par la page Carte.
+
+### D59. Mesures Lighthouse du lot S2 (§17.4)
+
+Lighthouse 13.6.0, mobile simulé, build de production servi par `vite preview` avec
+`SITE_INDEXABLE=1`, le 2026-11-21 :
+
+| Page | Performance | Accessibilité | Bonnes pratiques | Référencement |
+|---|---|---|---|---|
+| Accueil | 100 | 100 | 100 | 100 |
+| Tableau de bord | 96 | 100 | 100 | 100 |
+| Mentions légales | 100 | 100 | 100 | 100 |
+| Page 404 | 100 | 100 | 100 | 60 |
+
+La 404 perd des points de référencement par son `noindex`, voulu. Tant que le site reste en
+`noindex` (D47), toutes les pages perdent ces points de la même façon.

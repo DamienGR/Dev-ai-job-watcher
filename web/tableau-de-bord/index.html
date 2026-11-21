@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <!-- site:head -->
+    <link rel="preload" href="/api/data/meta.json" as="fetch" crossorigin="anonymous" />
+  </head>
+  <body>
+    <div class="site">
+      <!-- site:header -->
+      <div id="app">
+        <main id="contenu" class="boot" tabindex="-1">
+          <h1>Tableau de bord</h1>
+          <p>Chargement du tableau de bord…</p>
+          <noscript><p>Le tableau de bord a besoin de JavaScript.</p></noscript>
+        </main>
+      </div>
+      <!-- site:footer -->
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -19,7 +19,8 @@ toute modification.
 ## Commandes
 
 - `npm ci` puis `npm run check` (lint + typecheck + tests) avant chaque commit.
-- `npm run build` : build du site statique (`web/dist`).
+- `npm run build` : build du site statique (`web/dist`) ; pages déclarées dans
+  `web/site/config.ts`, textes en Markdown dans `web/content/` (SPEC.md §17).
 - `npm run collect:ft -- --mode fixtures` : collecte France Travail locale sans clé ;
   `npm run probe:ft` : sonde de l'API réelle (identifiants `FT_CLIENT_ID` / `FT_CLIENT_SECRET`).
 - `npm run process -- --run-id <run>` : traitement local d'un run collecté (offres, index,

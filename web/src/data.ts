@@ -10,8 +10,23 @@ export class NoDataError extends Error {
   override name = 'NoDataError';
 }
 
-/** `meta.json` est préchargé par `index.html` (même requête, servie sans cache par `api-data`). */
-export async function loadMeta(): Promise<Meta> {
+let metaPromise: Promise<Meta> | null = null;
+
+/**
+ * `meta.json`, lu une fois par page (pied de page du site et tableau de bord) ; préchargé par
+ * `tableau-de-bord/index.html` (même requête, servie sans cache par `api-data`).
+ */
+export function loadMeta(): Promise<Meta> {
+  if (!metaPromise) {
+    metaPromise = fetchMeta();
+    metaPromise.catch(() => {
+      metaPromise = null;
+    });
+  }
+  return metaPromise;
+}
+
+async function fetchMeta(): Promise<Meta> {
   const response = await fetch(`${DATA_BASE}meta.json`);
   if (response.status === 404) throw new NoDataError('aucun agrégat publié');
   if (!response.ok) throw new Error(`meta.json : HTTP ${response.status}`);
