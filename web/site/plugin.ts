@@ -3,6 +3,7 @@ import { join, relative, sep } from 'node:path';
 import type { Plugin } from 'vite';
 import { CHANGELOG_FILE } from './changelog';
 import { PAGES, pageByFile } from './config';
+import { renderSecurityTxt, SECURITY_TXT } from './security';
 import { seoFiles } from './seo';
 import { renderPage } from './template';
 
@@ -30,6 +31,8 @@ export function sitePages(webRoot: string): Plugin {
     generateBundle() {
       // `robots.txt` et, au lancement, `sitemap.xml` (SPEC.md §17.5).
       for (const [fileName, source] of Object.entries(seoFiles())) this.emitFile({ type: 'asset', fileName, source });
+      // Contact pour signaler une faille (RFC 9116, D71).
+      this.emitFile({ type: 'asset', fileName: SECURITY_TXT, source: renderSecurityTxt() });
     },
     configureServer(server) {
       // Les textes ne sont pas des modules : une modification recharge la page.

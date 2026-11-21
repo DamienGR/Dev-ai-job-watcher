@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { CHANGELOG_MARKER, journalUpdated, parseChangelog, renderChangelog, renderVersionsTable, VERSIONS_MARKER, withChangelog } from '../../web/site/changelog';
 import { PAGES, SITE, type SitePage } from '../../web/site/config';
 import { siteInputs } from '../../web/site/plugin';
+import { renderSecurityTxt, SECURITY_CONTACT } from '../../web/site/security';
 import { renderRobots, renderSitemap, seoFiles } from '../../web/site/seo';
 import { escapeHtml, renderByline, renderContent, renderMarkdown, renderPage } from '../../web/site/template';
 import { legacyDashboardUrl } from '../../web/src/site/legacy';
@@ -251,6 +252,24 @@ describe('robots.txt et sitemap.xml (SPEC.md §17.5, D47)', () => {
 
   it('refuse d’ouvrir l’indexation avant le branchement du domaine', () => {
     expect(() => seoFiles(true, 'https://dev-ai-job-watcher.netlify.app')).toThrow(/brancher d'abord le domaine/);
+  });
+});
+
+describe('security.txt (RFC 9116, D71)', () => {
+  it('donne le contact, une expiration à moins d’un an et l’adresse canonique', () => {
+    const now = new Date('2026-11-21T19:00:00Z');
+    const text = renderSecurityTxt(now, 'https://barometre.dg-tech.dev');
+    expect(text).toContain(`Contact: ${SECURITY_CONTACT}\n`);
+    expect(text).toContain('Canonical: https://barometre.dg-tech.dev/.well-known/security.txt\n');
+    expect(text).toContain(`Policy: ${SITE.repository}/blob/main/SECURITY.md\n`);
+    const expires = new Date(/^Expires: (.+)$/m.exec(text)?.[1] ?? '');
+    expect(expires.getTime()).toBeGreaterThan(now.getTime() + 300 * 86_400_000);
+    expect(expires.getTime()).toBeLessThan(now.getTime() + 365 * 86_400_000);
+    expect(text).toMatch(/^Expires: \d{4}-\d{2}-\d{2}T00:00:00Z$/m);
+  });
+
+  it('pointe vers un SECURITY.md présent dans le dépôt', () => {
+    expect(existsSync(join(ROOT, 'SECURITY.md'))).toBe(true);
   });
 });
 

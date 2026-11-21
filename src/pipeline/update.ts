@@ -8,7 +8,9 @@ import type { PushReport } from './push';
 // Job `update` du VPS (SPEC.md §3.3, §9.3, D67), chaque jour à 04:00 UTC, en deux temps :
 //
 // 1. `updateCode` : `git fetch` puis avance rapide de `main`, `npm ci` si `package-lock.json`
-//    a changé. Refuse une copie de travail modifiée ou une branche qui a divergé.
+//    a changé. Refuse une copie de travail modifiée ou une branche qui a divergé. `npm ci`
+//    tourne sans scripts d'installation : le job a chargé les secrets du VPS, qu'un paquet
+//    compromis lirait depuis son `postinstall` (D71).
 // 2. `applyTaxonomyUpdate`, lancé dans un nouveau processus pour tourner avec le code à jour :
 //    si la version de taxonomy.yaml diffère de celle des données, reclassement complet de
 //    l'historique, puis envoi des agrégats.
@@ -74,7 +76,7 @@ export async function updateCode(deps: UpdateCodeDeps): Promise<CodeUpdateReport
     const changed = exec('git', ['diff', '--name-only', 'HEAD', 'FETCH_HEAD']).split('\n').filter(Boolean);
     exec('git', ['merge', '--ff-only', '--quiet', 'FETCH_HEAD']);
     const npmCi = changed.includes('package-lock.json');
-    if (npmCi) exec('npm', ['ci', '--no-audit', '--no-fund', '--loglevel=error']);
+    if (npmCi) exec('npm', ['ci', '--ignore-scripts', '--no-audit', '--no-fund', '--loglevel=error']);
     log('update.code', { status: 'updated', from, to, files: changed.length, npmCi });
 
     const units = changed.filter((file) => file.startsWith(UNITS_DIR));

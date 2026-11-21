@@ -12,7 +12,7 @@ aucun port entrant) :
 |---|---|---|
 | `veille-weekly-run.timer` | lundi 05:00, 06:00, 07:00 | Collecte France Travail, traitement, envoi des agrégats. Une relance reprend à l'étape incomplète, ne fait rien si le run est complet ; alerte après la 3e tentative. |
 | `veille-backup.timer` | lundi 09:00 | Copie chiffrée de `DATA_DIR` vers Cloudflare R2 (restic), alerte en cas d'échec. |
-| `veille-update.timer` | chaque jour 04:00 | Avance rapide de `main`, `npm ci` si besoin ; si la version de `taxonomy.yaml` a changé, reclassement de tout l'historique puis envoi des agrégats (lot 6, D67). |
+| `veille-update.timer` | chaque jour 04:00 | Avance rapide de `main`, `npm ci --ignore-scripts` si besoin (D71) ; si la version de `taxonomy.yaml` a changé, reclassement de tout l'historique puis envoi des agrégats (lot 6, D67). |
 | `veille-remote-control.service` | au démarrage | Facultatif : Remote Control dans une session tmux (étape 10). |
 
 Chaque job passe par `deploy/vps/veille-job`, qui charge le fichier d'environnement et prend le
@@ -112,7 +112,7 @@ fusionner la PR du lot 5, son déploiement s'en chargera.
 ```bash
 cd ~/Dev-ai-job-watcher
 git pull --ff-only
-npm ci
+npm ci --ignore-scripts
 ```
 
 Le dépôt s'appelle `Dg-tech-dev/barometre-emploi-dev-ia` depuis le 21 novembre 2026 (D64).
@@ -196,7 +196,7 @@ la fusion de la PR du lot 6 :
 ```bash
 export XDG_RUNTIME_DIR=/run/user/$(id -u)
 cd ~/Dev-ai-job-watcher
-git pull --ff-only && npm ci                     # dernière mise à jour à la main
+git pull --ff-only && npm ci --ignore-scripts   # dernière mise à jour à la main
 cp deploy/vps/systemd/veille-update.* ~/.config/systemd/user/
 systemctl --user daemon-reload
 systemctl --user enable --now veille-update.timer
