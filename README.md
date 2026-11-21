@@ -4,9 +4,11 @@ Veille quantitative du marché de l'emploi dev, data et IA en France : collecte 
 offres (France Travail, Adzuna), classification par une taxonomie versionnée, agrégats publiés
 sur un dashboard Netlify. Le cadrage complet est dans [SPEC.md](SPEC.md).
 
-**État** : lots 0 à 2 et 4 livrés (socle, collecte France Travail, traitement et agrégats,
-dashboard) ; lot 5 (VPS, planification, alertes) en cours, avant le lot 3 (Adzuna, D31, D37).
-Les lots sont décrits au §14 de la spec.
+**État** : lots 0 à 2, 4 et 5 livrés (socle, collecte France Travail, traitement et
+agrégats, dashboard, VPS et alertes) ; en production depuis le 7 octobre 2026, un run
+automatique chaque lundi. En cours : le site public autour du dashboard (SPEC.md §17, lots S1 à
+S6), puis le lot 6 (revue mensuelle). Le lot 3 (Adzuna) attend une décision (D50). Les lots
+sont décrits au §14 de la spec.
 
 ## Démarrage
 
@@ -131,3 +133,8 @@ Toute modification de `taxonomy.yaml` (revue mensuelle ou correction) doit :
    `{ "source": "...", "title": "...", "description"?: "...", "role": "...", "group": "...", "requalified"?: true }`
    (`role` et `group` valent `non_classe` pour un intitulé hors taxonomie) ;
 5. passer `npm test`, qui vérifie le schéma, la cohérence et tous les cas de classification.
+
+## Licence
+
+Code sous licence MIT ([LICENSE](LICENSE)). Le dépôt ne contient aucune donnée collectée ; les
+statistiques publiées viennent des offres France Travail (SPEC.md §11, D20).

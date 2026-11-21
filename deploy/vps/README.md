@@ -1,6 +1,6 @@
 # VPS : installation des jobs, des alertes et de la sauvegarde (lot 5)
 
-Procédure pour le VPS OVH (`vps-b594e2c8`, Ubuntu 26.04), préparé le 3 octobre 2026 :
+Procédure pour le VPS OVH (Ubuntu 26.04), préparé le 3 octobre 2026 :
 utilisateur dédié `veille` (sans `sudo` ni `docker`, `Linger=yes`), Node 22, clé de déploiement
 en lecture seule, dépôt cloné dans `/home/veille/Dev-ai-job-watcher`. Références : SPEC.md §3,
 §10, §12 et décisions D21, D37 à D42.
