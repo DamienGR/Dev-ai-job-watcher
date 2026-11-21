@@ -2,41 +2,10 @@ import changelog from '../../../TAXONOMY_CHANGELOG.md?raw';
 import { fmtInt, fmtPct, shareOf } from '../lib/format';
 import { parseMarkdown, type Inline } from '../lib/markdown';
 import { weekLongLabel } from '../lib/periods';
-import { rowsOf } from '../lib/table';
+import { fmtDuration, qualityRows, RUN_STATUS } from '../lib/quality';
 import type { Table } from '../lib/types';
 import type { Page } from '../page';
 import { append, card, dataTable, h, valueOr, type Child } from '../ui';
-
-interface QualityRow {
-  run: string;
-  source: string;
-  status: string;
-  collectStatus: string;
-  coverageComplete: boolean;
-  apiCalls: number;
-  errors: number;
-  truncatedPartitions: number;
-  failedPartitions: number;
-  read: number;
-  collectedA: number;
-  collectedB: number;
-  distinct: number;
-  abroad: number;
-  droppedRetention: number;
-  retained: number;
-  newOffers: number;
-  closed: number;
-  classified: number;
-  salaryDeclared: number;
-  salaryPredicted: number;
-  tjm: number;
-  noCoordinates: number;
-  noRegion: number;
-  duplicates: number;
-  durationMs: number;
-}
-
-const STATUS: Record<string, string> = { complete: 'complet', partial: 'partiel', failed: 'en échec', running: 'en cours' };
 
 function inlines(items: Inline[]): Child[] {
   return items.map((i) => (i.code ? h('code', null, i.text) : i.bold ? h('strong', null, i.text) : i.text));
@@ -60,7 +29,7 @@ export const qualitePage: Page = {
   title: 'Données & qualité',
   async render(ctx) {
     const { meta } = ctx;
-    const quality = rowsOf<QualityRow>(await ctx.load<Table>('quality.json')).sort((a, b) => b.run.localeCompare(a.run));
+    const quality = qualityRows(await ctx.load<Table>('quality.json'));
     const last = quality[0];
     const pct = (part: number, total: number) => valueOr(shareOf(part, total), fmtPct);
 
@@ -68,11 +37,11 @@ export const qualitePage: Page = {
       card(
         'Derniers runs',
         h('p', { class: 'note' }, 'Un run par semaine, le lundi matin : collecte, traitement, puis envoi des agrégats.'),
-        dataTable<QualityRow>(
+        dataTable(
           [
             { label: 'Run', render: (r) => r.run },
             { label: 'Source', render: (r) => meta.sources.find((s) => s.id === r.source)?.label ?? r.source },
-            { label: 'Statut', render: (r) => `${STATUS[r.status] ?? r.status}${r.coverageComplete ? '' : ', couverture partielle'}` },
+            { label: 'Statut', render: (r) => `${RUN_STATUS[r.status] ?? r.status}${r.coverageComplete ? '' : ', couverture partielle'}` },
             { label: 'Appels API', numeric: true, render: (r) => fmtInt(r.apiCalls) },
             { label: 'Lues', numeric: true, title: 'Offres lues (passes A et B)', render: (r) => fmtInt(r.read) },
             { label: 'Retenues', numeric: true, render: (r) => fmtInt(r.retained) },
@@ -82,7 +51,7 @@ export const qualitePage: Page = {
             { label: 'Salaire', numeric: true, title: 'Offres avec un salaire déclaré exploitable', render: (r) => pct(r.salaryDeclared, r.retained) },
             { label: 'Géolocalisées', numeric: true, render: (r) => pct(r.retained - r.noCoordinates, r.retained) },
             { label: 'Erreurs', numeric: true, render: (r) => fmtInt(r.errors + r.failedPartitions) },
-            { label: 'Durée', numeric: true, render: (r) => `${Math.round(r.durationMs / 100) / 10} s` },
+            { label: 'Durée', numeric: true, render: (r) => fmtDuration(r.durationMs) },
           ],
           quality,
         ),

@@ -328,6 +328,58 @@ main:focus {
   font-size: 0.9em;
 }
 
+/* Mention de rédaction avec l'IA, sous le titre des pages de texte (SPEC.md §17.1, exigé). */
+.byline {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  margin: -8px 0 20px;
+}
+
+/* Tableaux : tableau de bord et chiffres en direct des pages de texte. */
+.table-wrap {
+  overflow-x: auto;
+  margin: 4px 0 8px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+caption {
+  text-align: left;
+  position: absolute;
+  left: -9999px;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--grid);
+  vertical-align: middle;
+}
+
+th {
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Qualité des derniers runs (page Méthodologie), lue en direct : place réservée. */
+.quality {
+  min-height: 330px;
+  margin: 8px 0 16px;
+}
+
 /* Accueil (SPEC.md §17.2). Hauteurs réservées avant l'arrivée des données : la page ne bouge
    pas au chargement. */
 .hero {
@@ -566,6 +618,10 @@ main:focus {
 
 .ai-note p {
   margin: 0;
+}
+
+.ai-note p + p {
+  margin-top: 8px;
 }
 
 .hero h1 {

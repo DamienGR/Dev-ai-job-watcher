@@ -13,6 +13,11 @@ export interface SitePage {
   nav?: string;
   /** Texte de la page dans `web/content/`, converti en HTML au build. */
   content?: string;
+  /**
+   * Date (AAAA-MM-JJ) de la dernière révision du texte, affichée avec la mention de
+   * rédaction avec Claude (SPEC.md §17.1, exigé) ; requise pour une page qui a un texte.
+   */
+  updated?: string;
   /** Image de partage `web/public/og/<id>.png` ; à défaut, celle de l'accueil. */
   ogImage?: boolean;
   /** Page d'erreur : ni URL canonique ni indexation. */
@@ -55,12 +60,48 @@ export const PAGES: SitePage[] = [
     ogImage: true,
   },
   {
+    id: 'ia',
+    path: '/ia/',
+    file: 'ia/index.html',
+    title: 'L’IA dans ce projet',
+    description:
+      'Comment Claude a écrit la spécification et le code de ce baromètre, ce que Damien Gros a décidé, et pourquoi les chiffres sont calculés sans IA.',
+    nav: 'L’IA dans ce projet',
+    content: 'ia.md',
+    updated: '2026-11-21',
+    ogImage: true,
+  },
+  {
+    id: 'methodologie',
+    path: '/methodologie/',
+    file: 'methodologie/index.html',
+    title: 'Méthodologie',
+    description:
+      'Source, collecte, classement des offres par métier, règles d’affichage et limites des chiffres du Baromètre emploi Dev & IA.',
+    nav: 'Méthodologie',
+    content: 'methodologie.md',
+    updated: '2026-11-21',
+    ogImage: true,
+  },
+  {
+    id: 'a-propos',
+    path: '/a-propos/',
+    file: 'a-propos/index.html',
+    title: 'À propos',
+    description: 'Qui publie le Baromètre emploi Dev & IA et pourquoi : Damien Gros, développeur Drupal et PHP indépendant (DG Tech).',
+    nav: 'À propos',
+    content: 'a-propos.md',
+    updated: '2026-11-21',
+    ogImage: true,
+  },
+  {
     id: 'mentions-legales',
     path: '/mentions-legales/',
     file: 'mentions-legales/index.html',
     title: 'Mentions légales',
     description: 'Éditeur, hébergeur, sources des données et licences du Baromètre emploi Dev & IA. Aucun cookie, aucune mesure d’audience.',
     content: 'mentions-legales.md',
+    updated: '2026-11-21',
   },
   {
     id: '404',

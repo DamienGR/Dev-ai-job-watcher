@@ -82,7 +82,7 @@ export function renderFooter(): string {
     '  <p class="site-footer-links">',
     '    <a href="/mentions-legales/">Mentions légales</a>',
     `    <a href="${SITE.repository}">Code source sur GitHub</a>`,
-    `    <span>Un projet de <a href="${SITE.author.site}">${escapeHtml(SITE.author.name)} (${escapeHtml(SITE.author.label)})</a></span>`,
+    `    <span>Un projet de <a href="${SITE.author.site}">${escapeHtml(SITE.author.name)} (${escapeHtml(SITE.author.label)})</a>, écrit avec <a href="/ia/">Claude</a></span>`,
     '  </p>',
     '</footer>',
   ].join('\n');
@@ -93,6 +93,27 @@ const markdown = new Marked({ gfm: true });
 /** Texte éditorial du dépôt (contenu de confiance) converti en HTML. */
 export function renderMarkdown(source: string): string {
   return markdown.parse(source, { async: false }).trim();
+}
+
+const LONG_DATE = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+
+/**
+ * Mention visible d'un texte rédigé avec l'IA (SPEC.md §17.1, exigé ; D51), datée de sa
+ * dernière révision.
+ */
+export function renderByline(updated: string): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(updated)) throw new Error(`date de révision invalide : ${updated}`);
+  return `<p class="byline">Texte rédigé avec Claude, relu et validé par ${escapeHtml(SITE.author.name)}. Mis à jour le ${LONG_DATE.format(new Date(`${updated}T00:00:00Z`))}.</p>`;
+}
+
+/** Texte d'une page : Markdown converti, mention de rédaction placée sous le titre. */
+export function renderContent(page: SitePage, source: string): string {
+  if (!page.updated) throw new Error(`${page.file} : date de révision du texte manquante`);
+  const html = renderMarkdown(source);
+  const end = html.indexOf('</h1>');
+  if (!html.startsWith('<h1') || end < 0) throw new Error(`${page.file} : le texte doit commencer par un titre de niveau 1`);
+  const split = end + '</h1>'.length;
+  return `${html.slice(0, split)}\n${renderByline(page.updated)}${html.slice(split)}`;
 }
 
 function marker(name: Marker): RegExp {
@@ -113,7 +134,7 @@ export function renderPage(html: string, page: SitePage, content?: string): stri
   const parts: Record<Marker, string | undefined> = {
     head: renderHead(page),
     header: renderHeader(page),
-    content: content === undefined ? undefined : renderMarkdown(content),
+    content: content === undefined ? undefined : renderContent(page, content),
     footer: renderFooter(),
   };
   let out = html;
