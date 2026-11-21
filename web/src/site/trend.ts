@@ -1,19 +1,11 @@
 import type { Axis } from '../lib/axis';
 import { fmtInt } from '../lib/format';
 import { HEIGHT, trendPoints, WIDTH, xPercent } from '../lib/trend';
-import { h } from '../ui';
+import { h, svg } from '../ui';
 
 // Mini-courbe de l'accueil (SPEC.md §17.2), sans ECharts pour garder la page légère : une
 // ligne en SVG, les semaines partielles hachurées et les changements de taxonomie marqués en
 // HTML par-dessus (§8.3), un tableau des valeurs pour les lecteurs d'écran.
-
-const SVG = 'http://www.w3.org/2000/svg';
-
-function svg<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, string>): SVGElementTagNameMap[K] {
-  const element = document.createElementNS(SVG, tag);
-  for (const [name, value] of Object.entries(attrs)) element.setAttribute(name, value);
-  return element;
-}
 
 export function trendChart(values: readonly number[], axis: Axis, label: string): HTMLElement {
   const count = values.length;

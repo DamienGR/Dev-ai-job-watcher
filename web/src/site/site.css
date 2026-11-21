@@ -382,9 +382,193 @@ th {
 
 /* Accueil (SPEC.md §17.2). Hauteurs réservées avant l'arrivée des données : la page ne bouge
    pas au chargement. */
+/* En-tête de l'accueil : texte à gauche, visuel animé du pipeline à droite (D70) ; le visuel
+   passe sous le texte sur un écran étroit. Hauteur réservée : rien ne bouge à l'arrivée des
+   données. */
 .hero {
+  display: grid;
+  gap: 16px 56px;
+  align-items: center;
   padding: 40px 0 24px;
+}
+
+.hero-text {
   max-width: 64ch;
+}
+
+.flow {
+  display: flex;
+  flex-direction: column;
+  height: 300px;
+  margin: 0;
+}
+
+.flow[hidden] {
+  display: none;
+}
+
+.flow-plot {
+  display: block;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow: visible;
+}
+
+.flow-caption {
+  margin-top: 10px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.flow-ready .flow-plot {
+  animation: flow-fade 0.6s ease-out both;
+}
+
+.flow-label,
+.flow-note {
+  fill: var(--text-muted);
+  font-size: 12px;
+}
+
+.flow-label-n {
+  fill: var(--text-primary);
+  font-weight: 600;
+}
+
+.flow-note {
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+
+.flow-bar-label {
+  fill: var(--text-secondary);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.flow-value {
+  fill: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  animation: flow-fade 0.5s ease-out 0.9s both;
+}
+
+.flow-track {
+  fill: var(--grid);
+}
+
+.flow-lane,
+.flow-plot .flow-branch {
+  fill: none;
+  stroke-width: 1;
+}
+
+.flow-lane {
+  stroke: url(#flow-lane);
+}
+
+.flow-stop-lane {
+  stop-color: var(--border);
+}
+
+.flow-branch {
+  stroke-width: 1.5;
+  opacity: 0.3;
+}
+
+.flow-branch.flow-dev {
+  stroke: var(--series-1);
+}
+
+.flow-branch.flow-data {
+  stroke: var(--series-2);
+}
+
+.flow-branch.flow-ia {
+  stroke: var(--series-3);
+}
+
+.flow-bar {
+  transform-box: fill-box;
+  transform-origin: left center;
+  animation: flow-grow 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s both;
+}
+
+.flow-settled .flow-bar,
+.flow-settled .flow-value {
+  animation: none;
+}
+
+.flow-gate {
+  fill: url(#flow-gate);
+}
+
+.flow-gate-halo {
+  fill: url(#flow-gate);
+  opacity: 0.12;
+}
+
+.flow-stop-dev {
+  stop-color: var(--series-1);
+}
+
+.flow-stop-data {
+  stop-color: var(--series-2);
+}
+
+.flow-stop-ia {
+  stop-color: var(--series-3);
+}
+
+.flow-dot {
+  fill: var(--series-other);
+}
+
+.flow-dev {
+  fill: var(--series-1);
+}
+
+.flow-data {
+  fill: var(--series-2);
+}
+
+.flow-ia {
+  fill: var(--series-3);
+}
+
+@keyframes flow-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes flow-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@media (min-width: 960px) {
+  .hero {
+    grid-template-columns: minmax(0, 64ch) minmax(340px, 1fr);
+  }
+}
+
+@media (max-width: 959px) {
+  .flow {
+    height: 240px;
+    max-width: 560px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flow-ready .flow-plot,
+  .flow-bar,
+  .flow-value {
+    animation: none;
+  }
 }
 
 .home-section {

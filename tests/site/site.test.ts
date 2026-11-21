@@ -96,7 +96,7 @@ describe('pages du site (SPEC.md §17.2)', () => {
 
   it('prépare sur l’accueil les emplacements des chiffres, de la courbe et de « ce qui bouge »', () => {
     const home = build(page('accueil'));
-    for (const slot of ['figures', 'trend', 'movers']) expect(home).toContain(`data-home-${slot}`);
+    for (const slot of ['flow', 'flow-caption', 'figures', 'trend', 'movers']) expect(home).toContain(`data-home-${slot}`);
     expect(home).toContain('<a class="button" href="/tableau-de-bord/">');
   });
 
