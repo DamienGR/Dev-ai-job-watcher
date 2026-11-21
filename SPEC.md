@@ -1,6 +1,6 @@
 # Veille emploi Dev & IA — Spec de cadrage
 
-**Version** 1.1 · **Date** 3 octobre 2026 · **Auteur** Damien Gros · **Statut** validée pour démarrage (lot 0) ; version 1.1 : collecte et traitement hébergés sur le VPS de Damien (D21)
+**Version** 1.2 · **Date** 21 novembre 2026 · **Auteur** Damien Gros · **Statut** validée pour démarrage (lot 0) ; version 1.1 : collecte et traitement hébergés sur le VPS de Damien (D21) ; version 1.2 : site public autour du dashboard (§17, D45 à D52)
 
 Fichier compagnon : [`taxonomy.yaml`](taxonomy.yaml) — taxonomie v1 validée (9 groupes, 51 rôles, 118 technologies ; 437 motifs compilés et testés sur les cas de l'annexe B).
 
@@ -26,6 +26,7 @@ Le marché de l'emploi dev / data / IA bouge vite : de nouveaux intitulés appar
 | O2 | Suivre les salaires proposés (et les TJM) par groupe, métier, expérience et région. |
 | O3 | Visualiser les offres sur une carte, avec filtre par région. |
 | O4 | Détecter les métiers et termes émergents, et faire évoluer la taxonomie chaque mois, avec validation humaine. |
+| O5 | Publier les résultats dans un site public qui explique la méthode et montre comment l'IA a servi à construire, exploiter et faire évoluer l'outil (§17). |
 
 **Hors objectifs**
 
@@ -173,7 +174,7 @@ Jamais versionnées. Sur le VPS, elles vivent dans un fichier d'environnement ho
 │  ├─ pipeline/              # collect, process, aggregate, reclassify, runState, push
 │  ├─ storage/               # stores typés : fichiers (VPS), Blobs (Netlify), mémoire (tests)
 │  └─ refs/                  # departements.json, regions.json
-├─ web/                      # dashboard Vite
+├─ web/                      # site Vite : accueil, pages éditoriales (content/), tableau de bord (§17)
 ├─ fixtures/                 # réponses d'API enregistrées (mode fixtures)
 ├─ tests/
 └─ docs/                     # decisions.md, monthly-review-prompt.md
@@ -467,6 +468,9 @@ Tension offres / demandeurs (API Marché du travail) ; durée de vie détaillée
 
 ## 8. Dashboard
 
+Depuis la version 1.2, le dashboard est la rubrique « Tableau de bord » du site public (§17),
+sous `/tableau-de-bord/`. Ce chapitre reste sa référence.
+
 ### 8.1 Pages
 
 | Page | Contenu |
@@ -489,7 +493,7 @@ Période · région (France entière par défaut) · groupes · rôles · source
 - Semaines partielles hachurées ; marqueurs verticaux aux changements de version de taxonomie.
 - Mention des sources en pied de page (France Travail ; Adzuna, avec l'attribution éventuellement exigée **[À VÉRIFIER]**).
 - Lisible sur mobile ; thème clair et sombre.
-- **Accès** : public, non indexé par les moteurs (**tranché, D32**). Les données sont des agrégats publics sans données personnelles. La protection par mot de passe intégrée de Netlify est réservée au plan Pro sur les plans legacy (§15.6, vérifié).
+- **Accès** : public (**tranché, D32**). Les données sont des agrégats publics sans données personnelles. La protection par mot de passe intégrée de Netlify est réservée au plan Pro sur les plans legacy (§15.6, vérifié). Non indexé par les moteurs jusqu'au lancement du site public, indexé ensuite (§17.5, **D47**, révise D32).
 
 ---
 
@@ -593,6 +597,9 @@ Les séries restent comparables dans le temps puisque tout l'historique est recl
 ## 14. Plan de livraison
 
 Ordre de livraison : les lots 4 puis 5 passent avant le lot 3, qui attend le compte Adzuna (D31, D37).
+Viennent ensuite les lots du site public (§17, D50) : S1 à S4, le lancement (§17.8), puis le lot 6,
+S5 et S6. Le lot 3 n'est plus sur le chemin critique. La règle « un lot à la fois » (§0) vaut
+aussi pour les lots S.
 
 | Lot | Contenu | Critères d'acceptation |
 |---|---|---|
@@ -602,7 +609,13 @@ Ordre de livraison : les lots 4 puis 5 passent avant le lot 3, qui attend le com
 | **3 — Adzuna** | Collecte avec budget, normalisation, dédoublonnage inter-sources, stats mensuelles. | Budget jamais dépassé (test) ; salaires prédits exclus (test) ; taux de recouvrement calculé. |
 | **4 — Dashboard MVP** | Pages Vue d'ensemble, Métiers, Salaires, Carte, Données & qualité ; filtres globaux dans l'URL. `api-ingest`, `api-data` et l'envoi des agrégats (`push`). | Vue d'ensemble affichée en moins de 2 s en 4G ; `n` affiché partout ; masquage `n < 5` ; lisible sur mobile ; agrégats envoyés par `push` visibles sans déploiement. |
 | **5 — VPS, planification & alertes** | Installation du VPS (`deploy/vps/` : unités systemd, procédure), jobs `weekly-run` et `admin`, relances, verrou, alertes, `watchdog`, sauvegarde de `DATA_DIR` ; retrait de `collect-francetravail-background` et d'`api-admin`. | Deux runs hebdomadaires consécutifs sans intervention ; alerte déclenchée sur un échec simulé ; sauvegarde en place. |
-| **6 — Revue mensuelle** | Export `.md` / `.json`, job `update` et reclassement, `TAXONOMY_CHANGELOG.md`, `docs/monthly-review-prompt.md`. | Une PR de taxonomie de test déclenche le reclassement complet et le marqueur de version apparaît sur les courbes. |
+| **S1 — Cadrage du site public** | SPEC 1.2 (§17), décisions D45 à D52, licence MIT, nom d'hôte du VPS retiré de la documentation, ligne « État » du README. | Spec relue et fusionnée par Damien. |
+| **S2 — Socle du site** | Build multi-pages, gabarit commun, tableau de bord sous `/tableau-de-bord/`, redirection des anciens liens, page 404, identité, référencement technique (`noindex` maintenu), mentions légales, en-têtes de sécurité (§17.2 à §17.5). | Critères communs du §17.4 ; tests du tableau de bord inchangés ; redirection des anciens liens testée. |
+| **S3 — Accueil** | Page d'accueil du §17.2. | Chiffres identiques aux tuiles du tableau de bord (test) ; accueil affiché en moins de 2 s en 4G ; critères communs du §17.4. |
+| **S4 — Pages éditoriales** | À propos, Méthodologie, L'IA dans ce projet (§17.2). Puis lancement (§17.8). | Textes relus et validés par Damien ; chaque chiffre daté ou lu en direct ; liens vers le dépôt valides. |
+| **6 — Revue mensuelle** | Export `.md` / `.json`, job `update` et reclassement, `TAXONOMY_CHANGELOG.md`, `docs/monthly-review-prompt.md`. Page « Journal de la taxonomie » du site (§17.2). | Une PR de taxonomie de test déclenche le reclassement complet et le marqueur de version apparaît sur les courbes ; le journal du site affiche cette version. |
+| **S5 — Résumé de la semaine** *(optionnel)* | Résumé rédigé par Claude et vérifié par du code (§17.6). | Un échec de l'API ne fait jamais échouer le run (test) ; un chiffre faux est rejeté (test) ; trois résumés relus par Damien avant affichage. |
+| **S6 — Analyses** | Rubrique Analyses, 2 articles, flux RSS (§17.2, §17.7). | Articles relus et publiés ; chaque chiffre retrouvable dans le tableau de bord. |
 | **7 — v2** | Pages Technologies et Employeurs complètes, indicateurs §7.3, sources v2 (§4.3). | Défini au moment du lancement. |
 
 ---
@@ -624,10 +637,104 @@ Ordre de livraison : les lots 4 puis 5 passent avant le lot 3, qui attend le com
 
 1. Accès au dashboard : public ou protégé. **Tranché (D32)** : public.
 2. Canal d'alerte : ntfy, e-mail ou Slack. **Tranché (D38)** : ntfy.
-3. Réponse d'Adzuna sur l'usage commercial (en cas de refus, Free-Work remplace Adzuna au lot 3).
-4. Source de population active pour la densité régionale.
-5. Nom du dépôt et du domaine.
+3. Réponse d'Adzuna sur l'usage commercial (en cas de refus, Free-Work remplace Adzuna au lot 3). Le site public sert l'activité professionnelle de Damien, ce qui relève de l'usage commercial au sens d'Adzuna : il se lance sans Adzuna, et le lot 3 attend que Damien décide d'écrire à Adzuna (D50).
+4. Source de population active pour la densité régionale. **Tranché (D29)** : Insee, RP2023.
+5. Nom du dépôt et du domaine. **Tranché (D46)** : le dépôt garde son nom ; le site s'appelle « Baromètre emploi Dev & IA » et passe sur `barometre.dg-tech.dev`, au lancement (§17.8).
 6. Moyen de sauvegarde de `DATA_DIR` hors du VPS (§3.4). **Tranché (D39)** : restic vers Cloudflare R2.
+
+## 17. Site public
+
+Version 1.2 (D45). Le dashboard devient la rubrique d'un site public qui sert de vitrine au
+travail de Damien : il présente les résultats, explique la méthode et montre comment l'IA a
+servi à construire, exploiter et faire évoluer l'outil (objectif O5). Choix de Damien : D45 à
+D52.
+
+### 17.1 Principes
+
+- Le tableau de bord (§8) reste tel quel, sous `/tableau-de-bord/`. Ses règles d'affichage
+  (§8.3) valent pour tout chiffre publié sur le site.
+- L'IA est montrée là où elle sert (développement avec Claude Code, exploitation, revue
+  mensuelle du §9) et son absence est expliquée là où il faut des résultats reproductibles
+  (classification déterministe, §6.5).
+- **Contenus écrits avec l'IA (exigé)** : un texte rédigé par un modèle porte une mention
+  visible ; chaque chiffre qu'il cite est confronté aux agrégats par du code avant
+  publication ; en cas d'écart ou d'erreur, un texte de repli sans IA est publié. Les analyses
+  sont signées par Damien, avec la mention « préparé avec Claude » (D51).
+- Inchangé (exigé, §3.2) : aucun run ne déclenche de déploiement. Les pages éditoriales sont
+  publiées par le déploiement qui suit une fusion sur `main`.
+
+### 17.2 Pages
+
+| Page | Adresse | Contenu | Lot |
+|---|---|---|---|
+| Accueil | `/` | Accroche ; 4 chiffres vivants (nouvelles offres de la semaine de référence, part IA, prime IA, rôles émergents actifs) ; mini-courbe depuis le premier run ; « ce qui bouge » ; schéma du pipeline ; accès au tableau de bord et à « L'IA dans ce projet ». Résumé de la semaine au lot S5. | S3 |
+| Tableau de bord | `/tableau-de-bord/#/<page>` | Les pages du §8.1, inchangées. | S2 |
+| L'IA dans ce projet | `/ia/` | Développement piloté par la spec avec Claude Code, exploitation, revue mensuelle, ce qui reste déterministe et pourquoi ; décisions et incidents réels ; liens vers le dépôt. | S4 |
+| Méthodologie | `/methodologie/` | Sources et licences, collecte, taxonomie, classification, règles d'affichage, limites chiffrées, qualité des derniers runs lue dans `quality.json`. | S4 |
+| Journal de la taxonomie | `/methodologie/journal/` | Versions de la taxonomie : propositions de la revue mensuelle, changements retenus, effet sur le taux de classification. Remplace le journal de la page « Données & qualité ». | 6 |
+| Analyses | `/analyses/`, une page par article | Articles datés, chiffres figés à leur date, liens vers des vues filtrées du tableau de bord ; flux RSS. | S6 |
+| À propos | `/a-propos/` | Damien, son activité (lien vers `dg-tech.dev`), pourquoi ce projet ; liens LinkedIn et GitHub. Pas de formulaire. | S4 |
+| Mentions légales | `/mentions-legales/` | Éditeur, hébergeur, sources et licences (France Travail, Insee, OpenStreetMap, IGN), absence de cookies et de mesure d'audience. | S2 |
+| Page introuvable | `/404.html` | Liens vers l'accueil et le tableau de bord. | S2 |
+
+### 17.3 Navigation, identité, langue
+
+- Français seul (D49). Le lecteur est vouvoyé ; phrases courtes, chiffres toujours datés.
+- En-tête : logotype (retour à l'accueil), Tableau de bord, Analyses, L'IA dans ce projet,
+  Méthodologie, À propos. Pied de page : sources, date de la dernière mise à jour
+  (`meta.json`), lien vers le dépôt GitHub, mentions légales.
+- Palette et thèmes du dashboard (D36) pour tout le site ; favicon ; image de partage par page.
+
+### 17.4 Technique
+
+- Build Vite multi-pages, sans framework (D48) : une page HTML par rubrique et un gabarit
+  commun (en-tête, navigation, pied) injecté au build. Les textes éditoriaux sont des fichiers
+  Markdown du dépôt (`web/content/`), convertis en HTML au build.
+- **Anciens liens (exigé)** : une adresse `/#/<page>?<filtres>` partagée avant le lot S2 mène
+  à `/tableau-de-bord/#/<page>?<filtres>`. Le fragment n'arrivant jamais au serveur, la
+  redirection est faite en JavaScript sur l'accueil.
+- Les chiffres de l'accueil viennent de `/api/data/*` et des fonctions de `web/src/lib/` : ils
+  sont identiques à ceux du tableau de bord (test). Aucun nouvel agrégat avant le lot S5.
+- Critères communs aux lots S2 à S6 : `npm run check` vert ; Lighthouse au moins 90 en
+  performance, accessibilité, bonnes pratiques et référencement sur chaque nouvelle page ;
+  lisible sur mobile ; thèmes clair et sombre.
+
+### 17.5 Référencement
+
+Révise le §8.3 (D47) : le site reste `noindex` pendant sa construction. Au lancement (§17.8) :
+indexation de tout le site, `robots.txt`, `sitemap.xml`, et pour chaque page un titre, une
+description, une URL canonique et des balises Open Graph.
+
+### 17.6 Résumé de la semaine (lot S5, optionnel)
+
+- Étape non bloquante de `weekly-run`, après le traitement : un appel à l'API Claude reçoit un
+  extrait compact des agrégats et rend un texte court avec la liste des chiffres cités ; un
+  vérificateur déterministe les confronte aux agrégats.
+- Écart, erreur de l'API ou délai dépassé : résumé de repli produit par un gabarit sans IA et
+  alerte ntfy de niveau avertissement. Le run n'échoue jamais à cause de cette étape (test).
+- Le résumé est écrit dans `aggregates/summary.json` et envoyé par `push` (liste du §3.4
+  complétée au lot S5). La clé d'API vit dans le fichier d'environnement du VPS, jamais dans
+  Netlify.
+- Les trois premiers résumés sont relus par Damien avant leur affichage public.
+
+### 17.7 Contenus et données
+
+Un article peut citer des chiffres agrégés, figés à sa date : c'est du contenu éditorial, pas
+une copie des données, que le dépôt ne contient toujours pas (D51). Aucune offre ni aucun
+extrait d'annonce n'est republié.
+
+### 17.8 Lancement
+
+Le lancement suit le lot S4 :
+
+1. **(exigé)** Avant que le dépôt devienne public, la politique Netlify des variables sensibles
+   est réglée sur « Require approval » : les aperçus de PR venant de forks partagent les
+   stores Blobs de la production et pourraient lire `INGEST_SECRET`.
+2. Balayage du dépôt (secrets, noms d'hôte, données), puis passage en public par Damien,
+   sous licence MIT (D52).
+3. Domaine branché (D46), HTTPS actif ; indexation ouverte et `sitemap.xml` déclaré aux
+   moteurs.
+4. README du dépôt réécrit en vitrine : capture, lien vers le site, usages de l'IA.
 
 ---
 

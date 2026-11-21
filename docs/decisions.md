@@ -710,3 +710,92 @@ quelques centaines de Mo par an.
   proche de zéro (plusieurs semaines complètes) et le masquer retirerait jusqu'à 4 semaines
   de données. Les agrégats ne changent pas : correction du seul dashboard, sans nouveau
   traitement sur le VPS.
+
+## Site public — Cadrage (lot S1, 2026-11-21)
+
+### D45. Le dashboard devient un site public vitrine
+
+Demandé par Damien le 2026-11-21 : faire de l'outil un site web public et professionnel,
+montrable dans son portfolio, qui met en avant les usages de l'IA du projet. Plan détaillé
+proposé le même jour, recommandations validées par Damien le 2026-11-21.
+
+- Nouvel objectif O5 et nouveau §17 de la spec (version 1.2) : pages, principes, technique,
+  référencement, résumé de la semaine, lancement.
+- Six lots ajoutés au §14 : S1 (ce cadrage), S2 (socle), S3 (accueil), S4 (pages
+  éditoriales), S5 (résumé de la semaine, optionnel), S6 (analyses). Le lot 6 garde son
+  contenu et ajoute la page « Journal de la taxonomie ».
+- Le tableau de bord ne change pas de fonctionnement : il déménage sous `/tableau-de-bord/`
+  au lot S2, et les anciens liens en `/#/<page>` y redirigent (exigé, §17.4).
+- Origine du projet, à dire tel quel sur la page « L'IA dans ce projet » (S4) : `SPEC.md` et
+  `taxonomy.yaml` ont été rédigés par Claude au fil de discussions avec Damien, qui les a
+  validés puis ajoutés au commit initial du 2026-10-02 (précisé par Damien le 2026-11-21).
+  Tout le code a ensuite été écrit par Claude Code, lot par lot, chaque PR fusionnée par
+  Damien.
+
+### D46. Nom et adresse du site (§16.5)
+
+- Adresse : un sous-domaine de `dg-tech.dev`, le domaine professionnel de Damien, qui en
+  héberge déjà un autre projet (`strates.dg-tech.dev`). Branchement au lancement (§17.8) ;
+  d'ici là, le site reste sur `dev-ai-job-watcher.netlify.app`.
+- Nom : « Baromètre emploi Dev & IA », adresse `barometre.dg-tech.dev`, choisi par Damien le
+  2026-11-21 (préféré à « Veille emploi Dev & IA », qui sonne comme un outil interne, et à un
+  nom court sans sous-titre).
+- Le dépôt garde son nom, `Dev-ai-job-watcher`.
+
+### D47. Référencement par les moteurs (révise D32)
+
+D32 gardait le dashboard en `noindex`. Il le reste pendant la construction du site ; au
+lancement, tout le site est indexé, avec `robots.txt`, `sitemap.xml` et des métadonnées par
+page (§17.5). Les données publiées restent des agrégats sans données personnelles.
+
+### D48. Technique : Vite multi-pages, sans framework
+
+Prolonge D36. Une dizaine de pages ne justifie pas de migrer vers un générateur de sites
+(Astro a été écarté : il ne vaudrait la peine que pour un blog tenu dans la durée). Pages HTML
+d'entrée multiples dans Vite, gabarit commun injecté au build, textes en Markdown dans
+`web/content/`, convertis au build. Le code du tableau de bord et ses tests ne bougent pas.
+
+### D49. Langue, audience, contact
+
+- Français seul, comme le reste de l'activité de Damien et le public visé.
+- Aucune mesure d'audience au lancement, donc aucun cookie ni bandeau de consentement.
+- Pas de formulaire de contact : la page À propos renvoie vers LinkedIn, GitHub et
+  `dg-tech.dev`, ce qui évite tout traitement de données personnelles.
+
+### D50. Ordre des lots, place des lots 3 et 6
+
+- Ordre : S1 à S4, lancement, puis lot 6, S5 et S6, un lot à la fois (§0, CLAUDE.md).
+- Le lot 6 passe juste après le lancement : la revue mensuelle par Claude, validée par
+  Damien, est l'usage de l'IA le plus démonstratif du projet.
+- Le lot 3 sort du chemin critique. Les conditions d'Adzuna (constat du 2026-10-03)
+  autorisent la recherche personnelle mais exigent un accord écrit pour un usage
+  professionnel, même agrégé ; un site vitrine de l'activité de Damien en relève. Le site se
+  lance avec France Travail seul ; Damien écrira à Adzuna s'il veut cette deuxième source.
+
+### D51. Contenus écrits avec l'IA, chiffres dans les contenus
+
+- Un texte rédigé par un modèle porte une mention visible ; chaque chiffre qu'il cite est
+  confronté aux agrégats par du code ; un texte de repli sans IA le remplace en cas d'écart
+  (exigé, §17.1, §17.6).
+- Le résumé de la semaine (S5) est retenu : Claude, appelé depuis le VPS après le
+  traitement. Coût estimé sur les tarifs publiés de l'API (relevé du 2026-11-03) : environ
+  12 000 jetons en entrée et 4 000 en sortie par semaine, soit moins de 1 $ par mois.
+- Deux analyses au lancement de la rubrique (S6), signées par Damien avec la mention
+  « préparé avec Claude ».
+- Citer dans un article des chiffres agrégés, figés à sa date, est du contenu éditorial : la
+  règle « aucune donnée dans le dépôt » (CLAUDE.md) vise les données collectées et les
+  agrégats, pas ces citations.
+
+### D52. Passage du dépôt en public
+
+Audit du 2026-10-30 : rien de bloquant. Choix de Damien :
+
+- Licence MIT pour le code (`LICENSE`). Les données collectées ne sont pas dans le dépôt et ne
+  sont pas concernées.
+- L'adresse e-mail des commits existants reste telle quelle (réécrire l'historique n'efface
+  pas les SHA déjà cités par les PR) ; Damien passe sur l'adresse `noreply` de GitHub pour la
+  suite.
+- Le nom d'hôte du VPS est retiré de `deploy/vps/README.md` (il résout vers son adresse
+  publique). Aucun nom d'hôte ni aucune adresse IP dans les fichiers de déploiement à venir.
+- Avant la bascule : politique Netlify des variables sensibles sur « Require approval »
+  (exigé, §17.8), puis nouveau balayage du dépôt.
