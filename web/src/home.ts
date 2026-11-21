@@ -1,10 +1,12 @@
 import { loadFile, loadMeta, NoDataError } from './data';
 import { weekAxis } from './lib/axis';
-import { DEFAULT_FILTERS, scopeOf } from './lib/filters';
+import { DEFAULT_FILTERS, scopeOf, type Scope } from './lib/filters';
 import { weekFlow, type WeekFlow } from './lib/flow';
-import { fmtInt, MASKED } from './lib/format';
+import { fmtInt, fmtPct, MASKED, orMasked } from './lib/format';
 import { fmtRoleMove, fmtTechMove, headline, headlineFigures, type Figure } from './lib/headline';
 import {
+  aiShare,
+  isPartialMonth,
   referenceMonth,
   referenceWeek,
   roleMovers,
@@ -14,14 +16,17 @@ import {
   type Mover,
   type Movers,
   type NewOfferRow,
+  type ShareValue,
   type PremiumRow,
   type TechRow,
   type TechTotalRow,
 } from './lib/indicators';
-import { monthLabel, weekLongLabel, weekRange } from './lib/periods';
+import { monthLabel, weekLabel, weekLongLabel, weekRange } from './lib/periods';
 import { rowsOf } from './lib/table';
 import type { Meta, SalariesFile, TechsFile, TimeseriesFile } from './lib/types';
+import { startCloud, type CloudTech } from './site/cloud';
 import { startFlow } from './site/flow';
+import { startGauge } from './site/gauge';
 import { legacyDashboardUrl } from './site/legacy';
 import './site/site';
 import { trendChart } from './site/trend';
@@ -99,13 +104,71 @@ function renderFlow(flow: WeekFlow, taxonomyVersion: number): void {
   startFlow(figure, flow, taxonomyVersion);
 }
 
+// --- Comparaison temporaire des pistes du visuel (aperçu de la PR, D70) -------------------
+// `?visuel=jauge` (piste 2) et `?visuel=competences` (piste 3) ; sans paramètre, la piste 1.
+// La piste écartée est retirée avant la fusion.
+
+/** Familles de technologies propres à l'IA, sur fond teinté dans le nuage. */
+const AI_FAMILIES = new Set(['llm_agents', 'model_providers', 'vector_search', 'ml', 'ai_dev_tools']);
+const CLOUD_SIZE = 15;
+
+function renderGauge(meta: Meta, rows: readonly NewOfferRow[], scope: Scope, ai: ShareValue): void {
+  const figure = slot('flow');
+  const caption = slot('flow-caption');
+  if (!figure || !caption) return;
+  const anyGroup = rows.filter((r) => scope.rowOk(r));
+  const week = referenceWeek(meta);
+  const weeks = weekRange(meta.firstRun, week);
+  const series = weeks.map((w) => aiShare(anyGroup, meta, scope.groupOf, [w]).share);
+  append(caption, [
+    `Part IA des offres dev, data et IA, ${weekLongLabel(week)} (n = ${fmtInt(ai.total)}) et chaque semaine depuis le premier run`,
+    h('span', { class: 'visually-hidden' }, ` : ${weeks.map((w, i) => `${weekLabel(w)}, ${orMasked(series[i], fmtPct)}`).join(' ; ')}.`),
+  ]);
+  startGauge(figure, { share: ai.share, weekNumber: Number(week.slice(-2)), series, firstLabel: weekLabel(weeks[0]!), lastLabel: weekLabel(week) });
+}
+
+function renderCloud(meta: Meta, techs: TechsFile, scope: Scope): void {
+  const figure = slot('flow');
+  const caption = slot('flow-caption');
+  if (!figure || !caption) return;
+  const month = referenceMonth(meta);
+  const total = rowsOf<TechTotalRow>(techs.totals)
+    .filter((t) => t.month === month && scope.groupOk(t.group))
+    .reduce((a, t) => a + t.n, 0);
+  const counts = new Map<string, number>();
+  for (const t of rowsOf<TechRow>(techs.techs)) {
+    if (t.month === month && scope.groupOk(t.group)) counts.set(t.tech, (counts.get(t.tech) ?? 0) + t.n);
+  }
+  if (total < 5 || !counts.size) {
+    figure.hidden = true;
+    return;
+  }
+  const rising = new Set(techMovers(rowsOf<TechRow>(techs.techs), rowsOf<TechTotalRow>(techs.totals), meta, scope).up.map((m) => m.id));
+  const list: CloudTech[] = [...counts]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, CLOUD_SIZE)
+    .map(([id, n]) => {
+      const tech = meta.labels.technologies.find((t) => t.id === id);
+      return { id, label: tech?.label ?? id, share: n / total, ai: AI_FAMILIES.has(tech?.family ?? ''), rising: rising.has(id) };
+    });
+  append(caption, [
+    `Technologies les plus citées dans les offres dev, data et IA, ${monthLabel(month)} (n = ${fmtInt(total)}) ; taille selon leur part, ↑ en hausse sur 3 mois`,
+    isPartialMonth(meta, month) ? [' ', partialBadge()] : null,
+  ]);
+  startCloud(figure, list);
+}
+
 function render(meta: Meta, timeseries: TimeseriesFile, salaries: SalariesFile, techs: TechsFile): void {
   const scope = scopeOf(meta, DEFAULT_FILTERS);
   const rows = rowsOf<NewOfferRow>(timeseries.newOffers);
   const scoped = scopedNewOffers(rows, scope);
+  const head = headline(meta, rows, scope, rowsOf<PremiumRow>(salaries.aiPremium));
 
-  slot('figures')?.replaceChildren(...headlineFigures(headline(meta, rows, scope, rowsOf<PremiumRow>(salaries.aiPremium))).map(figureCard));
-  renderFlow(weekFlow(meta, rows), meta.taxonomy.version);
+  slot('figures')?.replaceChildren(...headlineFigures(head).map(figureCard));
+  const variant = new URLSearchParams(location.search).get('visuel');
+  if (variant === 'jauge') renderGauge(meta, rows, scope, head.ai);
+  else if (variant === 'competences') renderCloud(meta, techs, scope);
+  else renderFlow(weekFlow(meta, rows), meta.taxonomy.version);
 
   const weeks = weekRange(meta.firstRun, referenceWeek(meta));
   const values = sumSeries(scoped, weeks, (r) => r.week, () => 'n').get('n') ?? weeks.map(() => 0);
