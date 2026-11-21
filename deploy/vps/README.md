@@ -114,6 +114,18 @@ git pull --ff-only
 npm ci
 ```
 
+Le dépôt s'appelle `Dg-tech-dev/barometre-emploi-dev-ia` depuis le 21 novembre 2026 (D64).
+GitHub redirige l'ancienne adresse, mais mieux vaut mettre à jour celle du dépôt distant, une
+fois, en gardant sa forme (SSH avec la clé de déploiement) :
+
+```bash
+git remote get-url origin   # ancienne adresse : …DamienGR/Dev-ai-job-watcher.git
+git remote set-url origin git@github.com:Dg-tech-dev/barometre-emploi-dev-ia.git
+git fetch origin main       # doit passer sans erreur
+```
+
+Le dossier garde son nom, `~/Dev-ai-job-watcher` : les unités systemd y renvoient.
+
 ## 7. Vérifier les alertes et la sauvegarde
 
 ```bash

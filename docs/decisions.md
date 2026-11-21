@@ -740,7 +740,8 @@ proposé le même jour, recommandations validées par Damien le 2026-11-21.
 - Nom : « Baromètre emploi Dev & IA », adresse `barometre.dg-tech.dev`, choisi par Damien le
   2026-11-21 (préféré à « Veille emploi Dev & IA », qui sonne comme un outil interne, et à un
   nom court sans sous-titre).
-- Le dépôt garde son nom, `Dev-ai-job-watcher`.
+- Le dépôt garde son nom, `Dev-ai-job-watcher` (révisé par D64 : renommé et transféré le
+  2026-11-21).
 
 ### D47. Référencement par les moteurs (révise D32)
 
@@ -1041,3 +1042,22 @@ correction adaptée.
   (exigé), domaine branché et principal, `SITE_URL` du VPS, dépôt public, indexation, plan du
   site déclaré dans Google Search Console, liens depuis le portfolio et LinkedIn.
 
+## Site public — Renommage du dépôt (2026-11-21)
+
+### D64. Dépôt renommé et transféré (révise D46)
+
+- Le dépôt devient `Dg-tech-dev/barometre-emploi-dev-ia` : même nom que le site, dans
+  l'organisation GitHub de DG Tech, l'activité de Damien (demande de Damien, nom choisi par lui
+  le 2026-11-21). Transfert et renommage faits par Damien dans GitHub, qui redirige l'ancienne
+  adresse `DamienGR/Dev-ai-job-watcher` (pages, `git clone`, `git fetch`) tant qu'aucun dépôt
+  ne reprend ce nom.
+- Les liens du site (pied de page, textes, page À propos), le nom du paquet npm et le test des
+  liens visent la nouvelle adresse. La page À propos pointe vers l'organisation `Dg-tech-dev`,
+  où le code est publié, au lieu du profil personnel.
+- Inchangés, pour ne rien casser en production : le dossier du dépôt sur le VPS
+  (`~/Dev-ai-job-watcher`, cité par les unités systemd), le fichier d'environnement
+  (`~/.config/dev-ai-job-watcher/env`), le nom du site Netlify (`dev-ai-job-watcher`) et les
+  mentions historiques des décisions précédentes.
+- Sur le VPS, l'adresse du dépôt distant passe à la nouvelle (`git remote set-url`, étape 6 de
+  `deploy/vps/README.md`) : la redirection suffit, mais elle cesserait si un dépôt reprenait
+  l'ancien nom. La clé de déploiement suit le dépôt lors d'un transfert.

@@ -47,7 +47,7 @@ offres encore ouvertes ce jour-là. Elles sont incomplètes et hachurées sur le
 
 ## Classement par métier
 
-La [taxonomie](https://github.com/DamienGR/Dev-ai-job-watcher/blob/main/taxonomy.yaml)
+La [taxonomie](https://github.com/Dg-tech-dev/barometre-emploi-dev-ia/blob/main/taxonomy.yaml)
 décrit 51 métiers répartis en 9 groupes (version 3 au 21 novembre 2026) :
 
 - le développement logiciel et web, et la data ;
@@ -71,7 +71,7 @@ technologies citées (118 dans la taxonomie), la mention de l’IA, le télétra
 déplacements.
 
 La taxonomie évolue par versions, décrites dans
-[son historique](https://github.com/DamienGR/Dev-ai-job-watcher/blob/main/TAXONOMY_CHANGELOG.md).
+[son historique](https://github.com/Dg-tech-dev/barometre-emploi-dev-ia/blob/main/TAXONOMY_CHANGELOG.md).
 Un changement de version est marqué d’un trait vertical sur les courbes. Avec la revue
 mensuelle de la taxonomie, chaque nouvelle version sera appliquée à tout l’historique, pour
 que les séries restent comparables.
@@ -123,11 +123,11 @@ Ces chiffres sont lus en direct dans les statistiques publiées, comme ceux du t
 
 ## Le code et les règles
 
-- [La taxonomie](https://github.com/DamienGR/Dev-ai-job-watcher/blob/main/taxonomy.yaml) et
-  [son historique](https://github.com/DamienGR/Dev-ai-job-watcher/blob/main/TAXONOMY_CHANGELOG.md)
-- [La normalisation des intitulés](https://github.com/DamienGR/Dev-ai-job-watcher/blob/main/src/core/normalize.ts)
-  et [le classement](https://github.com/DamienGR/Dev-ai-job-watcher/blob/main/src/core/classify.ts)
-- [Les cas de test du classement](https://github.com/DamienGR/Dev-ai-job-watcher/blob/main/tests/fixtures/titles.json)
-- [La spécification](https://github.com/DamienGR/Dev-ai-job-watcher/blob/main/SPEC.md),
-  sections 4 à 8, et [le journal des décisions](https://github.com/DamienGR/Dev-ai-job-watcher/blob/main/docs/decisions.md)
+- [La taxonomie](https://github.com/Dg-tech-dev/barometre-emploi-dev-ia/blob/main/taxonomy.yaml) et
+  [son historique](https://github.com/Dg-tech-dev/barometre-emploi-dev-ia/blob/main/TAXONOMY_CHANGELOG.md)
+- [La normalisation des intitulés](https://github.com/Dg-tech-dev/barometre-emploi-dev-ia/blob/main/src/core/normalize.ts)
+  et [le classement](https://github.com/Dg-tech-dev/barometre-emploi-dev-ia/blob/main/src/core/classify.ts)
+- [Les cas de test du classement](https://github.com/Dg-tech-dev/barometre-emploi-dev-ia/blob/main/tests/fixtures/titles.json)
+- [La spécification](https://github.com/Dg-tech-dev/barometre-emploi-dev-ia/blob/main/SPEC.md),
+  sections 4 à 8, et [le journal des décisions](https://github.com/Dg-tech-dev/barometre-emploi-dev-ia/blob/main/docs/decisions.md)
 - [L’IA dans ce projet](/ia/)

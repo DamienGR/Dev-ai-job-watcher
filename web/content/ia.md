@@ -19,7 +19,7 @@ l’IA n’intervient pas partout.
 
 ## Une spécification avant le code
 
-Tout part de la [spécification](https://github.com/DamienGR/Dev-ai-job-watcher/blob/main/SPEC.md),
+Tout part de la [spécification](https://github.com/Dg-tech-dev/barometre-emploi-dev-ia/blob/main/SPEC.md),
 un document d’environ 900 lignes (version 1.2 au 21 novembre 2026). Elle décrit ce que l’outil
 doit faire : sources, traitement, indicateurs, affichage et plan de livraison. Trois
 conventions encadrent le travail de l’agent :
@@ -29,9 +29,9 @@ conventions encadrent le travail de l’agent :
 - ce qui est marqué **[À VÉRIFIER]** doit être confirmé sur la documentation officielle ou sur
   une vraie réponse de l’API avant d’être codé ;
 - toute latitude prise, ou toute ambiguïté tranchée, est consignée avec sa raison dans le
-  [journal des décisions](https://github.com/DamienGR/Dev-ai-job-watcher/blob/main/docs/decisions.md).
+  [journal des décisions](https://github.com/Dg-tech-dev/barometre-emploi-dev-ia/blob/main/docs/decisions.md).
 
-Le fichier [CLAUDE.md](https://github.com/DamienGR/Dev-ai-job-watcher/blob/main/CLAUDE.md)
+Le fichier [CLAUDE.md](https://github.com/Dg-tech-dev/barometre-emploi-dev-ia/blob/main/CLAUDE.md)
 résume ces règles pour l’agent : un lot à la fois, tests verts avant chaque commit,
 commentaires et documentation en français.
 
@@ -110,7 +110,7 @@ décisions et passent par une pull request.
 ## Là où l’IA n’a pas sa place
 
 Le classement des offres par métier n’utilise pas de modèle de langage. Des règles écrites
-dans la [taxonomie](https://github.com/DamienGR/Dev-ai-job-watcher/blob/main/taxonomy.yaml)
+dans la [taxonomie](https://github.com/Dg-tech-dev/barometre-emploi-dev-ia/blob/main/taxonomy.yaml)
 sont appliquées à l’intitulé de chaque offre. Ce choix est délibéré :
 
 - **reproductible** : le même intitulé donne toujours le même métier, d’une semaine à
@@ -141,10 +141,10 @@ de repli sans IA en cas d’écart.
 
 ## Pour aller plus loin
 
-- [Le dépôt du projet sur GitHub](https://github.com/DamienGR/Dev-ai-job-watcher)
-- [La spécification](https://github.com/DamienGR/Dev-ai-job-watcher/blob/main/SPEC.md) et
-  [le journal des décisions](https://github.com/DamienGR/Dev-ai-job-watcher/blob/main/docs/decisions.md)
-- [La taxonomie](https://github.com/DamienGR/Dev-ai-job-watcher/blob/main/taxonomy.yaml) et
-  [son historique](https://github.com/DamienGR/Dev-ai-job-watcher/blob/main/TAXONOMY_CHANGELOG.md)
-- [Les règles de travail de l’agent](https://github.com/DamienGR/Dev-ai-job-watcher/blob/main/CLAUDE.md)
+- [Le dépôt du projet sur GitHub](https://github.com/Dg-tech-dev/barometre-emploi-dev-ia)
+- [La spécification](https://github.com/Dg-tech-dev/barometre-emploi-dev-ia/blob/main/SPEC.md) et
+  [le journal des décisions](https://github.com/Dg-tech-dev/barometre-emploi-dev-ia/blob/main/docs/decisions.md)
+- [La taxonomie](https://github.com/Dg-tech-dev/barometre-emploi-dev-ia/blob/main/taxonomy.yaml) et
+  [son historique](https://github.com/Dg-tech-dev/barometre-emploi-dev-ia/blob/main/TAXONOMY_CHANGELOG.md)
+- [Les règles de travail de l’agent](https://github.com/Dg-tech-dev/barometre-emploi-dev-ia/blob/main/CLAUDE.md)
 - [La méthode des chiffres](/methodologie/)

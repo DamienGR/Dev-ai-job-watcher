@@ -34,5 +34,5 @@ détaille d’où viennent les chiffres.
 Le site n’a pas de formulaire de contact. Vous pouvez me trouver ici :
 
 - [LinkedIn](https://www.linkedin.com/in/damien-gros-9b2ab4a6/)
-- [GitHub](https://github.com/DamienGR), où le code du baromètre est publié
+- [GitHub](https://github.com/Dg-tech-dev), où le code du baromètre est publié
 - [dg-tech.dev](https://dg-tech.dev), le site de mon activité

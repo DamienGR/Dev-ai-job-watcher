@@ -35,7 +35,7 @@ export const SITE = {
   url: (process.env.URL ?? 'https://barometre.dg-tech.dev').replace(/\/$/, ''),
   /** `false` jusqu'au lancement (D47, SPEC.md §17.5) ; `SITE_INDEXABLE=1` pour mesurer. */
   indexable: process.env.SITE_INDEXABLE === '1',
-  repository: 'https://github.com/DamienGR/Dev-ai-job-watcher',
+  repository: 'https://github.com/Dg-tech-dev/barometre-emploi-dev-ia',
   author: { name: 'Damien Gros', site: 'https://dg-tech.dev', label: 'DG Tech' },
 } as const;
 
