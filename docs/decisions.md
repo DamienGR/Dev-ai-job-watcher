@@ -726,6 +726,11 @@ proposé le même jour, recommandations validées par Damien le 2026-11-21.
   contenu et ajoute la page « Journal de la taxonomie ».
 - Le tableau de bord ne change pas de fonctionnement : il déménage sous `/tableau-de-bord/`
   au lot S2, et les anciens liens en `/#/<page>` y redirigent (exigé, §17.4).
+- Origine du projet, à dire tel quel sur la page « L'IA dans ce projet » (S4) : `SPEC.md` et
+  `taxonomy.yaml` ont été rédigés par Claude au fil de discussions avec Damien, qui les a
+  validés puis ajoutés au commit initial du 2026-10-02 (précisé par Damien le 2026-11-21).
+  Tout le code a ensuite été écrit par Claude Code, lot par lot, chaque PR fusionnée par
+  Damien.
 
 ### D46. Nom et adresse du site (§16.5)
 
