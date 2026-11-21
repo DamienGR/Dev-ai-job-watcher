@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
     <!-- site:head -->
+    <link rel="preload" href="/api/data/meta.json" as="fetch" crossorigin="anonymous" />
   </head>
   <body>
     <div class="site">
@@ -13,10 +14,77 @@
         <section class="hero">
           <h1>Le marché de l’emploi tech en France, mesuré chaque semaine</h1>
           <p class="lead">
-            Chaque lundi, les offres d’emploi publiées sur France Travail sont collectées, classées par métier et résumées en
-            indicateurs : nombre d’offres, part de celles qui demandent des compétences en IA, salaires, régions.
+            Combien d’offres pour les développeurs, la data et l’IA ? Quels métiers montent, quels salaires, dans quelles
+            régions ? Chaque lundi, les offres publiées sur France Travail sont collectées, classées par métier et résumées
+            en indicateurs.
           </p>
           <p><a class="button" href="/tableau-de-bord/">Ouvrir le tableau de bord</a></p>
+        </section>
+
+        <section class="home-section" aria-labelledby="titre-chiffres">
+          <h2 id="titre-chiffres">La semaine en quatre chiffres</h2>
+          <div class="figures" data-home-figures>
+            <div class="figure figure-loading"></div>
+            <div class="figure figure-loading"></div>
+            <div class="figure figure-loading"></div>
+            <div class="figure figure-loading"></div>
+          </div>
+          <p class="home-more"><a href="/tableau-de-bord/">Tous les indicateurs, avec filtres par région, métier et contrat</a></p>
+        </section>
+
+        <section class="home-section" aria-labelledby="titre-tendance">
+          <h2 id="titre-tendance">Nouvelles offres par semaine</h2>
+          <p class="note">
+            Offres dev, data et IA, comptées dans leur semaine de création, depuis le premier run hebdomadaire.
+          </p>
+          <div class="trend" data-home-trend></div>
+        </section>
+
+        <section class="home-section" aria-labelledby="titre-mouvements">
+          <h2 id="titre-mouvements">Ce qui bouge</h2>
+          <div class="home-movers" data-home-movers></div>
+        </section>
+
+        <section class="home-section" aria-labelledby="titre-pipeline">
+          <h2 id="titre-pipeline">D’où viennent les chiffres</h2>
+          <ol class="pipeline">
+            <li>
+              <span class="pipeline-step">1. Collecte</span>
+              <p>
+                Chaque lundi matin, un serveur interroge l’API de France Travail : tout le stock d’offres des métiers de
+                l’informatique, département par département, et une recherche par mots-clés pour les métiers de l’IA.
+              </p>
+            </li>
+            <li>
+              <span class="pipeline-step">2. Classement</span>
+              <p>
+                Chaque offre est dédoublonnée puis rangée dans l’un d’une cinquantaine de métiers, par des règles écrites
+                dans une taxonomie versionnée. Le même intitulé donne toujours le même métier.
+              </p>
+            </li>
+            <li>
+              <span class="pipeline-step">3. Statistiques</span>
+              <p>
+                Les offres deviennent des agrégats par semaine, métier, région, contrat et salaire. Une part, une
+                médiane ou une variation calculée sur moins de 5 offres est masquée.
+              </p>
+            </li>
+            <li>
+              <span class="pipeline-step">4. Publication</span>
+              <p>
+                Les agrégats sont envoyés à ce site, qui les affiche sans être reconstruit. Aucune annonce n’est
+                republiée.
+              </p>
+            </li>
+          </ol>
+          <aside class="ai-note" aria-labelledby="titre-ia">
+            <h3 id="titre-ia">L’IA dans ce projet</h3>
+            <p>
+              La spécification et la taxonomie ont été rédigées avec Claude, puis tout le code écrit par Claude Code,
+              lot par lot ; Damien Gros a relu et validé chaque changement. Le classement des offres, lui, se passe
+              d’IA : des règles explicites donnent des chiffres reproductibles d’une semaine à l’autre.
+            </p>
+          </aside>
         </section>
       </main>
       <!-- site:footer -->

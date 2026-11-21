@@ -65,7 +65,7 @@ Le site public (SPEC.md §17) est un site statique Vite à plusieurs pages : acc
 bord sous `/tableau-de-bord/`, mentions légales, page 404. Pages, titres et descriptions sont
 déclarés dans `web/site/config.ts` ; le gabarit commun (`web/site/template.ts`) injecte au build
 l'en-tête, la navigation, le pied de page et les textes Markdown de `web/content/`. Les anciens
-liens `/#/<page>` du dashboard mènent à `/tableau-de-bord/#/<page>`. Décisions D45 à D59.
+liens `/#/<page>` du dashboard mènent à `/tableau-de-bord/#/<page>`. Décisions D45 à D61.
 
 Le dashboard (ECharts, Leaflet) lit les agrégats par `GET /api/data/:name`. `npm run push` envoie chaque fichier de `.data/aggregates` (ou
 `DATA_DIR`) à `PUT /api/ingest/:name`, `meta.json` en dernier : le site passe au nouveau run
