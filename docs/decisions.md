@@ -1203,6 +1203,10 @@ dans les agrégats publics (le compte d'une semaine passée augmente d'un run à
   pipeline ». Des points gris (les offres de la semaine) arrivent à gauche par des couloirs qui
   convergent vers un filtre, la taxonomie ; les offres du périmètre en ressortent à la couleur
   de leur famille et rejoignent sa barre, les autres s'éteignent dans le filtre.
+- Deux autres pistes ont été montrées à Damien sur l'aperçu de la PR, avec les mêmes données :
+  un cadran de la part IA de la semaine suivi de sa courbe depuis le premier run (« baromètre
+  vivant »), et un nuage des technologies les plus citées du mois (« nuage de compétences »).
+  Damien a retenu le flux du pipeline le 2026-11-21 ; les deux autres ont été retirées.
 - **Vrais chiffres, aucun nouvel agrégat** (§17.4) : semaine de référence des chiffres de tête,
   `timeseries.json` et filtres par défaut. Trois barres plutôt que les huit groupes :
   développement (groupe dev), data (le reste du socle) et IA (les groupes IA, numérateur de la
