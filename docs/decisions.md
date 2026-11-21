@@ -937,7 +937,7 @@ La 404 perd des points de référencement par son `noindex`, voulu. Tant que le 
 - Schéma du pipeline en texte (quatre étapes), sans chiffre qui vieillirait : les chiffres de
   qualité des runs iront sur la page Méthodologie (S4).
 
-### D61. Constat : la semaine de référence est sous-comptée à sa publication (ouvert)
+### D61. Constat : la semaine de référence est sous-comptée à sa publication (mesuré, clos)
 
 Les nouvelles offres sont comptées par semaine de création (§6.9), mais une partie des offres
 n'apparaît dans l'API qu'une ou plusieurs semaines après leur date de création. Agrégats de
@@ -958,6 +958,34 @@ semaine 46 en vient probablement en partie. L'accueil reprend les chiffres du ta
 Choix de Damien le 2026-11-21 : mesurer d'abord sur le VPS, en lecture seule, le délai entre
 la création d'une offre et son premier run (`firstSeenRun` de `offers/*`), puis proposer la
 correction adaptée.
+
+Mesure du 2026-11-21 sur le VPS (script en lecture seule sur `offers/*`, doublons exclus,
+runs W41 à W47) : nombre d'offres d'une semaine de création à sa publication comme semaine
+de référence (offres vues par le run de la semaine elle-même ou par celui du lundi suivant),
+puis aujourd'hui.
+
+| Semaine de création | Dev g1 à g8 : publication → aujourd'hui | Toutes : publication → aujourd'hui |
+|---|---|---|
+| 2026-W40 | 228 → 231 (+1,3 %) | 748 → 756 (+1,1 %) |
+| 2026-W41 | 313 → 317 (+1,3 %) | 968 → 983 (+1,5 %) |
+| 2026-W42 | 322 → 327 (+1,6 %) | 1 001 → 1 009 (+0,8 %) |
+| 2026-W43 | 472 → 474 (+0,4 %) | 1 413 → 1 422 (+0,6 %) |
+| 2026-W44 | 290 → 290 (0 %) | 970 → 978 (+0,8 %) |
+| 2026-W45 | 277 → 320 (+15,5 %) | 826 → 962 (+16,5 %) |
+| 2026-W46 | 228 (pas encore de run suivant) | 846 |
+
+La borne « au moins 13 à 45 % » était fausse : elle supposait qu'aucune offre d'une semaine
+n'est vue par le run de cette même semaine. Or le premier run (mercredi 7 octobre) a vu
+451 offres de la semaine 41, et le run du lundi 19 octobre 235 offres créées le matin même.
+Hors la semaine 45, une semaine gagne moins de 2 % après sa publication. La semaine 45 a
+gagné 136 offres (43 dev) d'un coup au run W47, une semaine après sa publication : seule
+exception à ce jour. L'écart de −35 % de la semaine 46 au tableau de bord est donc surtout
+réel (vers −25 % même avec un rattrapage comme celui de la semaine 45).
+
+Correction retenue : les textes seulement. La limite « La dernière semaine peut encore
+bouger » de la page Méthodologie et le récit de la page « L'IA dans ce projet » donnent les
+chiffres mesurés ; aucun calcul ne change. Un rattrapage comme celui de la semaine 45 se voit
+dans les agrégats publics (le compte d'une semaine passée augmente d'un run à l'autre).
 
 ## Site public — Pages éditoriales (lot S4, 2026-11-21)
 
@@ -993,7 +1021,7 @@ correction adaptée.
 - Méthodologie : source et couverture, collecte (D18, D19, règle de rétention), classement
   (§6.4, §6.5), indicateurs, règles d'affichage (§8.3, D44), limites, dont la dernière semaine
   provisoire (D61), avec les ordres de grandeur connus à ce jour : à mettre à jour après la
-  mesure sur le VPS.
+  mesure sur le VPS (fait le 2026-11-21, voir D61).
 - À propos : à la première personne, d'après la présentation de `dg-tech.dev` ; liens
   LinkedIn, GitHub et `dg-tech.dev`, sans formulaire (D49).
 - Accueil : lien vers `/ia/` dans l'encart « L'IA dans ce projet » (D60) et vers

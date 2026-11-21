@@ -112,10 +112,13 @@ et son effet sur la part des offres classées sont publiés dans le
 - **16 novembre 2026, une fausse chute.** La courbe des nouvelles offres finissait sur 5
   offres : le run du lundi ne voit que les premières heures de sa propre semaine. Cette
   semaine n’est plus dessinée tant qu’elle n’a pas été collectée.
-- **21 novembre 2026, une semaine sous-comptée.** En construisant la page d’accueil, Claude
-  Code a remarqué que la dernière semaine publiée gagne encore des offres les semaines
-  suivantes : certaines n’apparaissent dans l’API qu’après leur date de création. Une mesure
-  sur le serveur est en cours avant de choisir la correction.
+- **21 novembre 2026, une estimation démentie par la mesure.** En construisant la page
+  d’accueil, Claude Code a remarqué que la dernière semaine publiée gagne encore des offres les
+  semaines suivantes, et en a estimé l’ampleur à au moins 13 à 45 %. La mesure faite ensuite
+  sur le serveur l’a démentie : une semaine gagne en général moins de 2 % après sa
+  publication, une seule a gagné 16 %. L’estimation oubliait les offres déjà vues par le run
+  de leur propre semaine. Le texte de la méthodologie a été corrigé ; les calculs n’avaient
+  pas à changer.
 
 Chaque fois, le constat, la décision et la correction sont écrits dans le journal des
 décisions et passent par une pull request.
