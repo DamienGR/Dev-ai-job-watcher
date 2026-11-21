@@ -639,7 +639,7 @@ aussi pour les lots S.
 2. Canal d'alerte : ntfy, e-mail ou Slack. **Tranché (D38)** : ntfy.
 3. Réponse d'Adzuna sur l'usage commercial (en cas de refus, Free-Work remplace Adzuna au lot 3). Le site public sert l'activité professionnelle de Damien, ce qui relève de l'usage commercial au sens d'Adzuna : il se lance sans Adzuna, et le lot 3 attend que Damien décide d'écrire à Adzuna (D50).
 4. Source de population active pour la densité régionale. **Tranché (D29)** : Insee, RP2023.
-5. Nom du dépôt et du domaine. **Tranché (D46)** : le dépôt garde son nom ; le site s'appelle « Baromètre emploi Dev & IA » et passe sur `barometre.dg-tech.dev`, au lancement (§17.8).
+5. Nom du dépôt et du domaine. **Tranché (D46, D64)** : le site s'appelle « Baromètre emploi Dev & IA » et passe sur `barometre.dg-tech.dev`, au lancement (§17.8) ; le dépôt, d'abord gardé sous son nom, devient `Dg-tech-dev/barometre-emploi-dev-ia` le 2026-11-21.
 6. Moyen de sauvegarde de `DATA_DIR` hors du VPS (§3.4). **Tranché (D39)** : restic vers Cloudflare R2.
 
 ## 17. Site public

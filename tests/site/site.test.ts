@@ -110,7 +110,7 @@ describe('pages du site (SPEC.md §17.2)', () => {
   it('donne sur la page À propos les liens LinkedIn, GitHub et dg-tech.dev, sans formulaire (D49)', () => {
     const html = build(page('a-propos'));
     expect(html).toContain('href="https://www.linkedin.com/in/');
-    expect(html).toContain('href="https://github.com/DamienGR"');
+    expect(html).toContain('href="https://github.com/Dg-tech-dev"');
     expect(html).toContain(`href="${SITE.author.site}"`);
     expect(html).not.toMatch(/<form[\s>]/);
   });

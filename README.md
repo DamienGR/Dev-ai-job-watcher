@@ -111,7 +111,7 @@ navigation, le pied de page et les textes Markdown de `web/content/`, avec sous 
 mention de leur rédaction avec Claude (SPEC.md §17.1). Les anciens liens `/#/<page>` du
 dashboard mènent à `/tableau-de-bord/#/<page>`. Le site reste en `noindex` jusqu'au lancement ;
 `SITE_INDEXABLE=1` au build (variable Netlify) ouvre l'indexation et publie `sitemap.xml`, à
-côté de `robots.txt`, écrit à chaque build. Décisions D45 à D63.
+côté de `robots.txt`, écrit à chaque build. Décisions D45 à D64.
 
 Le dashboard (ECharts, Leaflet) lit les agrégats par `GET /api/data/:name`. `npm run push` envoie chaque fichier de `.data/aggregates` (ou
 `DATA_DIR`) à `PUT /api/ingest/:name`, `meta.json` en dernier : le site passe au nouveau run
