@@ -1,14 +1,56 @@
-# Veille emploi Dev & IA
+# Baromètre emploi Dev & IA
 
-Veille quantitative du marché de l'emploi dev, data et IA en France : collecte hebdomadaire des
-offres (France Travail, Adzuna), classification par une taxonomie versionnée, agrégats publiés
-sur un dashboard Netlify. Le cadrage complet est dans [SPEC.md](SPEC.md).
+Le marché de l'emploi dev, data et IA en France, mesuré chaque semaine à partir des offres
+publiées sur France Travail : volumes, métiers, salaires, régions.
 
-**État** : lots 0 à 2, 4 et 5 livrés (socle, collecte France Travail, traitement et
-agrégats, dashboard, VPS et alertes) ; en production depuis le 7 octobre 2026, un run
-automatique chaque lundi. En cours : le site public autour du dashboard (SPEC.md §17, lots S1 à
-S6), puis le lot 6 (revue mensuelle). Le lot 3 (Adzuna) attend une décision (D50). Les lots
-sont décrits au §14 de la spec.
+**Site : [barometre.dg-tech.dev](https://barometre.dg-tech.dev)**
+
+![Accueil du site : les quatre chiffres de la semaine et la courbe des nouvelles offres](docs/images/accueil.png)
+
+Ce dépôt contient tout le baromètre : la collecte, le classement des offres par métier, le
+calcul des statistiques et le site public. C'est aussi une démonstration de développement
+avec l'IA : la spécification et le code ont été écrits par Claude, lot par lot, et chaque
+changement a été relu et fusionné par [Damien Gros](https://dg-tech.dev).
+
+## En bref
+
+- **Collecte** : chaque lundi matin, un serveur interroge l'API « Offres d'emploi » de France
+  Travail et récupère tout le stock d'offres ouvertes des métiers de l'informatique, plus une
+  recherche par mots-clés pour les métiers de l'IA.
+- **Classement** : chaque offre est rangée dans l'un des 51 métiers de
+  [`taxonomy.yaml`](taxonomy.yaml) par des règles explicites appliquées à son intitulé, sans
+  IA. Le même intitulé donne toujours le même métier.
+- **Statistiques** : nouvelles offres par semaine, part de l'IA, salaires, technologies,
+  carte. Une valeur calculée sur moins de 5 offres est masquée.
+- **Publication** : seuls des agrégats sont envoyés au site, sans redéploiement. Aucune
+  annonce n'est republiée et aucune donnée collectée n'est versionnée.
+- **Technique** : TypeScript, Node 22, Vitest (plus de 500 tests) ; site statique Vite avec
+  ECharts et Leaflet sur Netlify ; jobs planifiés par systemd sur un VPS, alertes ntfy,
+  sauvegarde chiffrée vers Cloudflare R2. Pas de base de données.
+
+## L'IA dans ce projet
+
+- [`SPEC.md`](SPEC.md) et [`taxonomy.yaml`](taxonomy.yaml) ont été rédigés par Claude au fil
+  de discussions avec Damien, qui les a validés avant le premier commit, le 2 octobre 2026.
+- Tout le code a ensuite été écrit par Claude Code, en suivant [`CLAUDE.md`](CLAUDE.md) : un
+  lot par pull request, tests verts, points « [À VÉRIFIER] » confirmés sur l'API réelle avant
+  d'être codés, et chaque latitude consignée dans [`docs/decisions.md`](docs/decisions.md).
+- L'exploitation suit la même règle : Claude Code prépare et vérifie, Damien fait les gestes
+  sensibles (secrets, droits d'administration).
+- Le classement des offres et les chiffres restent sans IA, pour être reproductibles,
+  explicables et testables.
+
+Le récit complet, avec les décisions et les incidents réels, est sur la page
+[L'IA dans ce projet](https://barometre.dg-tech.dev/ia/) ; la méthode des chiffres, sur la
+page [Méthodologie](https://barometre.dg-tech.dev/methodologie/).
+
+## État
+
+En production depuis le 7 octobre 2026, avec un run automatique chaque lundi. Livrés : lots 0
+à 2, 4 et 5 (socle, collecte France Travail, traitement, tableau de bord, VPS et alertes) et
+le site public, lots S1 à S4. À venir : la revue mensuelle de la taxonomie par Claude (lot 6),
+le résumé de la semaine (S5) et des analyses (S6). La source Adzuna (lot 3) attend une décision
+(D50). Les lots sont décrits au §14 de la spec.
 
 ## Démarrage
 
@@ -67,7 +109,9 @@ mentions légales, page 404. Pages, titres et descriptions sont déclarés dans
 `web/site/config.ts` ; le gabarit commun (`web/site/template.ts`) injecte au build l'en-tête, la
 navigation, le pied de page et les textes Markdown de `web/content/`, avec sous leur titre la
 mention de leur rédaction avec Claude (SPEC.md §17.1). Les anciens liens `/#/<page>` du
-dashboard mènent à `/tableau-de-bord/#/<page>`. Décisions D45 à D62.
+dashboard mènent à `/tableau-de-bord/#/<page>`. Le site reste en `noindex` jusqu'au lancement ;
+`SITE_INDEXABLE=1` au build (variable Netlify) ouvre l'indexation et publie `sitemap.xml`, à
+côté de `robots.txt`, écrit à chaque build. Décisions D45 à D63.
 
 Le dashboard (ECharts, Leaflet) lit les agrégats par `GET /api/data/:name`. `npm run push` envoie chaque fichier de `.data/aggregates` (ou
 `DATA_DIR`) à `PUT /api/ingest/:name`, `meta.json` en dernier : le site passe au nouveau run
@@ -108,6 +152,7 @@ web/content/            textes des pages en Markdown
 fixtures/               réponses d'API fictives, mode SOURCE_MODE=fixtures
 tests/                  tests Vitest ; tests/fixtures/titles.json = cas de classification
 docs/decisions.md       décisions d'implémentation
+docs/images/            capture de l'accueil pour ce README
 ```
 
 ## Utiliser le cœur
