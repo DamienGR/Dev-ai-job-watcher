@@ -322,44 +322,6 @@
   font-style: italic;
 }
 
-.table-wrap {
-  overflow-x: auto;
-  margin: 4px 0 8px;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.875rem;
-  font-variant-numeric: tabular-nums;
-}
-
-caption {
-  text-align: left;
-  position: absolute;
-  left: -9999px;
-}
-
-th,
-td {
-  text-align: left;
-  padding: 6px 8px;
-  border-bottom: 1px solid var(--grid);
-  vertical-align: middle;
-}
-
-th {
-  color: var(--text-secondary);
-  font-weight: 600;
-  font-size: 0.8rem;
-  white-space: nowrap;
-}
-
-.num {
-  text-align: right;
-  white-space: nowrap;
-}
-
 .cell-n {
   color: var(--text-muted);
   font-size: 0.8em;

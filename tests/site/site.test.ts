@@ -1,12 +1,13 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { PAGES, SITE, type SitePage } from '../../web/site/config';
 import { siteInputs } from '../../web/site/plugin';
-import { escapeHtml, renderMarkdown, renderPage } from '../../web/site/template';
+import { escapeHtml, renderByline, renderContent, renderMarkdown, renderPage } from '../../web/site/template';
 import { legacyDashboardUrl } from '../../web/src/site/legacy';
 
-const WEB = join(import.meta.dirname, '..', '..', 'web');
+const ROOT = join(import.meta.dirname, '..', '..');
+const WEB = join(ROOT, 'web');
 
 function build(page: SitePage): string {
   const html = readFileSync(join(WEB, page.file), 'utf8');
@@ -70,6 +71,16 @@ describe('pages du site (SPEC.md §17.2)', () => {
     expect(build(page('accueil'))).toContain('<title>Baromètre emploi Dev &amp; IA</title>');
   });
 
+  it('suit l’ordre de navigation de SPEC.md §17.3 (Analyses viendra au lot S6)', () => {
+    const nav = /<nav class="site-nav" aria-label="Site">(.*?)<\/nav>/.exec(build(page('accueil')))?.[1] ?? '';
+    expect([...nav.matchAll(/<a href="([^"]+)">([^<]+)<\/a>/g)].map((m) => [m[1], m[2]])).toEqual([
+      ['/tableau-de-bord/', 'Tableau de bord'],
+      ['/ia/', 'L’IA dans ce projet'],
+      ['/methodologie/', 'Méthodologie'],
+      ['/a-propos/', 'À propos'],
+    ]);
+  });
+
   it('marque la page courante dans la navigation', () => {
     const dashboard = build(page('tableau-de-bord'));
     expect(dashboard).toContain('<a href="/tableau-de-bord/" aria-current="page">Tableau de bord</a>');
@@ -84,11 +95,73 @@ describe('pages du site (SPEC.md §17.2)', () => {
     expect(home).toContain('<a class="button" href="/tableau-de-bord/">');
   });
 
+  it('mène de l’accueil au tableau de bord, à « L’IA dans ce projet » et à la méthodologie (§17.2)', () => {
+    const home = build(page('accueil'));
+    for (const href of ['/tableau-de-bord/', '/ia/', '/methodologie/']) expect(home).toContain(`href="${href}"`);
+  });
+
+  it('lit en direct la qualité des derniers runs sur la page Méthodologie (§17.2)', () => {
+    const html = build(page('methodologie'));
+    expect(html).toContain('<div class="quality" data-quality>');
+    expect(html).toContain('<script type="module" src="/src/methodologie.ts"></script>');
+  });
+
+  it('donne sur la page À propos les liens LinkedIn, GitHub et dg-tech.dev, sans formulaire (D49)', () => {
+    const html = build(page('a-propos'));
+    expect(html).toContain('href="https://www.linkedin.com/in/');
+    expect(html).toContain('href="https://github.com/DamienGR"');
+    expect(html).toContain(`href="${SITE.author.site}"`);
+    expect(html).not.toMatch(/<form[\s>]/);
+  });
+
   it('relie chaque page aux mentions légales et à la page 404 vers l’accueil et le tableau de bord', () => {
     for (const p of PAGES) expect(build(p)).toContain('<a href="/mentions-legales/">Mentions légales</a>');
     const notFound = build(page('404'));
     expect(notFound).toContain('href="/"');
     expect(notFound).toContain('href="/tableau-de-bord/"');
+  });
+});
+
+describe('textes rédigés avec l’IA (SPEC.md §17.1, exigé ; D51)', () => {
+  const texts = PAGES.filter((p) => p.content);
+
+  it('place la mention de rédaction avec Claude sous le titre de chaque page de texte', () => {
+    expect(texts.map((p) => p.id).sort()).toEqual(['a-propos', 'ia', 'mentions-legales', 'methodologie']);
+    for (const p of texts) {
+      expect(build(p), p.file).toMatch(/<\/h1>\n\s*<p class="byline">Texte rédigé avec Claude, relu et validé par Damien Gros\. Mis à jour le \d{1,2} [a-zéû]+ \d{4}\.<\/p>/);
+    }
+    expect(renderByline('2026-11-21')).toContain('Mis à jour le 21 novembre 2026.');
+  });
+
+  it('le rappelle dans le pied de page de tout le site', () => {
+    for (const p of PAGES) expect(build(p), p.file).toContain(', écrit avec <a href="/ia/">Claude</a>');
+  });
+
+  it('refuse un texte sans date de révision ou sans titre', () => {
+    const text = page('ia');
+    expect(() => renderContent({ ...text, updated: undefined }, '# Titre')).toThrow(/date de révision du texte manquante/);
+    expect(() => renderContent(text, 'Pas de titre')).toThrow(/titre de niveau 1/);
+    expect(() => renderByline('21/11/2026')).toThrow(/date de révision invalide/);
+  });
+});
+
+describe('liens des textes (critère du lot S4)', () => {
+  const repoFile = new RegExp(`^${SITE.repository.replace(/[.]/g, '\\.')}/blob/main/(.+)$`);
+  const links = readdirSync(join(WEB, 'content'))
+    .filter((f) => f.endsWith('.md'))
+    .flatMap((f) => [...readFileSync(join(WEB, 'content', f), 'utf8').matchAll(/\]\(([^)\s]+)\)/g)].map((m) => ({ file: f, href: m[1]! })));
+
+  it('pointe vers des fichiers qui existent dans le dépôt', () => {
+    const files = links.filter((l) => repoFile.test(l.href));
+    expect(files.length).toBeGreaterThan(5);
+    for (const { file, href } of files) expect(existsSync(join(ROOT, repoFile.exec(href)![1]!)), `${file} : ${href}`).toBe(true);
+  });
+
+  it('pointe vers des pages du site qui existent', () => {
+    const paths = new Set(PAGES.map((p) => p.path));
+    const internal = links.filter((l) => l.href.startsWith('/'));
+    expect(internal.length).toBeGreaterThan(3);
+    for (const { file, href } of internal) expect(paths.has(href.split('#')[0]!), `${file} : ${href}`).toBe(true);
   });
 });
 

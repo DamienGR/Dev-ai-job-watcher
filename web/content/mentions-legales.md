@@ -1,7 +1,5 @@
 # Mentions légales
 
-Dernière mise à jour : 21 novembre 2026.
-
 ## Éditeur
 
 Le Baromètre emploi Dev & IA est édité par **Damien Gros**, entreprise individuelle sous le
@@ -36,9 +34,10 @@ France. Seules les statistiques agrégées en sortent pour être publiées ici.
 - **Fond de carte** : © les contributeurs d’[OpenStreetMap](https://www.openstreetmap.org/copyright),
   données sous licence ODbL, tuiles servies par la fondation OpenStreetMap.
 
-Le code source du site est publié sous licence MIT. Les textes sont de Damien Gros. Vous pouvez
-citer les chiffres en indiquant la source : « Baromètre emploi Dev & IA, d’après les offres
-France Travail ».
+Le code source du site est publié sous licence MIT. Les textes sont rédigés avec Claude, l’IA
+d’Anthropic, puis relus et validés par Damien Gros, qui en répond. Vous pouvez citer les
+chiffres en indiquant la source : « Baromètre emploi Dev & IA, d’après les offres France
+Travail ».
 
 ## Cookies et données personnelles
 

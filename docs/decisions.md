@@ -953,3 +953,54 @@ nouvelles en tout : chaque semaine a donc gagné au moins 13 à 45 % après sa p
 publication. La semaine de référence des tuiles est la plus touchée ; l'écart de −35 % de la
 semaine 46 en vient probablement en partie. L'accueil reprend les chiffres du tableau de bord
 (§17.4) ; la correction est à décider par Damien.
+
+Choix de Damien le 2026-11-21 : mesurer d'abord sur le VPS, en lecture seule, le délai entre
+la création d'une offre et son premier run (`firstSeenRun` de `offers/*`), puis proposer la
+correction adaptée.
+
+## Site public — Pages éditoriales (lot S4, 2026-11-21)
+
+### D62. « L'IA dans ce projet », Méthodologie, À propos (§17.2, §17.3)
+
+- Trois pages en Markdown (`web/content/ia.md`, `methodologie.md`, `a-propos.md`) sous `/ia/`,
+  `/methodologie/` et `/a-propos/`. Navigation dans l'ordre du §17.3 : Tableau de bord, L'IA
+  dans ce projet, Méthodologie, À propos ; Analyses s'y ajoutera au lot S6. Chaque page a son
+  image de partage (`npm run site:images`).
+- **Mention de rédaction (exigé, §17.1, D51)** : le gabarit place sous le titre de chaque page
+  de texte « Texte rédigé avec Claude, relu et validé par Damien Gros. Mis à jour le … », daté
+  par le champ `updated` de `web/site/config.ts`. Un texte sans date ou sans titre de niveau 1
+  fait échouer le build (test). Les mentions légales, rédigées de la même façon au lot S2,
+  reçoivent la mention ; leur phrase « Les textes sont de Damien Gros » est corrigée. Le pied
+  de page de tout le site ajoute « écrit avec Claude », avec un lien vers `/ia/`, ce qui couvre
+  les textes de l'accueil et du tableau de bord.
+- **Chiffres datés ou lus en direct (critère du lot S4)** : la page Méthodologie lit
+  `quality.json` en direct (`web/src/methodologie.ts`) pour les six derniers runs France
+  Travail : offres lues, retenues, nouvelles, parts classées, avec salaire et localisées,
+  durée. Mêmes calculs que la page « Données & qualité » du tableau de bord, dont le type et
+  le tri passent dans `web/src/lib/quality.ts`. Les autres chiffres des textes décrivent la
+  méthode (seuils, 51 métiers et 9 groupes de la taxonomie v3, 75 mots-clés, 8 codes ROME) ou
+  sont datés : « au 21 novembre 2026 » pour 13 PR fusionnées, plus de 60 décisions, plus de
+  500 tests et 93 cas de classement. Ils ne se mettent pas à jour seuls ; la date de révision
+  de la page change avec eux.
+- **Liens vers le dépôt** : vers `blob/main/<fichier>`. Un test vérifie que chaque fichier
+  existe et que chaque lien interne mène à une page du site. Tant que le dépôt est privé, ces
+  liens répondent 404 aux visiteurs : le lancement (§17.8) le rend public.
+- « L'IA dans ce projet » reprend l'origine du projet telle que D45 la consigne, les règles de
+  SPEC.md §0 et CLAUDE.md, la sonde du 2026-10-03 (D18, D19), les décisions de Damien (D20,
+  D21, D46, D52), l'exploitation et ses garde-fous (§11, lot 5), trois incidents réels (D43,
+  D44, D61), le classement sans IA et ses raisons (§6.5), puis le lot 6 et le lot S5 au futur.
+- Méthodologie : source et couverture, collecte (D18, D19, règle de rétention), classement
+  (§6.4, §6.5), indicateurs, règles d'affichage (§8.3, D44), limites, dont la dernière semaine
+  provisoire (D61), avec les ordres de grandeur connus à ce jour : à mettre à jour après la
+  mesure sur le VPS.
+- À propos : à la première personne, d'après la présentation de `dg-tech.dev` ; liens
+  LinkedIn, GitHub et `dg-tech.dev`, sans formulaire (D49).
+- Accueil : lien vers `/ia/` dans l'encart « L'IA dans ce projet » (D60) et vers
+  `/methodologie/` sous le schéma du pipeline.
+- Les styles des tableaux passent de `styles.css` à `site.css`, partagés par le tableau de
+  bord et les pages de texte. La durée des runs s'écrit à la française (« 12,8 s ») sur la page
+  « Données & qualité ».
+- Lighthouse 13.6.0, mobile simulé, en local avec un build indexable et les agrégats de
+  production : 100 / 100 / 100 / 100 pour `/ia/`, `/methodologie/`, `/a-propos/` et l'accueil,
+  LCP sous 1 s, CLS 0.
+- Textes à relire et valider par Damien avant la fusion (critère du lot S4, §14).
