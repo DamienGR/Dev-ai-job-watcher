@@ -877,8 +877,12 @@ Dans `netlify.toml`, pour tout le site :
 - `Strict-Transport-Security`, `X-Content-Type-Options`, `X-Frame-Options`,
   `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`.
 - `/assets/*` (noms de fichiers tirés du contenu) : cache d'un an, `immutable`.
-- Vérifié dans Chromium avec cette CSP : les cinq pages du tableau de bord, la carte et ses
-  tuiles, l'accueil, les mentions légales et la 404, sans aucune erreur dans la console.
+- Vérifié dans Chromium avec cette CSP, en local puis sur l'aperçu Netlify de la PR (vraies
+  données) : les cinq pages du tableau de bord, la carte et ses tuiles, l'accueil, les
+  mentions légales et la 404, sans erreur de la page dans la console.
+- Seule erreur, sur les aperçus Netlify uniquement : la barre d'outils que Netlify y ajoute
+  ouvre un cadre vers `app.netlify.com`, bloqué par la CSP. La production n'a pas cette barre ;
+  la CSP n'est pas élargie pour elle.
 
 ### D58. Mentions légales (§17.2)
 
