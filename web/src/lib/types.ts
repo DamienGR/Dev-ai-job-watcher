@@ -29,6 +29,23 @@ export interface RegionLabel {
   population: number | null;
 }
 
+/** Offres classées parmi les offres retenues d'un run. */
+export interface ClassifiedShare {
+  classified: number;
+  retained: number;
+}
+
+/**
+ * Version de la taxonomie appliquée aux données (`src/pipeline/aggregates/meta.ts`) : `date`
+ * est celle de la version (`updated`), `appliedAt` et `effect` viennent du reclassement.
+ */
+export interface TaxonomyHistoryEntry {
+  version: number;
+  date: string;
+  appliedAt?: string;
+  effect?: { run: string; before: ClassifiedShare; after: ClassifiedShare };
+}
+
 export interface Meta {
   generatedAt: string;
   lastRun: { runId: string; status: string; collectStatus: string; coverageComplete: boolean } | null;
@@ -39,7 +56,7 @@ export interface Meta {
   partialMonths: string[];
   rollingMonths: string[];
   taxonomy: { version: number; updated: string };
-  taxonomyHistory: { version: number; date: string }[];
+  taxonomyHistory: TaxonomyHistoryEntry[];
   aiGroups: string[];
   devGroup: string;
   sources: { id: string; label: string }[];

@@ -1,0 +1,11 @@
+# Chaque jour à 04:00 UTC (SPEC.md §3.3) : une taxonomie fusionnée est appliquée aux données au
+# plus tard le lendemain, et le lundi le run de 05:00 part avec le code à jour.
+[Unit]
+Description=Veille emploi Dev & IA : mise à jour, chaque jour à 04:00 UTC
+
+[Timer]
+OnCalendar=*-*-* 04:00:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

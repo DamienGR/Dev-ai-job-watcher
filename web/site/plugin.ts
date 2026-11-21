@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
 import type { Plugin } from 'vite';
+import { CHANGELOG_FILE } from './changelog';
 import { PAGES, pageByFile } from './config';
 import { seoFiles } from './seo';
 import { renderPage } from './template';
@@ -22,7 +23,8 @@ export function sitePages(webRoot: string): Plugin {
         const page = pageByFile(file);
         if (!page) throw new Error(`${file} : page absente de web/site/config.ts`);
         const content = page.content ? await readFile(join(contentDir, page.content), 'utf8') : undefined;
-        return renderPage(html, page, content);
+        const changelog = page.changelog ? await readFile(CHANGELOG_FILE, 'utf8') : undefined;
+        return renderPage(html, page, content, changelog);
       },
     },
     generateBundle() {

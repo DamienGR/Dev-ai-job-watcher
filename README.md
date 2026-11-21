@@ -47,8 +47,8 @@ page [Méthodologie](https://barometre.dg-tech.dev/methodologie/).
 ## État
 
 En production depuis le 7 octobre 2026, avec un run automatique chaque lundi. Livrés : lots 0
-à 2, 4 et 5 (socle, collecte France Travail, traitement, tableau de bord, VPS et alertes) et
-le site public, lots S1 à S4. À venir : la revue mensuelle de la taxonomie par Claude (lot 6),
+à 2, 4 et 5 (socle, collecte France Travail, traitement, tableau de bord, VPS et alertes), le
+site public (lots S1 à S4) et la revue mensuelle de la taxonomie par Claude (lot 6). À venir :
 le résumé de la semaine (S5) et des analyses (S6). La source Adzuna (lot 3) attend une décision
 (D50). Les lots sont décrits au §14 de la spec.
 
@@ -104,14 +104,15 @@ npm run site:images                     # images de partage et icône (Playwrigh
 ```
 
 Le site public (SPEC.md §17) est un site statique Vite à plusieurs pages : accueil, tableau de
-bord sous `/tableau-de-bord/`, « L'IA dans ce projet » (`/ia/`), Méthodologie, À propos,
-mentions légales, page 404. Pages, titres et descriptions sont déclarés dans
+bord sous `/tableau-de-bord/`, « L'IA dans ce projet » (`/ia/`), Méthodologie et son « Journal
+de la taxonomie » (`/methodologie/journal/`, repris de `TAXONOMY_CHANGELOG.md` au build), À
+propos, mentions légales, page 404. Pages, titres et descriptions sont déclarés dans
 `web/site/config.ts` ; le gabarit commun (`web/site/template.ts`) injecte au build l'en-tête, la
 navigation, le pied de page et les textes Markdown de `web/content/`, avec sous leur titre la
 mention de leur rédaction avec Claude (SPEC.md §17.1). Les anciens liens `/#/<page>` du
 dashboard mènent à `/tableau-de-bord/#/<page>`. Le site reste en `noindex` jusqu'au lancement ;
 `SITE_INDEXABLE=1` au build (variable Netlify) ouvre l'indexation et publie `sitemap.xml`, à
-côté de `robots.txt`, écrit à chaque build. Décisions D45 à D64.
+côté de `robots.txt`, écrit à chaque build. Décisions D45 à D64 et D69.
 
 Le dashboard (ECharts, Leaflet) lit les agrégats par `GET /api/data/:name`. `npm run push` envoie chaque fichier de `.data/aggregates` (ou
 `DATA_DIR`) à `PUT /api/ingest/:name`, `meta.json` en dernier : le site passe au nouveau run
@@ -121,13 +122,16 @@ sans déploiement. Pages, filtres et règles d'affichage : SPEC.md §8, décisio
 
 Sur le VPS (D21), des timers systemd de l'utilisateur `veille` lancent chaque lundi le job
 `weekly-run` (collecte, traitement, envoi ; relances à 06:00 et 07:00 UTC) puis la sauvegarde
-de `DATA_DIR` vers Cloudflare R2 (restic). Les alertes partent sur ntfy, depuis le VPS et depuis
-la fonction planifiée `watchdog` du site (aucun run réussi depuis 8 jours). Installation et
-commandes du quotidien : [deploy/vps/README.md](deploy/vps/README.md) ; décisions D37 à D42.
+de `DATA_DIR` vers Cloudflare R2 (restic). Chaque jour à 04:00 UTC, le job `update` avance
+`main` et, si la version de `taxonomy.yaml` a changé, reclasse tout l'historique puis envoie
+les agrégats. Les alertes partent sur ntfy, depuis le VPS et depuis la fonction planifiée
+`watchdog` du site (aucun run réussi depuis 8 jours). Installation et commandes du quotidien :
+[deploy/vps/README.md](deploy/vps/README.md) ; décisions D37 à D42, D66 et D67.
 
 ```sh
 npm run weekly-run -- --run-id 2026-W41   # en local : même job, dans .data/ (ou DATA_DIR)
 npm run admin -- status --run-id 2026-W41 # état d'un run ; autres commandes en tête de scripts/admin.ts
+npm run admin -- reclassify               # reclassement de tout l'historique avec taxonomy.yaml
 deploy/vps/veille-job admin status        # sur le VPS : environnement et verrou en plus
 ```
 
@@ -140,11 +144,11 @@ netlify.toml            site Netlify : site public, en-têtes de sécurité, API
 src/core/               normalize, taxonomy, classify, signals, salary, location, employer, dedup, stats
 src/refs/               départements (101), régions (18), population active INSEE par région
 src/sources/            interface Source, client HTTP bridé, collecteur France Travail (Adzuna au lot 3)
-src/pipeline/           état des runs, traitement, agrégats (aggregates/), envoi, weekly-run, alertes, sauvegarde
+src/pipeline/           état des runs, traitement, reclassement, agrégats (aggregates/), envoi, weekly-run, update, alertes, sauvegarde
 src/storage/            stores Netlify Blobs, mémoire (tests) et disque (VPS, scripts)
 src/functions/          logique des fonctions Netlify, testable
-netlify/functions/      fonctions Netlify : api-ingest, api-data, watchdog
-scripts/                jobs du VPS (weekly-run, admin, backup), collecte, traitement, envoi, sonde FT, images du site
+netlify/functions/      fonctions Netlify : api-ingest, api-data, api-export, watchdog
+scripts/                jobs du VPS (weekly-run, admin, backup, update), collecte, traitement, envoi, sonde FT, images du site
 deploy/vps/             lanceur veille-job, unités systemd, procédure d'installation du VPS
 web/                    site Vite : pages HTML d'entrée, dashboard (web/src/pages), calculs testés (web/src/lib)
 web/site/               pages du site et gabarit commun, appliqué au build
@@ -152,6 +156,7 @@ web/content/            textes des pages en Markdown
 fixtures/               réponses d'API fictives, mode SOURCE_MODE=fixtures
 tests/                  tests Vitest ; tests/fixtures/titles.json = cas de classification
 docs/decisions.md       décisions d'implémentation
+docs/monthly-review-prompt.md  prompt de la tâche planifiée de revue mensuelle
 docs/images/            capture de l'accueil pour ce README
 ```
 
@@ -188,6 +193,12 @@ Toute modification de `taxonomy.yaml` (revue mensuelle ou correction) doit :
    `{ "source": "...", "title": "...", "description"?: "...", "role": "...", "group": "...", "requalified"?: true }`
    (`role` et `group` valent `non_classe` pour un intitulé hors taxonomie) ;
 5. passer `npm test`, qui vérifie le schéma, la cohérence et tous les cas de classification.
+
+Chaque premier mardi du mois, une tâche planifiée Claude lit l'export de revue du mois écoulé
+(`/api/export/taxonomy-review.md`, SPEC.md §9.1) et propose les changements justifiés dans une
+PR « Taxonomie v<N> », selon [docs/monthly-review-prompt.md](docs/monthly-review-prompt.md).
+Après la fusion, le job `update` du VPS reclasse tout l'historique la nuit suivante, et la page
+« Journal de la taxonomie » du site affiche la version dès le déploiement (D65 à D69).
 
 ## Licence
 

@@ -4,6 +4,7 @@
 #   deploy/vps/veille-job weekly-run [--run-id 2026-W41] [--force]
 #   deploy/vps/veille-job admin <commande> [--run-id …] [--reset] [--force]
 #   deploy/vps/veille-job backup
+#   deploy/vps/veille-job update [--apply]               (mise à jour du code, reclassement)
 #   deploy/vps/veille-job restic <commande restic>      (init, snapshots, restore…)
 #
 # Charge le fichier d'environnement (hors du dépôt, droits 600, SPEC.md §3.5), puis lance le
@@ -38,14 +39,14 @@ cd "$REPO"
 job="${1:-}"
 if [ $# -gt 0 ]; then shift; fi
 case "$job" in
-  weekly-run | admin | backup)
+  weekly-run | admin | backup | update)
     exec flock "$DATA_DIR/.lock" "$REPO/node_modules/.bin/tsx" "scripts/$job.ts" "$@"
     ;;
   restic)
     exec flock "$DATA_DIR/.lock" restic "$@"
     ;;
   *)
-    echo "usage : veille-job weekly-run|admin|backup|restic [arguments]" >&2
+    echo "usage : veille-job weekly-run|admin|backup|update|restic [arguments]" >&2
     exit 64
     ;;
 esac

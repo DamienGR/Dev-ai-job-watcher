@@ -1061,3 +1061,107 @@ correction adaptée.
 - Sur le VPS, l'adresse du dépôt distant passe à la nouvelle (`git remote set-url`, étape 6 de
   `deploy/vps/README.md`) : la redirection suffit, mais elle cesserait si un dépôt reprenait
   l'ancien nom. La clé de déploiement suit le dépôt lors d'un transfert.
+
+## Lot 6 — Revue mensuelle de la taxonomie (2026-11-21)
+
+### D65. Export de revue mensuelle (§9.1)
+
+- Le VPS prépare la revue avec les agrégats, à chaque traitement : `review/AAAA-MM.json` pour
+  le mois du dernier run (celui du jeudi de sa semaine) et pour le mois précédent. Le run du
+  lundi qui précède le premier mardi du mois met donc à jour le mois écoulé juste avant sa
+  revue. Un mois de `partialMonths` est marqué « partiel » dans l'export.
+- Seules les offres créées dans ces deux mois gardent leur intitulé et leur description en
+  mémoire pendant le calcul. L'export n'en garde que des comptages, des intitulés et des
+  termes : 100 intitulés non classés au plus (3 exemples bruts de 90 caractères au plus et
+  leurs codes ROME), 80 termes émergents, 50 technologies candidates citées par au moins 5
+  offres, 30 confusions. Un test vérifie que l'export Markdown reste sous 50 Ko, listes
+  pleines.
+- Non classés : parmi les offres du filet ROME (passe A) seulement, comme le demande le §9.1 ;
+  les offres de la passe B non classées sont de toute façon écartées par la règle de
+  rétention.
+- Technologies candidates : heuristique du §9.1 sur les descriptions complètes, avec une liste
+  de termes à écarter (contrats, diplômes, sigles RH, adresses web) et sans les termes déjà
+  reconnus par la taxonomie (test des motifs sur le terme normalisé). Un mot à seule majuscule
+  initiale (« Langfuse ») n'est pas vu : c'est la limite assumée de l'heuristique, que les
+  recherches web de la revue complètent.
+- `api-export` lit `review/AAAA-MM.json` dans Blobs (le fichier est déjà dans la liste des
+  fichiers acceptés par `api-ingest`) et le sert en Markdown ou en JSON. Mois écoulé par
+  défaut, en heure de Paris ; un mois absent répond 404 avec la liste des mois disponibles ;
+  cache de 5 minutes. Lecture publique, sans jeton (§9.1) : aucune donnée personnelle.
+
+### D66. Reclassement de tout l'historique (§9.3)
+
+- Le reclassement rejoue, dans l'ordre, chaque run traité avec succès, depuis `raw` et avec un
+  index `seen` repris de zéro : la règle de rétention dépend du classement, donc aussi la
+  nouveauté et les fermetures. Il réécrit `offers/*`, l'index et ses copies par run, les
+  comptes rendus (version de taxonomie et date du reclassement ; durées d'origine gardées),
+  puis tous les agrégats. Les copies d'index de runs plus récents jamais menés au bout sont
+  supprimées.
+- La nouvelle version n'est enregistrée dans `state/taxonomy-version` qu'à la fin, avec son
+  entrée d'historique : date de la version (`updated`, place du trait sur les courbes), jour
+  du reclassement et effet sur le dernier run (offres classées avant et après). Interrompu, le
+  reclassement est refait en entier au lancement suivant.
+- Filet de sécurité : un traitement hebdomadaire qui trouve des données dans une autre
+  version que `taxonomy.yaml` reclasse d'abord tout l'historique. Les séries ne mélangent
+  jamais deux versions, même si le job `update` a échoué.
+- `admin reclassify` lance le reclassement à la main (suivi de `admin push`) ; `admin status`
+  montre la version du fichier et celle des données.
+- Critère d'acceptation du lot 6 vérifié par des tests plutôt que par une vraie PR de
+  taxonomie, qui changerait les chiffres publiés : une v4 de test (rôle `consultant_sap`)
+  reclasse les offres concernées dans tous les runs, son marqueur apparaît sur l'axe des
+  courbes, et le journal du site affiche une v4 de test dès sa fusion (D69). La première
+  revue réelle fera la vérification de bout en bout.
+
+### D67. Job `update` du VPS (§3.3)
+
+- Chaque jour à 04:00 UTC, avant le run du lundi (05:00), sous le verrou des jobs. Premier
+  temps, avec le code en place : vérifie que le dépôt est sur `main` sans fichier suivi
+  modifié, `git fetch` puis avance rapide (équivalent de `git pull --ff-only`, avec un refus
+  clair si `main` a divergé), `npm ci` si `package-lock.json` a changé. Second temps, dans un
+  nouveau processus pour tourner avec le code à jour : reclassement si la version de
+  `taxonomy.yaml` diffère de celle des données, puis envoi des agrégats.
+- Conséquence assumée : tout ce qui est fusionné sur `main` tourne sur le VPS le lendemain
+  matin. La relecture de chaque PR par Damien reste le seul contrôle ; le VPS ne lit que
+  `main`, avec sa clé de déploiement en lecture seule.
+- Les unités systemd ne sont pas réinstallées automatiquement : une mise à jour qui modifie
+  `deploy/vps/systemd/` envoie une alerte avec les deux commandes à lancer. Une modification
+  des services reste ainsi un geste de Damien.
+- Alertes : échec de la mise à jour (les runs continuent avec le code en place), unités à
+  recopier, taxonomie appliquée (information, avec l'effet sur le dernier run), reclassement en
+  échec (le site garde les chiffres précédents).
+
+### D68. Tâche planifiée de la revue mensuelle (§9.2, §15.7)
+
+- Une expression cron ne sait pas viser le premier mardi du mois : jour du mois et jour de la
+  semaine s'additionnent. La tâche part donc chaque mardi à 08:45 (heure de Paris) et le
+  prompt s'arrête de lui-même hors du premier mardi.
+- Elle tourne dans une nouvelle session Claude Code de l'environnement cloud du projet. Le
+  2026-11-21, une session de cet environnement lisait le site (`https://barometre.dg-tech.dev`)
+  sans difficulté : le repli par une GitHub Action et une branche `exports` n'est pas
+  construit. Si l'export devient inaccessible, la tâche s'arrête et le dit.
+- Prompt dans `docs/monthly-review-prompt.md` (annexe D, adresses du dépôt et du site, dossier
+  et fichiers modifiables, entrée du journal écrite pour le site). La tâche ne fusionne
+  jamais : Damien relit chaque PR « Taxonomie v<N> ».
+- La tâche est créée après la fusion du lot 6, avec l'accord de Damien. Elle n'est pas dans
+  le dépôt.
+
+### D69. Page « Journal de la taxonomie » (§17.2)
+
+- `/methodologie/journal/`, sous-page de la Méthodologie : hors de la navigation, qui marque
+  alors la Méthodologie comme rubrique courante.
+- Les versions et leurs notes viennent de `TAXONOMY_CHANGELOG.md` au build : une version
+  fusionnée apparaît au déploiement qui suit la fusion. Le tableau des versions est complété
+  en direct par `meta.taxonomyHistory` : appliquée dès le premier run, appliquée tel jour (avec
+  l'effet sur la part des offres classées), en attente du reclassement de la nuit, ou avant le
+  premier run. Le tableau est écrit au build : la page ne bouge pas au chargement.
+- Les notes du journal sont écrites par la revue mensuelle à partir d'intitulés d'offres : le
+  HTML brut y est échappé, les liens relatifs mènent au fichier du dépôt, et une image ou un
+  lien autre que web arrête le build.
+- « Propositions de la revue mensuelle » : un lien vers les PR « Taxonomie v » du dépôt, celles
+  qui ont été refusées comprises. Le résumé des propositions écartées est dans chaque PR.
+- La date de révision de la page est celle de son texte ou celle de la dernière version, si
+  elle est plus récente (mention de rédaction et `sitemap.xml`).
+- La page « Données & qualité » du tableau de bord renvoie vers le journal au lieu de
+  l'afficher ; son petit lecteur Markdown est retiré.
+- Lighthouse 13.6.0, mobile simulé, build servi par `vite preview` avec `SITE_INDEXABLE=1` :
+  100 en performance, accessibilité, bonnes pratiques et référencement.

@@ -57,6 +57,13 @@ export function monthLabel(month: string): string {
   return monthFormat.format(new Date(Date.UTC(year, m - 1, 1)));
 }
 
+const longDateFormat = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+
+/** Date AAAA-MM-JJ en toutes lettres (« 3 octobre 2026 »). */
+export function dateLongLabel(date: string): string {
+  return longDateFormat.format(new Date(`${date}T00:00:00Z`));
+}
+
 /** Semaine ISO d'une date AAAA-MM-JJ (marqueurs de version de taxonomie). */
 export function weekOfDate(date: string, weeks: readonly string[]): string | null {
   const time = Date.parse(`${date}T12:00:00Z`);

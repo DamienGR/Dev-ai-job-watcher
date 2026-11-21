@@ -115,7 +115,7 @@ Netlify sert le dashboard et les agrégats.
 |---|---|---|
 | `weekly-run` | lundi 05:00, relancé à 06:00 et 07:00 | Crée le run s'il n'existe pas (id = semaine ISO Europe/Paris, ex. `2026-W41`) ; collecte France Travail et Adzuna → `raw` (§4) ; traitement (§6, §7) ; envoi des agrégats. Une relance reprend à la première étape incomplète et ne fait rien si le run est complet ; 3 tentatives au plus, puis alerte (§10). |
 | `monthly-adzuna-stats` | `Tue *-*-01..07 07:00` | Appels agrégés Adzuna (`history`, `histogram`, `geodata`) → `aggregates/adzuna-stats.json`, puis envoi. |
-| `update` | chaque jour à 04:00 | `git pull --ff-only` de `main`, `npm ci` si `package-lock.json` a changé. Si la version de `taxonomy.yaml` diffère de `state/taxonomy-version` : reclassement complet (§9.3), puis envoi des agrégats. |
+| `update` | chaque jour à 04:00 | Avance rapide de `main` (`git fetch`, refus si la copie de travail est modifiée ou a divergé), `npm ci` si `package-lock.json` a changé, alerte si les unités systemd ont changé. Puis, dans un nouveau processus, avec le code à jour : si la version de `taxonomy.yaml` diffère de `state/taxonomy-version`, reclassement complet (§9.3), puis envoi des agrégats (D67). |
 | `admin` | à la main, par SSH | Relance d'une étape (`collect-ft`, `collect-adzuna`, `process`, `reclassify`, `push`) pour un `runId`, `--reset` en option. Remplace `api-admin`. |
 
 **Fonctions Netlify**
@@ -514,24 +514,26 @@ L'export ne contient que des agrégats et des intitulés : lecture publique, san
 
 ### 9.2 Tâche planifiée Claude
 
-- **Quand** : premier mardi du mois à 08:45 (Europe/Paris), après le run du lundi.
-- **Besoins** : accès au dépôt GitHub (branche + PR), recherche web, lecture de l'export par `WebFetch`. Si l'environnement de la tâche ne peut pas joindre le site **[À VÉRIFIER]**, repli : une GitHub Action mensuelle récupère l'export et le pousse sur une branche `exports` exclue des déploiements Netlify.
+- **Quand** : premier mardi du mois à 08:45 (Europe/Paris), après le run du lundi. La tâche part chaque mardi et son prompt s'arrête hors du premier mardi : une expression cron ne sait pas viser le premier mardi seul (D68).
+- **Besoins** : accès au dépôt GitHub (branche + PR), recherche web, lecture de l'export par `WebFetch`. **Vérifié** le 2026-11-21 : une session de l'environnement cloud du projet lit le site. Le repli prévu si le site devenait injoignable (une GitHub Action mensuelle récupère l'export et le pousse sur une branche `exports` exclue des déploiements Netlify) n'est pas construit (D68).
 - **Règles (exigé)** :
   - jamais de suppression ni de renommage d'`id` : passer `status: deprecated` ;
   - toute modification incrémente `version`, ajoute une entrée datée et justifiée (chiffres de l'export, exemples) dans `TAXONOMY_CHANGELOG.md`, et des cas de test à l'annexe B pour chaque motif ajouté ;
   - `npm test` vert avant d'ouvrir la PR ;
   - aucun changement justifié → pas de PR, juste un résumé.
-- Prompt complet : annexe D (à copier dans `docs/monthly-review-prompt.md`).
+- Prompt complet : annexe D, repris avec les adresses du dépôt et du site dans `docs/monthly-review-prompt.md`, qui fait foi.
 
 ### 9.3 Après fusion
 
 Fusion → le job quotidien `update` du VPS récupère `main` et constate que la version de `taxonomy.yaml` diffère de `state/taxonomy-version` → reclassement :
 
-1. Relit `raw` semaine par semaine (reprise possible, §12), renormalise et reclasse.
+1. Relit `raw` semaine par semaine (reprise possible, §12), renormalise et reclasse, avec un index `seen` repris de zéro.
 2. Réécrit `offers/*`.
-3. Recalcule tous les agrégats, ajoute l'entrée dans `meta.taxonomyHistory`, puis les envoie au site.
+3. Recalcule tous les agrégats, ajoute l'entrée dans `meta.taxonomyHistory` (avec l'effet sur le dernier run : offres classées avant et après), puis les envoie au site.
 
-Le déploiement Netlify qui suit la fusion ne reclasse rien : il publie seulement le dashboard et les fonctions. Une taxonomie fusionnée est appliquée aux données au plus tard le lendemain.
+La version des données n'est enregistrée qu'à la fin : un reclassement interrompu est refait en entier. Un traitement hebdomadaire qui trouve des données dans une autre version reclasse d'abord tout l'historique (D66).
+
+Le déploiement Netlify qui suit la fusion ne reclasse rien : il publie le dashboard, les fonctions et la page « Journal de la taxonomie » (§17.2), qui montre la nouvelle version comme en attente jusqu'au reclassement. Une taxonomie fusionnée est appliquée aux données au plus tard le lendemain.
 
 Les séries restent comparables dans le temps puisque tout l'historique est reclassé avec la même version.
 
@@ -630,7 +632,7 @@ aussi pour les lots S.
 | 4 | Termes de la licence de réutilisation des offres France Travail. | 1 |
 | 5 | Adzuna : tag de catégorie IT pour `fr`, libellés de régions dans `location.area`, support de `what_or` sur `history`/`histogram`/`geodata`, attribution, licence commerciale. | 3 |
 | 6 | Netlify : protection par mot de passe selon le plan. **Tranché (D32)** : réservée au plan Pro sur les plans legacy ; dashboard public. | 4 |
-| 7 | Accès de la tâche planifiée Claude au site (`WebFetch`) ; sinon repli GitHub Action (§9.2). | 6 |
+| 7 | Accès de la tâche planifiée Claude au site (`WebFetch`) ; sinon repli GitHub Action (§9.2). **Vérifié** le 2026-11-21 : le site répond depuis l'environnement cloud du projet ; pas de repli (D68). | 6 |
 | 8 | VPS : système et version, Node 22, systemd, espace disque pour `DATA_DIR`, accès en lecture au dépôt. **Vérifié** le 2026-10-03 : Ubuntu 26.04.1, Node 22, systemd 259, 33 Go libres, clé de déploiement en lecture seule (D41). | 5 |
 
 ## 16. Décisions ouvertes

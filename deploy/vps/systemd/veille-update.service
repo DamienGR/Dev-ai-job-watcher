@@ -1,0 +1,12 @@
+# Mise à jour quotidienne du code et application de la taxonomie (SPEC.md §3.3, §9.3, D67) :
+# avance rapide de main, npm ci si besoin, reclassement complet si la version de taxonomy.yaml
+# a changé, puis envoi des agrégats. Sous le verrou des jobs : jamais pendant un run.
+[Unit]
+Description=Veille emploi Dev & IA : mise à jour du code et reclassement
+Documentation=file:%h/Dev-ai-job-watcher/deploy/vps/README.md
+
+[Service]
+Type=oneshot
+ExecStart=%h/Dev-ai-job-watcher/deploy/vps/veille-job update
+TimeoutStartSec=60min
+Nice=10

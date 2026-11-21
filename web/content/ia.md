@@ -90,6 +90,19 @@ serveur. Les garde-fous ne changent pas :
   une adresse protégée par un secret ;
 - un run ne déclenche jamais de déploiement du site.
 
+## La revue mensuelle de la taxonomie
+
+Le premier mardi de chaque mois, une tâche planifiée confie à Claude un export du mois
+écoulé : les intitulés d’offres non classés les plus fréquents, les termes en hausse,
+l’évolution de chaque métier. Claude vérifie les nouveaux intitulés par quelques recherches
+sur le web. Il propose ensuite les changements justifiés dans une pull request, avec les
+chiffres, des exemples d’intitulés et des cas de test, ou rien si rien n’est justifié.
+
+Damien relit la proposition et décide de la fusionner. La nuit suivante, le serveur récupère
+seul la nouvelle version et reclasse toutes les offres depuis le premier run. Chaque version
+et son effet sur la part des offres classées sont publiés dans le
+[journal de la taxonomie](/methodologie/journal/).
+
 ## Des incidents réels, et ce qu’ils ont changé
 
 - **7 octobre 2026, des alertes refusées.** La première alerte de test a été rejetée par le
@@ -130,14 +143,9 @@ de repli sans IA en cas d’écart.
 
 ## Ce qui arrive
 
-- **Une revue mensuelle de la taxonomie.** Chaque mois, Claude lira un export des intitulés
-  non classés et des termes en hausse. Il proposera des changements de la taxonomie dans une
-  pull request, chiffres et cas de test à l’appui. Damien les acceptera ou non, et tout
-  l’historique sera reclassé avec la nouvelle version. Les changements retenus seront publiés
-  dans un journal sur ce site.
-- **Un résumé de la semaine.** Après chaque run, Claude rédigera un texte court à partir des
-  statistiques. Chaque chiffre cité sera vérifié par du code, et le texte portera la mention
-  de son écriture par l’IA. Coût estimé : moins d’un dollar par mois.
+**Un résumé de la semaine.** Après chaque run, Claude rédigera un texte court à partir des
+statistiques. Chaque chiffre cité sera vérifié par du code, et le texte portera la mention de
+son écriture par l’IA. Coût estimé : moins d’un dollar par mois.
 
 ## Pour aller plus loin
 

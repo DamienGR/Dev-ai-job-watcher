@@ -1,4 +1,3 @@
-import { resolve } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import type { Offer } from '../../src/core/offer';
 import { compileTaxonomy, loadTaxonomy, type CompiledTaxonomy, type Taxonomy } from '../../src/core/taxonomy';
@@ -6,12 +5,10 @@ import type { Table } from '../../src/pipeline/aggregates/table';
 import { silentLogger } from '../../src/pipeline/log';
 import { offersKey, processRun, TAXONOMY_VERSION_KEY } from '../../src/pipeline/process';
 import { loadProcessRecord, saveProcessRecord } from '../../src/pipeline/processRecord';
-import { newStepState, saveStepState, type StepState } from '../../src/pipeline/runState';
 import { SEEN_KEY, type SeenIndex } from '../../src/pipeline/seenIndex';
-import { collectFranceTravail, rawKey, type FtRawPartition } from '../../src/sources/francetravail/collect';
-import { FixtureFtApi } from '../../src/sources/francetravail/fixtures';
 import { memoryStores } from '../../src/storage/memory';
-import { getGzipJson, getGzipJsonLines, getJson, setGzipJson, type Stores } from '../../src/storage/store';
+import { getGzipJson, getGzipJsonLines, getJson, type Stores } from '../../src/storage/store';
+import { addKeywordOnlyOffer, collectRunFixtures, seedRunFrom } from './fixtures';
 
 let taxonomy: Taxonomy;
 let compiled: CompiledTaxonomy;
@@ -20,48 +17,7 @@ beforeAll(async () => {
   compiled = compileTaxonomy(taxonomy);
 });
 
-/** Collecte du run en mode fixtures (SPEC.md §13), dans des stores en mémoire. */
-async function collectFixtures(runId: string, stores: Stores = memoryStores()): Promise<Stores> {
-  const api = await FixtureFtApi.fromDirectory(resolve('fixtures/francetravail'));
-  await collectFranceTravail(runId, { api, taxonomy, stores, log: silentLogger });
-  return stores;
-}
-
-/** Ajoute une partition de passe B avec une offre hors informatique, à écarter (règle de rétention). */
-async function addKeywordOnlyOffer(stores: Stores, runId: string): Promise<void> {
-  const partition: FtRawPartition = {
-    source: 'francetravail',
-    runId,
-    partition: { id: 'b-kcomptable', stem: 'b-kcomptable', parent: null, pass: 'B', level: 'national', params: { motsCles: 'comptable' } },
-    fetchedAt: '2026-10-03T08:00:00.000Z',
-    total: 1,
-    truncated: false,
-    offers: [
-      { id: 'FX09001', intitule: 'Comptable (H/F)', description: 'Utilisation de l’IA pour la saisie.', dateCreation: '2026-09-29T08:00:00.000Z', lieuTravail: { libelle: '35 - RENNES', commune: '35238' } },
-    ],
-  };
-  await setGzipJson(stores.raw, rawKey(runId, partition.partition.id), partition);
-}
-
-/** Recopie la passe A d'un run vers un autre run, sans certaines offres, avec un état de collecte. */
-async function seedRunFrom(
-  stores: Stores,
-  from: string,
-  runId: string,
-  { without = [], status = 'complete' }: { without?: string[]; status?: StepState['status'] } = {},
-): Promise<void> {
-  const raw = await getGzipJson<FtRawPartition>(stores.raw, rawKey(from, 'a-fr'));
-  if (!raw) throw new Error('partition a-fr absente');
-  await setGzipJson(stores.raw, rawKey(runId, 'a-fr'), {
-    ...raw,
-    runId,
-    offers: raw.offers.filter((o) => !without.includes(o.id as string)),
-  });
-  const state = newStepState(runId, 'collect-ft', new Date('2026-10-12T05:00:00Z'));
-  state.status = status;
-  state.partitions = [{ ...raw.partition, status: 'done', total: raw.total, written: raw.offers.length, truncated: false, attempts: 1, error: null }];
-  await saveStepState(stores.state, state);
-}
+const collectFixtures = (runId: string, stores?: Stores) => collectRunFixtures(taxonomy, runId, stores);
 
 const process = (runId: string, stores: Stores) => processRun(runId, { stores, log: silentLogger, taxonomy: compiled });
 const runOffers = async (stores: Stores, runId: string) => (await getGzipJsonLines<Offer>(stores.offers, offersKey(runId))) ?? [];
@@ -105,7 +61,8 @@ describe('traitement d’un run (SPEC.md §6, §7, lot 2)', () => {
 
     expect((await stores.aggregates.list('')).sort()).toEqual([
       'conditions.json', 'emerging.json', 'employers.json', 'geo-points.json', 'geo-regions.json', 'meta.json',
-      'quality.json', 'salaries.json', 'techs.json', 'timeseries.json', 'titles.json',
+      'quality.json', 'review/2026-09.json', 'review/2026-10.json', 'salaries.json', 'techs.json', 'timeseries.json',
+      'titles.json',
     ]);
     const meta = await aggregate<Record<string, unknown>>(stores, 'meta.json');
     expect(meta).toMatchObject({ firstRun: '2026-W40', partialWeeks: ['2026-W37', '2026-W38', '2026-W39', '2026-W40'] });

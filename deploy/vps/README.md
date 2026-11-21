@@ -12,6 +12,7 @@ aucun port entrant) :
 |---|---|---|
 | `veille-weekly-run.timer` | lundi 05:00, 06:00, 07:00 | Collecte France Travail, traitement, envoi des agrégats. Une relance reprend à l'étape incomplète, ne fait rien si le run est complet ; alerte après la 3e tentative. |
 | `veille-backup.timer` | lundi 09:00 | Copie chiffrée de `DATA_DIR` vers Cloudflare R2 (restic), alerte en cas d'échec. |
+| `veille-update.timer` | chaque jour 04:00 | Avance rapide de `main`, `npm ci` si besoin ; si la version de `taxonomy.yaml` a changé, reclassement de tout l'historique puis envoi des agrégats (lot 6, D67). |
 | `veille-remote-control.service` | au démarrage | Facultatif : Remote Control dans une session tmux (étape 10). |
 
 Chaque job passe par `deploy/vps/veille-job`, qui charge le fichier d'environnement et prend le
@@ -146,12 +147,13 @@ export XDG_RUNTIME_DIR=/run/user/$(id -u)   # nécessaire après « sudo -iu vei
 mkdir -p ~/.config/systemd/user
 cp ~/Dev-ai-job-watcher/deploy/vps/systemd/veille-* ~/.config/systemd/user/
 systemctl --user daemon-reload
-systemctl --user enable --now veille-weekly-run.timer veille-backup.timer
+systemctl --user enable --now veille-weekly-run.timer veille-backup.timer veille-update.timer
 systemctl --user list-timers
 ```
 
-Attendu : les deux timers, prochain passage le lundi suivant à 07:00 et 11:00 heure de Paris
-(05:00 et 09:00 UTC).
+Attendu : les trois timers, prochain passage le lundi suivant à 07:00 et 11:00 heure de Paris
+(05:00 et 09:00 UTC) pour le run et la sauvegarde, et à 04:00 UTC le jour suivant pour la mise
+à jour.
 
 ## 9. Premier run, sans attendre lundi
 
@@ -186,6 +188,29 @@ Le service lance `claude remote-control --spawn worktree` dans une session tmux 
 à la main. À vérifier au premier démarrage : si une question s'affiche dans tmux, réponds-y une
 fois ; elle ne reviendra pas.
 
+## 11. Mise à jour automatique (lot 6, installation existante)
+
+Le VPS installé avant le lot 6 n'a pas encore le timer `veille-update`. Sous `veille`, après
+la fusion de la PR du lot 6 :
+
+```bash
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+cd ~/Dev-ai-job-watcher
+git pull --ff-only && npm ci                     # dernière mise à jour à la main
+cp deploy/vps/systemd/veille-update.* ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now veille-update.timer
+systemctl --user start veille-update.service     # premier passage, sans attendre la nuit
+journalctl --user -u veille-update -n 20
+```
+
+Attendu dans le journal : `update.code` avec `up-to-date`, puis `update.taxonomy` avec
+`up-to-date` et la version en cours. Le service doit pouvoir lancer `git fetch` seul, avec la
+clé de déploiement : une erreur d'authentification apparaît ici et part aussi en alerte.
+
+À partir de là, le dépôt se met à jour seul chaque nuit : tout ce qui est fusionné sur `main`
+tourne sur le VPS le lendemain matin.
+
 ---
 
 ## Au quotidien
@@ -202,10 +227,15 @@ Toutes les commandes se lancent sous `veille`, depuis `~/Dev-ai-job-watcher`.
 | Prochains lancements | `systemctl --user list-timers` |
 | Instantanés de sauvegarde | `deploy/vps/veille-job restic snapshots` |
 | Restaurer dans un dossier | `deploy/vps/veille-job restic restore latest --target /tmp/restauration` |
+| Mettre le code à jour sans attendre la nuit | `deploy/vps/veille-job update` |
+| Relancer un reclassement en échec | `deploy/vps/veille-job update --apply` |
+| Version de la taxonomie, fichier et données | `deploy/vps/veille-job admin status` |
+| Journal de la mise à jour | `journalctl --user -u veille-update -n 100` |
 
-Le dépôt est mis à jour à la main (étape 6) jusqu'au lot 6, qui ajoute le job `update`. Si une
-mise à jour modifie `deploy/vps/systemd/`, recopie les unités et relance
-`systemctl --user daemon-reload`.
+Le dépôt se met à jour seul chaque nuit (job `update`), sur `main` uniquement. Il refuse une
+copie de travail modifiée ou une branche qui a divergé : ne modifie pas les fichiers du dépôt
+sur le VPS. Si une mise à jour modifie `deploy/vps/systemd/`, une alerte le signale : recopie
+les unités et relance `systemctl --user daemon-reload`.
 
 ## Alertes envoyées
 
@@ -216,12 +246,16 @@ mise à jour modifie `deploy/vps/systemd/`, recopie les unités et relance
 | Erreur du traitement | VPS | dès la première erreur |
 | Run en échec après 3 tentatives | VPS | toute autre erreur (OAuth, envoi au site…) |
 | Sauvegarde en échec ou non configurée | VPS | lundi 09:00 UTC |
+| Mise à jour du code en échec | VPS | 04:00 UTC : dépôt modifié, branche divergée, `git fetch` ou `npm ci` en échec ; les runs continuent avec le code en place |
+| Unités systemd modifiées | VPS | après une mise à jour qui touche `deploy/vps/systemd/` : commandes à lancer |
+| Taxonomie appliquée | VPS | après un reclassement réussi : runs reclassés, part des offres classées avant et après (information) |
+| Reclassement en échec | VPS | le site garde les chiffres précédents ; relance : `veille-job update --apply` |
 | Aucun run réussi depuis 8 jours | Netlify (`watchdog`) | chaque jour à 09:00 UTC tant que dure le retard, couvre un VPS arrêté |
 
 ## Retour arrière
 
 ```bash
-systemctl --user disable --now veille-weekly-run.timer veille-backup.timer veille-remote-control.service
+systemctl --user disable --now veille-weekly-run.timer veille-backup.timer veille-update.timer veille-remote-control.service
 rm ~/.config/systemd/user/veille-*
 systemctl --user daemon-reload
 ```

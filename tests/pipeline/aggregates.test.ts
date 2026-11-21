@@ -251,7 +251,8 @@ describe('semaines partielles et meta.json (SPEC.md §6.9, §7.2)', () => {
     });
     expect(Object.keys(files).sort()).toEqual([
       'conditions.json', 'emerging.json', 'employers.json', 'geo-points.json', 'geo-regions.json', 'meta.json',
-      'quality.json', 'salaries.json', 'techs.json', 'timeseries.json', 'titles.json',
+      'quality.json', 'review/2026-09.json', 'review/2026-10.json', 'salaries.json', 'techs.json', 'timeseries.json',
+      'titles.json',
     ]);
     const meta = files['meta.json'] as Record<string, unknown> & { labels: Record<string, { id?: string; code?: string }[]> };
     expect(meta).toMatchObject({

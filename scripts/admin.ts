@@ -8,11 +8,15 @@
 //   process           traitement du run (rejouable)
 //   push              envoi des agrégats au site
 //   weekly-run        job complet ; --force autorise de nouvelles tentatives après 3 échecs
-//   status            état du run : étapes, tentatives, erreurs, dernière sauvegarde
+//   status            état du run : étapes, tentatives, erreurs, dernière sauvegarde, versions
+//                     de la taxonomie (fichier et données)
 //   simulate-failure  simule un run en échec et envoie la vraie alerte (test du canal)
-//   collect-adzuna    lot 3 ; reclassify : lot 6
+//   reclassify        reclassement de tout l'historique avec la taxonomie courante (SPEC.md
+//                     §9.3), même si sa version n'a pas changé ; puis `push` pour l'envoyer
+//   collect-adzuna    lot 3
 import { parseArgs } from 'node:util';
 import { BACKUP_STATE_KEY, type BackupState } from '../src/pipeline/backup';
+import { dataTaxonomyVersion, reclassifyAll } from '../src/pipeline/process';
 import { loadProcessRecord } from '../src/pipeline/processRecord';
 import { isRunId, runIdFor } from '../src/pipeline/runId';
 import { loadStepState } from '../src/pipeline/runState';
@@ -34,8 +38,8 @@ const { values, positionals } = parseArgs({
   },
 });
 
-const LATER: Record<string, number> = { 'collect-adzuna': 3, reclassify: 6 };
-const COMMANDS = ['collect-ft', 'process', 'push', 'weekly-run', 'status', 'simulate-failure'] as const;
+const LATER: Record<string, number> = { 'collect-adzuna': 3 };
+const COMMANDS = ['collect-ft', 'process', 'push', 'weekly-run', 'status', 'simulate-failure', 'reclassify'] as const;
 type Command = (typeof COMMANDS)[number];
 
 /** Erreur d'usage : message seul, sans pile. */
@@ -71,6 +75,9 @@ switch (command as Command) {
   case 'push':
     print(await ctx.push());
     break;
+  case 'reclassify':
+    print(await reclassifyAll({ stores: ctx.stores, log: ctx.log, taxonomy: ctx.taxonomy }));
+    break;
   case 'weekly-run': {
     const state = await runWeekly(runId, { ...ctx, force: values.force });
     print(state);
@@ -94,6 +101,8 @@ switch (command as Command) {
         error: processRecord.error,
       },
       backup: await getJson<BackupState>(ctx.stores.state, BACKUP_STATE_KEY),
+      // Version de taxonomy.yaml et version appliquée aux données (différentes : reclassement à faire).
+      taxonomy: { file: ctx.taxonomy.version, data: await dataTaxonomyVersion(ctx.stores) },
     });
     break;
   }

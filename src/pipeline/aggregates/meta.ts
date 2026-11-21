@@ -29,9 +29,21 @@ export function quality(records: readonly ProcessRecord[]): Table {
   };
 }
 
+/** Classement d'un run : offres classées et offres retenues. */
+export interface ClassifiedShare {
+  classified: number;
+  retained: number;
+}
+
+/** Version de la taxonomie appliquée aux données (`state/taxonomy-version`, SPEC.md §9.3). */
 export interface TaxonomyHistoryEntry {
   version: number;
+  /** Date de la version (`updated` de taxonomy.yaml) : place du marqueur sur les courbes. */
   date: string;
+  /** Jour (Europe/Paris) du reclassement de tout l'historique ; absent pour la première version. */
+  appliedAt?: string;
+  /** Effet du reclassement sur le dernier run traité : classement avant et après (D66). */
+  effect?: { run: string; before: ClassifiedShare; after: ClassifiedShare };
 }
 
 /**
