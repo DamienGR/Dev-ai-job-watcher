@@ -1,8 +1,10 @@
 import { gunzipSync } from 'node:zlib';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import dataFunction, { config as dataConfig } from '../netlify/functions/api-data.mts';
+import exportFunction, { config as exportConfig } from '../netlify/functions/api-export.mts';
 import ingestFunction, { config as ingestConfig } from '../netlify/functions/api-ingest.mts';
 import { createDataHandler } from '../src/functions/data';
+import { createExportHandler, previousMonth } from '../src/functions/export';
 import { createIngestHandler } from '../src/functions/ingest';
 import { isAggregateFile, MAX_AGGREGATE_BYTES, pushOrder } from '../src/pipeline/aggregateFiles';
 import { silentLogger } from '../src/pipeline/log';
@@ -171,5 +173,63 @@ describe('push : envoi des agrégats (SPEC.md §3.3)', () => {
       'geo-points.json dépasse',
     );
     expect(fetchImpl).not.toHaveBeenCalled();
+  });
+});
+
+describe('api-export : GET /api/export/taxonomy-review (SPEC.md §9.1)', () => {
+  const review = {
+    month: '2026-11',
+    generatedAt: '2026-11-30T06:00:00.000Z',
+    lastRun: '2026-W49',
+    partial: false,
+    taxonomy: { version: 3, updated: '2026-10-03' },
+    totals: { offers: 10, classified: 6, romeNet: 8, unclassifiedRome: 3 },
+    unclassified: [{ title: 'ingenieur d etude informatique', n: 3, examples: ['Ingénieur d’étude informatique'], rome: { M1818: 3 } }],
+    emergingTerms: [],
+    roles: [],
+    techCandidates: [],
+    confusions: [],
+  };
+  const store = new MemoryStore();
+  beforeEach(async () => {
+    await store.set('review/2026-11.json', bytes(review));
+    await store.set('review/2026-10.json', bytes({ ...review, month: '2026-10' }));
+  });
+  // Premier mardi de décembre, 08:45 à Paris : le mois écoulé est novembre.
+  const handler = createExportHandler({ store: () => store, now: () => new Date('2026-12-01T07:45:00Z') });
+  const get = (path: string, method = 'GET') => handler(new Request(`${SITE}/api/export/${path}`, { method }));
+
+  it('est routée sur /api/export/* en lecture', () => {
+    expect(exportConfig).toEqual({ path: '/api/export/*', method: 'GET' });
+    expect(typeof exportFunction).toBe('function');
+  });
+
+  it('sert le mois écoulé en Markdown par défaut, et un mois demandé en JSON', async () => {
+    const md = await get('taxonomy-review.md');
+    expect(md.status).toBe(200);
+    expect(md.headers.get('content-type')).toBe('text/markdown; charset=utf-8');
+    expect(md.headers.get('cache-control')).toBe('public, max-age=300');
+    const text = await md.text();
+    expect(text).toContain('# Revue de la taxonomie — 2026-11');
+    expect(text).toContain('| 3 | ingenieur d etude informatique | Ingénieur d’étude informatique | M1818 (3) |');
+
+    const json = await get('taxonomy-review.json?month=2026-10');
+    expect(json.headers.get('content-type')).toBe('application/json; charset=utf-8');
+    expect(await json.json()).toMatchObject({ month: '2026-10' });
+  });
+
+  it('répond 404 avec les mois disponibles, 400 pour un mois invalide, 405 en écriture', async () => {
+    const missing = await get('taxonomy-review.md?month=2026-09');
+    expect(missing.status).toBe(404);
+    expect(await missing.json()).toEqual({ error: 'aucune revue préparée pour 2026-09', available: ['2026-10', '2026-11'] });
+    expect((await get('taxonomy-review.md?month=2026-13')).status).toBe(400);
+    expect((await get('autre.md')).status).toBe(404);
+    expect((await get('taxonomy-review.md', 'POST')).status).toBe(405);
+  });
+
+  it('calcule le mois écoulé à l’heure de Paris', () => {
+    expect(previousMonth(new Date('2026-12-01T07:45:00Z'))).toBe('2026-11');
+    expect(previousMonth(new Date('2026-12-31T23:30:00Z'))).toBe('2026-12'); // déjà janvier à Paris
+    expect(previousMonth(new Date('2027-01-05T08:00:00Z'))).toBe('2026-12');
   });
 });

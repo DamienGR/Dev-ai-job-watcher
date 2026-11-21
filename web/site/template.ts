@@ -1,5 +1,9 @@
 import { Marked } from 'marked';
+import { parseChangelog, withChangelog } from './changelog';
 import { PAGES, SITE, type SitePage } from './config';
+import { escapeHtml, longDate } from './text';
+
+export { escapeHtml };
 
 // Gabarit commun du site (SPEC.md §17.3, §17.4) : métadonnées, en-tête, navigation, pied de
 // page et textes Markdown, injectés au build dans chaque page HTML d'entrée à la place des
@@ -8,10 +12,6 @@ import { PAGES, SITE, type SitePage } from './config';
 
 const MARKERS = ['head', 'header', 'content', 'footer'] as const;
 type Marker = (typeof MARKERS)[number];
-
-export function escapeHtml(text: string): string {
-  return text.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
-}
 
 export function pageTitle(page: SitePage): string {
   return page.title === SITE.name ? SITE.name : `${page.title} · ${SITE.name}`;
@@ -61,7 +61,8 @@ const LOGO_SVG =
   '<circle cx="16" cy="21" r="2.4" fill="#fff" /></svg>';
 
 export function renderHeader(page: SitePage): string {
-  const current = (p: SitePage) => (p.id === page.id ? ' aria-current="page"' : '');
+  // La page elle-même, ou sa rubrique pour une sous-page (le journal sous Méthodologie).
+  const current = (p: SitePage) => (p.id === page.id ? ' aria-current="page"' : p.path !== '/' && page.path.startsWith(p.path) ? ' aria-current="true"' : '');
   const links = PAGES.filter((p) => p.nav).map((p) => `<a href="${p.path}"${current(p)}>${escapeHtml(p.nav!)}</a>`);
   const home = PAGES[0]!;
   return [
@@ -95,21 +96,24 @@ export function renderMarkdown(source: string): string {
   return markdown.parse(source, { async: false }).trim();
 }
 
-const LONG_DATE = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-
 /**
  * Mention visible d'un texte rédigé avec l'IA (SPEC.md §17.1, exigé ; D51), datée de sa
  * dernière révision.
  */
 export function renderByline(updated: string): string {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(updated)) throw new Error(`date de révision invalide : ${updated}`);
-  return `<p class="byline">Texte rédigé avec Claude, relu et validé par ${escapeHtml(SITE.author.name)}. Mis à jour le ${LONG_DATE.format(new Date(`${updated}T00:00:00Z`))}.</p>`;
+  return `<p class="byline">Texte rédigé avec Claude, relu et validé par ${escapeHtml(SITE.author.name)}. Mis à jour le ${longDate(updated)}.</p>`;
 }
 
-/** Texte d'une page : Markdown converti, mention de rédaction placée sous le titre. */
-export function renderContent(page: SitePage, source: string): string {
+/**
+ * Texte d'une page : Markdown converti, mention de rédaction placée sous le titre, journal de
+ * la taxonomie inclus si la page le demande (`changelog`, source de `TAXONOMY_CHANGELOG.md`).
+ */
+export function renderContent(page: SitePage, source: string, changelog?: string): string {
   if (!page.updated) throw new Error(`${page.file} : date de révision du texte manquante`);
-  const html = renderMarkdown(source);
+  if (page.changelog && changelog === undefined) throw new Error(`${page.file} : journal de la taxonomie manquant`);
+  const text = renderMarkdown(source);
+  const html = page.changelog ? withChangelog(text, parseChangelog(changelog!), SITE.repository) : text;
   const end = html.indexOf('</h1>');
   if (!html.startsWith('<h1') || end < 0) throw new Error(`${page.file} : le texte doit commencer par un titre de niveau 1`);
   const split = end + '</h1>'.length;
@@ -128,13 +132,16 @@ function indent(block: string, prefix: string): string {
     .join('\n');
 }
 
-/** Remplit les marqueurs d'une page ; `content` est le Markdown de la page, s'il y en a un. */
-export function renderPage(html: string, page: SitePage, content?: string): string {
+/**
+ * Remplit les marqueurs d'une page ; `content` est le Markdown de la page, s'il y en a un, et
+ * `changelog` la source du journal de la taxonomie pour une page qui l'inclut.
+ */
+export function renderPage(html: string, page: SitePage, content?: string, changelog?: string): string {
   if (page.content && content === undefined) throw new Error(`${page.file} : texte ${page.content} manquant`);
   const parts: Record<Marker, string | undefined> = {
     head: renderHead(page),
     header: renderHeader(page),
-    content: content === undefined ? undefined : renderContent(page, content),
+    content: content === undefined ? undefined : renderContent(page, content, changelog),
     footer: renderFooter(),
   };
   let out = html;

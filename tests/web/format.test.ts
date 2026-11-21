@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { fmtDelta, fmtDeltaPct, fmtEuro, fmtInt, fmtPct, fmtSalary, MASKED, orMasked, shareOf } from '../../web/src/lib/format';
-import { parseInline, parseMarkdown } from '../../web/src/lib/markdown';
-import { monthOfWeek, monthRange, partialRanges, weekLabel, weekOfDate, weekRange, lastWeeks } from '../../web/src/lib/periods';
+import { journalRows } from '../../web/src/lib/journal';
+import { dateLongLabel, monthOfWeek, monthRange, partialRanges, weekLabel, weekOfDate, weekRange, lastWeeks } from '../../web/src/lib/periods';
 
 /** Espaces insécables de fr-FR remplacées par des espaces simples. */
 const plain = (text: string) => text.replace(/[\u202f\u00a0]/g, ' ');
@@ -44,15 +44,31 @@ describe('périodes', () => {
   });
 });
 
-describe('journal de la taxonomie', () => {
-  it('découpe titres, paragraphes et listes, sans HTML', () => {
-    const blocks = parseMarkdown('# Titre\n\nUn **mot** et `code`,\nsur deux lignes.\n\n- point [lien](x)\n  suite\n- second\n## v3 — 2026-10-03');
-    expect(blocks.map((b) => b.kind)).toEqual(['heading', 'paragraph', 'list', 'heading']);
-    expect(blocks[1]).toEqual({
-      kind: 'paragraph',
-      inlines: [{ text: 'Un ' }, { text: 'mot', bold: true }, { text: ' et ' }, { text: 'code', code: true }, { text: ', sur deux lignes.' }],
-    });
-    expect(blocks[2]).toEqual({ kind: 'list', items: [[{ text: 'point ' }, { text: 'lien' }, { text: ' suite' }], [{ text: 'second' }]] });
-    expect(parseInline('<script>')).toEqual([{ text: '<script>' }]);
+describe('journal de la taxonomie (lot 6)', () => {
+  const versions = [5, 4, 3, 2, 1].map((version) => ({ version, date: `2026-1${version % 2}-0${version}` }));
+  const effect = { run: '2026-W49', before: { classified: 1700, retained: 3000 }, after: { classified: 1850, retained: 3010 } };
+
+  it('distingue versions d’avant le premier run, premières données, reclassement et attente', () => {
+    const history = [
+      { version: 3, date: '2026-10-03' },
+      { version: 5, date: '2026-12-01', appliedAt: '2026-12-02', effect },
+    ];
+    expect(journalRows(versions, history)).toEqual([
+      { version: 5, status: 'appliquee', appliedAt: '2026-12-02', effect },
+      // v4 et v5 fusionnées avant le même reclassement : v4 n'a jamais été appliquée seule.
+      { version: 4, status: 'incluse', appliedAt: null, effect: null },
+      { version: 3, status: 'premier', appliedAt: null, effect: null },
+      { version: 2, status: 'avant', appliedAt: null, effect: null },
+      { version: 1, status: 'avant', appliedAt: null, effect: null },
+    ]);
+  });
+
+  it('montre une version fusionnée en attente du reclassement de la nuit', () => {
+    const rows = journalRows(versions.slice(1), [{ version: 3, date: '2026-10-03' }]);
+    expect(rows.map((r) => r.status)).toEqual(['attente', 'premier', 'avant', 'avant']);
+  });
+
+  it('date en toutes lettres', () => {
+    expect(dateLongLabel('2026-10-03')).toBe('3 octobre 2026');
   });
 });

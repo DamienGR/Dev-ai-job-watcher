@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { CHANGELOG_MARKER, journalUpdated, parseChangelog, renderChangelog, renderVersionsTable, VERSIONS_MARKER, withChangelog } from '../../web/site/changelog';
 import { PAGES, SITE, type SitePage } from '../../web/site/config';
 import { siteInputs } from '../../web/site/plugin';
 import { renderRobots, renderSitemap, seoFiles } from '../../web/site/seo';
@@ -13,7 +14,8 @@ const WEB = join(ROOT, 'web');
 function build(page: SitePage): string {
   const html = readFileSync(join(WEB, page.file), 'utf8');
   const content = page.content ? readFileSync(join(WEB, 'content', page.content), 'utf8') : undefined;
-  return renderPage(html, page, content);
+  const changelog = page.changelog ? readFileSync(join(ROOT, 'TAXONOMY_CHANGELOG.md'), 'utf8') : undefined;
+  return renderPage(html, page, content, changelog);
 }
 
 const page = (id: string) => PAGES.find((p) => p.id === id)!;
@@ -88,6 +90,8 @@ describe('pages du site (SPEC.md §17.2)', () => {
     expect(dashboard).not.toContain('<a class="logo" href="/" aria-current="page">');
     expect(build(page('accueil'))).toContain('<a class="logo" href="/" aria-current="page">');
     expect(build(page('mentions-legales'))).not.toContain('aria-current');
+    // Le journal de la taxonomie est une sous-page de la Méthodologie.
+    expect(build(page('journal'))).toContain('<a href="/methodologie/" aria-current="true">Méthodologie</a>');
   });
 
   it('prépare sur l’accueil les emplacements des chiffres, de la courbe et de « ce qui bouge »', () => {
@@ -127,7 +131,7 @@ describe('textes rédigés avec l’IA (SPEC.md §17.1, exigé ; D51)', () => {
   const texts = PAGES.filter((p) => p.content);
 
   it('place la mention de rédaction avec Claude sous le titre de chaque page de texte', () => {
-    expect(texts.map((p) => p.id).sort()).toEqual(['a-propos', 'ia', 'mentions-legales', 'methodologie']);
+    expect(texts.map((p) => p.id).sort()).toEqual(['a-propos', 'ia', 'journal', 'mentions-legales', 'methodologie']);
     for (const p of texts) {
       expect(build(p), p.file).toMatch(/<\/h1>\n\s*<p class="byline">Texte rédigé avec Claude, relu et validé par Damien Gros\. Mis à jour le \d{1,2} [a-zéû]+ \d{4}\.<\/p>/);
     }
@@ -143,6 +147,71 @@ describe('textes rédigés avec l’IA (SPEC.md §17.1, exigé ; D51)', () => {
     expect(() => renderContent({ ...text, updated: undefined }, '# Titre')).toThrow(/date de révision du texte manquante/);
     expect(() => renderContent(text, 'Pas de titre')).toThrow(/titre de niveau 1/);
     expect(() => renderByline('21/11/2026')).toThrow(/date de révision invalide/);
+  });
+});
+
+describe('journal de la taxonomie (SPEC.md §17.2, lot 6)', () => {
+  const V4 = `# Journal
+
+Préambule, avec un [lien](taxonomy.yaml).
+
+## v4 — 2026-12-01
+
+Revue mensuelle de 2026-11. Ajout de \`consultant_sap\` : n = 42, par exemple « Consultant SAP FI/CO <b>H/F</b> » ; voir [les cas](tests/fixtures/titles.json).
+
+<script>alert(1)</script>
+
+### Écarté
+
+- « Coach agile » : hors périmètre.
+
+## v3 — 2026-10-03
+
+Correction du filet de collecte.
+`;
+
+  it('reprend chaque version du dépôt dans le tableau et dans le détail, sans le préambule', () => {
+    const html = build(page('journal'));
+    const versions = parseChangelog(readFileSync(join(ROOT, 'TAXONOMY_CHANGELOG.md'), 'utf8'));
+    expect(versions.map((v) => v.version)).toEqual([3, 2, 1]);
+    for (const v of versions) {
+      expect(html).toContain(`<tr data-version="${v.version}" data-date="${v.date}"><th scope="row"><a href="#v${v.version}">v${v.version}</a></th>`);
+      expect(html).toContain(`<h3 id="v${v.version}">Version ${v.version} · `);
+    }
+    expect(html).toContain('<h3 id="v3">Version 3 · 3 octobre 2026</h3>');
+    expect(html).not.toContain('Toute modification de');
+    expect(html).not.toMatch(/site:taxonomy-/);
+    expect(html).toContain('<script type="module" src="/src/journal.ts"></script>');
+    expect(build(page('methodologie'))).toContain('href="/methodologie/journal/"');
+  });
+
+  it('affiche une nouvelle version dès sa fusion, datée de sa note (critère du lot 6)', () => {
+    const entries = parseChangelog(V4);
+    expect(entries.map((e) => [e.version, e.date])).toEqual([[4, '2026-12-01'], [3, '2026-10-03']]);
+    const html = withChangelog(`<h1>Journal</h1>\n${VERSIONS_MARKER}\n${CHANGELOG_MARKER}`, entries, SITE.repository);
+    expect(html).toContain('<tr data-version="4" data-date="2026-12-01">');
+    expect(html).toContain('<h3 id="v4">Version 4 · 1 décembre 2026</h3>');
+    expect(html).toContain('<h4>Écarté</h4>');
+    expect(journalUpdated('2026-11-21', entries)).toBe('2026-12-01');
+    expect(journalUpdated('2026-12-15', entries)).toBe('2026-12-15');
+    expect(renderVersionsTable(entries).match(/<td data-applied>…<\/td><td class="num" data-effect>…<\/td>/g)).toHaveLength(2);
+  });
+
+  it('échappe le HTML des notes et mène les liens relatifs au fichier du dépôt', () => {
+    const html = renderChangelog(parseChangelog(V4), SITE.repository);
+    expect(html).toContain('« Consultant SAP FI/CO &lt;b&gt;H/F&lt;/b&gt; »');
+    expect(html).toContain('<p>&lt;script&gt;alert(1)&lt;/script&gt;</p>');
+    expect(html).not.toMatch(/<script|<b>/);
+    expect(html).toContain(`<a href="${SITE.repository}/blob/main/tests/fixtures/titles.json">les cas</a>`);
+  });
+
+  it('refuse un titre hors format, des versions dans le désordre, une image ou un lien non web', () => {
+    expect(() => parseChangelog('## Version 4\n')).toThrow(/hors format/);
+    expect(() => parseChangelog('## v3 — 2026-10-03\n\n## v4 — 2026-12-01\n')).toThrow(/de la plus récente à la plus ancienne/);
+    expect(() => parseChangelog('# Journal\n')).toThrow(/aucune version/);
+    expect(() => renderChangelog(parseChangelog('## v4 — 2026-12-01\n\n![x](https://example.org/x.png)'), SITE.repository)).toThrow(/image refusée/);
+    expect(() => renderChangelog(parseChangelog('## v4 — 2026-12-01\n\n[x](javascript:alert(1))'), SITE.repository)).toThrow(/lien refusé/);
+    expect(() => withChangelog('<h1>Journal</h1>', parseChangelog(V4), SITE.repository)).toThrow(/trouvé 0 fois/);
   });
 });
 

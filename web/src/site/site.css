@@ -223,7 +223,7 @@ main:focus {
   color: var(--text-primary);
 }
 
-.site-nav a[aria-current='page'] {
+.site-nav a[aria-current] {
   color: var(--text-primary);
   font-weight: 600;
   border-bottom-color: var(--accent);

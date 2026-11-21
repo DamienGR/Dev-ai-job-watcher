@@ -471,13 +471,6 @@
   margin: 4px 0;
 }
 
-.changelog {
-  font-size: 0.875rem;
-  max-height: 480px;
-  overflow: auto;
-}
-
-.changelog code,
 .facts code {
   background: var(--surface-2);
   border-radius: 4px;

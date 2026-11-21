@@ -61,6 +61,8 @@ export interface ProcessRecord {
   /** Libellés les plus fréquents des offres écartées comme étrangères (supervision). */
   abroadLabels: Record<string, number>;
   error: string | null;
+  /** Dernier reclassement de tout l'historique (SPEC.md §9.3) ; les durées restent celles du run. */
+  reclassifiedAt?: string;
 }
 
 export function processRecordKey(runId: string): string {

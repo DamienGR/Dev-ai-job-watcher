@@ -70,11 +70,11 @@ des offres, mais dans aucun métier. La description de l’offre sert aussi à r
 technologies citées (118 dans la taxonomie), la mention de l’IA, le télétravail et les
 déplacements.
 
-La taxonomie évolue par versions, décrites dans
-[son historique](https://github.com/Dg-tech-dev/barometre-emploi-dev-ia/blob/main/TAXONOMY_CHANGELOG.md).
-Un changement de version est marqué d’un trait vertical sur les courbes. Avec la revue
-mensuelle de la taxonomie, chaque nouvelle version sera appliquée à tout l’historique, pour
-que les séries restent comparables.
+La taxonomie évolue par versions, proposées par une revue mensuelle. Le
+[journal de la taxonomie](/methodologie/journal/) décrit chacune, avec son effet sur la part
+des offres classées. Une nouvelle version est appliquée à tout l’historique la nuit qui suit
+sa fusion, pour que les séries restent comparables, et marquée d’un trait vertical sur les
+courbes.
 
 ## Indicateurs
 

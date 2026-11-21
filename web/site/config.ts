@@ -1,3 +1,5 @@
+import { journalUpdated, parseChangelog, readChangelog } from './changelog';
+
 // Pages du site public (SPEC.md §17.2) et réglages communs, lus au build par le gabarit
 // (`template.ts`) et par le plugin Vite. Une page ajoutée par un lot S3 à S6 s'inscrit ici.
 
@@ -18,6 +20,11 @@ export interface SitePage {
    * rédaction avec Claude (SPEC.md §17.1, exigé) ; requise pour une page qui a un texte.
    */
   updated?: string;
+  /**
+   * Inclut le journal de la taxonomie (`TAXONOMY_CHANGELOG.md`) à la place des marqueurs
+   * `<!-- site:taxonomy-versions -->` et `<!-- site:taxonomy-changelog -->` du texte.
+   */
+  changelog?: boolean;
   /** Image de partage `web/public/og/<id>.png` ; à défaut, celle de l'accueil. */
   ogImage?: boolean;
   /** Page d'erreur : ni URL canonique ni indexation. */
@@ -81,6 +88,19 @@ export const PAGES: SitePage[] = [
     nav: 'Méthodologie',
     content: 'methodologie.md',
     updated: '2026-11-21',
+    ogImage: true,
+  },
+  {
+    id: 'journal',
+    path: '/methodologie/journal/',
+    file: 'methodologie/journal/index.html',
+    title: 'Journal de la taxonomie',
+    description:
+      'Les versions de la taxonomie des métiers : propositions mensuelles de Claude, changements retenus et effet sur la part des offres classées.',
+    content: 'journal.md',
+    changelog: true,
+    // Date du texte, ou celle de la dernière version de la taxonomie si elle est plus récente.
+    updated: journalUpdated('2026-11-21', parseChangelog(readChangelog())),
     ogImage: true,
   },
   {

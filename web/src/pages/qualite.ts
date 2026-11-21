@@ -1,28 +1,9 @@
-import changelog from '../../../TAXONOMY_CHANGELOG.md?raw';
 import { fmtInt, fmtPct, shareOf } from '../lib/format';
-import { parseMarkdown, type Inline } from '../lib/markdown';
-import { weekLongLabel } from '../lib/periods';
+import { dateLongLabel, weekLongLabel } from '../lib/periods';
 import { fmtDuration, qualityRows, RUN_STATUS } from '../lib/quality';
 import type { Table } from '../lib/types';
 import type { Page } from '../page';
-import { append, card, dataTable, h, valueOr, type Child } from '../ui';
-
-function inlines(items: Inline[]): Child[] {
-  return items.map((i) => (i.code ? h('code', null, i.text) : i.bold ? h('strong', null, i.text) : i.text));
-}
-
-/** Journal de la taxonomie, sans son préambule (titres de version et contenu). */
-function changelogView(): HTMLElement {
-  const blocks = parseMarkdown(changelog);
-  const start = blocks.findIndex((b) => b.kind === 'heading' && b.level === 2);
-  const box = h('div', { class: 'changelog' });
-  for (const block of blocks.slice(Math.max(0, start))) {
-    if (block.kind === 'heading') box.append(h(block.level <= 2 ? 'h3' : 'h4', null, inlines(block.inlines)));
-    else if (block.kind === 'paragraph') box.append(h('p', null, inlines(block.inlines)));
-    else box.append(h('ul', null, block.items.map((item) => h('li', null, inlines(item)))));
-  }
-  return box;
-}
+import { append, card, dataTable, h, valueOr } from '../ui';
 
 export const qualitePage: Page = {
   id: 'qualite',
@@ -98,13 +79,15 @@ export const qualitePage: Page = {
         ),
       ),
       card(
-        'Journal de la taxonomie',
+        'Taxonomie',
         h(
-          'ul',
-          { class: 'facts' },
-          meta.taxonomyHistory.map((entry) => h('li', null, `v${entry.version} appliquée le ${entry.date}`)),
+          'p',
+          null,
+          `Version ${meta.taxonomy.version} du ${dateLongLabel(meta.taxonomy.updated)}, appliquée à toutes les offres depuis le premier run. `,
+          'Chaque version, les propositions de la revue mensuelle et l’effet des changements sur la part des offres classées : ',
+          h('a', { href: '/methodologie/journal/' }, 'journal de la taxonomie'),
+          '.',
         ),
-        h('details', null, h('summary', null, 'Détail des changements'), changelogView()),
       ),
       card(
         'Sources et mentions',
