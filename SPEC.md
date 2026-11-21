@@ -669,7 +669,7 @@ D52.
 
 | Page | Adresse | Contenu | Lot |
 |---|---|---|---|
-| Accueil | `/` | Accroche ; 4 chiffres vivants (nouvelles offres de la semaine de référence, part IA, prime IA, rôles émergents actifs) ; mini-courbe depuis le premier run ; « ce qui bouge » ; schéma du pipeline ; accès au tableau de bord et à « L'IA dans ce projet ». Résumé de la semaine au lot S5. | S3 |
+| Accueil | `/` | Accroche, avec le flux du pipeline animé sur la semaine de référence (D70) ; 4 chiffres vivants (nouvelles offres de la semaine de référence, part IA, prime IA, rôles émergents actifs) ; mini-courbe depuis le premier run ; « ce qui bouge » ; schéma du pipeline ; accès au tableau de bord et à « L'IA dans ce projet ». Résumé de la semaine au lot S5. | S3 |
 | Tableau de bord | `/tableau-de-bord/#/<page>` | Les pages du §8.1, inchangées. | S2 |
 | L'IA dans ce projet | `/ia/` | Développement piloté par la spec avec Claude Code, exploitation, revue mensuelle, ce qui reste déterministe et pourquoi ; décisions et incidents réels ; liens vers le dépôt. | S4 |
 | Méthodologie | `/methodologie/` | Sources et licences, collecte, taxonomie, classification, règles d'affichage, limites chiffrées, qualité des derniers runs lue dans `quality.json`. | S4 |

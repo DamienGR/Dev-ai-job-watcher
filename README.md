@@ -5,7 +5,7 @@ publiées sur France Travail : volumes, métiers, salaires, régions.
 
 **Site : [barometre.dg-tech.dev](https://barometre.dg-tech.dev)**
 
-![Accueil du site : les quatre chiffres de la semaine et la courbe des nouvelles offres](docs/images/accueil.png)
+![Accueil du site : le flux des offres de la semaine à travers la taxonomie, les quatre chiffres de la semaine et la courbe des nouvelles offres](docs/images/accueil.png)
 
 Ce dépôt contient tout le baromètre : la collecte, le classement des offres par métier, le
 calcul des statistiques et le site public. C'est aussi une démonstration de développement

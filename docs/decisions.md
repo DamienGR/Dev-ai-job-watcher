@@ -1193,3 +1193,39 @@ dans les agrégats publics (le compte d'une semaine passée augmente d'un run à
   l'afficher ; son petit lecteur Markdown est retiré.
 - Lighthouse 13.6.0, mobile simulé, build servi par `vite preview` avec `SITE_INDEXABLE=1` :
   100 en performance, accessibilité, bonnes pratiques et référencement.
+
+## Site public — Visuel animé de l'accueil (2026-11-21)
+
+### D70. Flux du pipeline dans l'en-tête de l'accueil (§17.2)
+
+- Demande de Damien : habiller l'en-tête de l'accueil d'un visuel animé à droite du titre et
+  de l'introduction, subtil et professionnel. Piste retenue par Damien : « le flux du
+  pipeline ». Des points gris (les offres de la semaine) arrivent à gauche par des couloirs qui
+  convergent vers un filtre, la taxonomie ; les offres du périmètre en ressortent à la couleur
+  de leur famille et rejoignent sa barre, les autres s'éteignent dans le filtre.
+- **Vrais chiffres, aucun nouvel agrégat** (§17.4) : semaine de référence des chiffres de tête,
+  `timeseries.json` et filtres par défaut. Trois barres plutôt que les huit groupes :
+  développement (groupe dev), data (le reste du socle) et IA (les groupes IA, numérateur de la
+  « Part IA »). Leur total est le chiffre « Nouvelles offres » (test). Les huit groupes, dont
+  plusieurs sous 5 offres par semaine, auraient chargé un dessin d'en-tête. Le libellé de
+  gauche compte toutes les offres collectées de la semaine, périmètre élargi et non classées
+  comprises ; la part des points écartés au filtre suit ce rapport.
+- Les points sont un tirage selon ces proportions, pas une offre chacun ; les comptages
+  affichés sont des effectifs, montrés même sous 5 (§8.3 ne masque que les statistiques). Une
+  semaine partielle porte la pastille « partiel » dans la légende.
+- **Technique** : un SVG dessiné à la taille réelle de son cadre (textes nets sur mobile),
+  redessiné au changement de taille ; une boucle `requestAnimationFrame` d'une trentaine de
+  cercles, suspendue hors de l'écran et quand l'onglet est caché. Couleurs par variables CSS
+  (thèmes clair et sombre), places 1 à 3 de la palette catégorielle. Aucune dépendance.
+  Les barres poussent au premier affichage seulement.
+- **Accessibilité** : le dessin est `aria-hidden` ; la légende (`figcaption`) date la semaine et
+  donne, en texte masqué, les comptages que le dessin montre. Avec « réduire les animations »,
+  le visuel reste une image fixe : le flux déjà installé, sans mouvement.
+- **Mise en page** : deux colonnes à partir de 960 px, le visuel sous le texte en dessous
+  (hauteur réduite, largeur limitée à 560 px). Hauteur réservée : rien ne bouge à l'arrivée
+  des données. Visuel masqué si les données manquent.
+- Capture du README refaite avec le nouvel en-tête (mêmes agrégats publics du 21 novembre
+  2026, image fixe du mode « animations réduites »).
+- Lighthouse 13.6.0, build servi par `vite preview` avec `SITE_INDEXABLE=1` : 100 en
+  performance, accessibilité, bonnes pratiques et référencement, en mobile simulé comme en
+  bureau ; temps de blocage 0 ms et décalage de mise en page nul en mobile, comme avant.

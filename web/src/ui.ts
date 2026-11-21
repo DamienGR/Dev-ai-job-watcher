@@ -18,6 +18,15 @@ export function h<K extends keyof HTMLElementTagNameMap>(tag: K, attrs: Attrs | 
   return element;
 }
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/** Élément SVG avec ses attributs (dessins légers de l'accueil, sans ECharts). */
+export function svg<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, string | number> = {}): SVGElementTagNameMap[K] {
+  const element = document.createElementNS(SVG_NS, tag);
+  for (const [name, value] of Object.entries(attrs)) element.setAttribute(name, String(value));
+  return element;
+}
+
 export function append(parent: Node, children: Child[]): void {
   for (const child of children) {
     if (child === null || child === undefined || child === false) continue;
